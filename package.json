@@ -1,0 +1,38 @@
+{
+  "name": "morpho-tokenized-vaults",
+  "version": "1.0.0",
+  "description": "Morpho tokenized vaults contracts",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morpho-labs/morpho-tokenized-vaults.git",
+    "fix:sol": "prettier --write './src/**/*.sol' && prettier --write './test/**/*.sol'",
+    "postinstall": "husky install"
+  },
+  "keywords": [
+    "defi",
+    "blockchain",
+    "token",
+    "morpho"
+  ],
+  "author": "Morpho Labs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/morpho-labs/morpho-tokenized-vaults/issues"
+  },
+  "homepage": "https://github.com/morpho-labs/morpho-tokenized-vaults#readme",
+  "devDependencies": {
+    "husky": "7.0.1",
+    "prettier": "2.3.2",
+    "prettier-plugin-solidity": "1.0.0-beta.13",
+    "solhint": "3.3.6",
+    "solhint-plugin-prettier": "0.0.5"
+  }
+}
