@@ -1,0 +1,3 @@
+[submodule "lib/morpho-contracts"]
+	path = lib/morpho-contracts
+	url = git@github.com:morpho-labs/morpho-contracts.git
