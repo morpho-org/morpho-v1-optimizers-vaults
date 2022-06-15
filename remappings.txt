@@ -1,2 +1,12 @@
 @morpho-contracts/=lib/morpho-contracts/
-forge-std/=lib/forge-std/src/
+@morphodao/morpho-core-v1/=node_modules/@morphodao/morpho-core-v1/
+@contracts/=lib/morpho-contracts/contracts/
+@forge-std/=lib/forge-std/src/
+forge-std/=lib/morpho-contracts/lib/forge-std/src/
+ds-test/=lib/morpho-contracts/lib/ds-test/src/
+@config/=lib/morpho-contracts/config/eth-mainnet/
+
+@aave/periphery-v3/=lib/periphery-v3/
+@aave/core-v3/=node_modules/@aave/core-v3/
+@openzeppelin/=node_modules/@openzeppelin/
+@rari-capital/=node_modules/@rari-capital
