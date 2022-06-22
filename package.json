@@ -2,25 +2,24 @@
   "name": "morpho-tokenized-vaults",
   "version": "1.0.0",
   "description": "Morpho tokenized vaults contracts",
-  "main": "index.js",
   "directories": {
     "lib": "lib",
     "test": "test"
   },
   "scripts": {
-    "test": "make test"
+    "fix:sol": "prettier --write './contracts/**/*.sol' && prettier --write './test/**/*.sol'",
+    "postinstall": "husky install"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/morpho-labs/morpho-tokenized-vaults.git",
-    "fix:sol": "prettier --write './src/**/*.sol' && prettier --write './test/**/*.sol'",
-    "postinstall": "husky install"
+    "url": "git+https://github.com/morpho-labs/morpho-tokenized-vaults.git"
   },
   "keywords": [
     "defi",
     "blockchain",
     "token",
-    "morpho"
+    "morpho",
+    "vaults"
   ],
   "author": "Morpho Labs",
   "license": "ISC",
@@ -37,7 +36,6 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.5.0",
-    "@openzeppelin/contracts-upgradeable": "4.5.2",
-    "@rari-capital/solmate": "6.2.0"
+    "@openzeppelin/contracts-upgradeable": "4.5.2"
   }
 }

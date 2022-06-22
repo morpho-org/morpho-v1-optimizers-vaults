@@ -1,57 +1,76 @@
 -include .env.local
+.EXPORT_ALL_VARIABLES:
 
-export DAPP_REMAPPINGS=@config/=config/$(NETWORK)/
+PROTOCOL?=compound
+NETWORK?=eth-mainnet
+CHAIN_ID?=1
+
+FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
+FOUNDRY_FORK_BLOCK_NUMBER?=14292587
+
+DAPP_REMAPPINGS?=@config/=config/${NETWORK}/${PROTOCOL}/
+
+ifeq (${NETWORK}, eth-mainnet)
+  DAPP_REMAPPINGS=@config/=config/${NETWORK}/
+endif
+
+ifeq (${NETWORK}, polygon-mainnet)
+  FOUNDRY_FORK_BLOCK_NUMBER=29116728
+endif
 
 ifeq (${NETWORK}, avalanche-mainnet)
-  export FOUNDRY_ETH_RPC_URL=https://api.avax.network/ext/bc/C/rpc
-  export FOUNDRY_FORK_BLOCK_NUMBER=15675271
-  export DAPP_REMAPPINGS=@config/=config/$(NETWORK)/${PROTOCOL}/
+  FOUNDRY_FORK_BLOCK_NUMBER=15675271
+  FOUNDRY_ETH_RPC_URL=https://api.avax.network/ext/bc/C/rpc
 else
-  export FOUNDRY_ETH_RPC_URL=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
-
-  ifeq (${NETWORK}, eth-mainnet)
-    export FOUNDRY_FORK_BLOCK_NUMBER=14292587
-  else ifeq (${NETWORK}, polygon-mainnet)
-    export FOUNDRY_FORK_BLOCK_NUMBER=29116728
-    export DAPP_REMAPPINGS=@config/=config/$(NETWORK)/${PROTOCOL}/
-  endif
 endif
 
-ifeq (${PROTOCOL}, aave-v3)
-  export FOUNDRY_SOLC_VERSION=0.8.10
-else
-  export FOUNDRY_SOLC_VERSION=0.8.13
+ifneq (, $(filter ${NETWORK}, ropsten rinkeby))
+  FOUNDRY_ETH_RPC_URL=https://${NETWORK}.infura.io/v3/${INFURA_PROJECT_ID}
 endif
+
+install:
+	@yarn
+	@foundryup
+	@git submodule update --init --recursive
 
 test:
 	@echo Running all ${PROTOCOL} tests on ${NETWORK}
-	@forge test --use solc:${FOUNDRY_SOLC_VERSION} -vv -c test/${PROTOCOL}
+	@forge test -vv -c test/${PROTOCOL}
 
 test-ansi:
 	@echo Running all ${PROTOCOL} tests on ${NETWORK}
-	@forge test --use solc:${FOUNDRY_SOLC_VERSION} -vv -c test/${PROTOCOL} > trace.ansi
+	@forge test -vv -c test/${PROTOCOL} > trace.ansi
 
-fuzz:
-	@echo Running all ${PROTOCOL} fuzzing tests on ${NETWORK}
-	@forge test --use solc:${FOUNDRY_SOLC_VERSION} -vv -c test/fuzzing/${PROTOCOL}
-
-gas-report:
-	@echo Creating gas consumption report for ${PROTOCOL} on ${NETWORK}
-	@forge test --use solc:${FOUNDRY_SOLC_VERSION} -vvv -c test/${PROTOCOL} --gas-report
-
-test-common:
-	@echo Running all common tests on ${NETWORK}
-	@forge test --use solc:0.8.13 -vvv -c test/common
+test-html:
+	@echo Running all ${PROTOCOL} tests on ${NETWORK}
+	@forge test -vv -c test/${PROTOCOL} | aha --black > trace.html
 
 contract-% c-%:
 	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test --use solc:${FOUNDRY_SOLC_VERSION} -vvv -c test/${PROTOCOL} --match-contract $* > trace.ansi
+	@forge test -vvv -c test/${PROTOCOL}/$*.t.sol --match-contract $*
+
+ansi-c-%:
+	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
+	@forge test -vvv -c test/${PROTOCOL}/$*.t.sol --match-contract $* > trace.ansi
+
+html-c-%:
+	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
+	@forge test -vvv -c test/${PROTOCOL}/$*.t.sol --match-contract $* | aha --black > trace.html
 
 single-% s-%:
 	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
-	@forge test --use solc:${FOUNDRY_SOLC_VERSION} -vvvvv -c test/${PROTOCOL} --match-test $* > trace.ansi
+	@forge test -vvv -c test/${PROTOCOL} --match-test $*
+
+ansi-s-%:
+	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
+	@forge test -vvvvv -c test/${PROTOCOL} --match-test $* > trace.ansi
+
+html-s-%:
+	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
+	@forge test -vvvvv -c test/${PROTOCOL} --match-test $* | aha --black > trace.html
 
 config:
-	forge config
+	@forge config
 
-.PHONY: test config common
+
+.PHONY: test config common foundry

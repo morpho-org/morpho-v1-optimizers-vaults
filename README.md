@@ -6,47 +6,43 @@ This repository contains the Morpho tokeneized vaults contracts.
 
 ---
 
-## Testing with Foundry 🔨
+## Testing with [Foundry](https://github.com/foundry-rs/foundry) 🔨
 
 Tests are run against a forks of real networks, which allows us to interact directly with liquidity pools of Compound or Aave. Note that you need to have an RPC provider that have access to Ethereum or Polygon.
 
-For testing, first, install dependencies with:
+For testing, make sure `yarn` and `foundry` are installed and install dependencies (node_modules, git submodules) with:
 
 ```bash
-yarn
+make install
 ```
 
-Then, install [Foundry](https://github.com/gakonst/foundry):
+Alternatively, if you only want to set up
 
-Run the command below to get foundryup, the Foundry toolchain installer:
+Refer to the `env.example` for the required environment variable.
+
+In order to have the traces of the run exported as an HTML page, install the aha module.
+
+For OSX users:
 
 ```bash
-curl -L https://foundry.paradigm.xyz | bash
+brew install aha
 ```
 
-If you do not want to use the redirect, feel free to manually download the foundryup installation script from [here](https://github.com/gakonst/foundry).
-
-Then in a new terminal session or after reloading your PATH, run it to get the latest forge and cast binaries:
+For debian users:
 
 ```bash
-foundryup
-```
-
-Finally, update git submodules:
-
-```bash
-git submodule update --init --recursive
+apt install aha
 ```
 
 To run tests on different protocols, navigate a Unix terminal to the root folder of the project and run the command of your choice:
 
-To run every test of a specific protocol (e.g. Morpho-Compound ):
+To run every test of a specific protocol (e.g. for Morpho-Compound):
 
 ```bash
 make test PROTOCOL=compound
 ```
 
-or to run only a specific set of tests of a specific protocol (e.g. Aave V2):
+or to run only a specific set of tests of a specific protocol (e.g. for Morpho-Aave V2):
 
 ```bash
 make c-TestBorrow PROTOCOL=aave-v2
@@ -54,7 +50,7 @@ make c-TestGovernance PROTOCOL=aave-v2
 ...
 ```
 
-or to run individual tests of a specific protocol (e.g. Aave V3):
+or to run individual tests of a specific protocol (e.g. for Morpho-Aave V3):
 
 ```bash
 make s-testShouldCollectTheRightAmountOfFees PROTOCOL=aave-v3
@@ -62,7 +58,7 @@ make s-testShouldReduceTheFeeToRepay PROTOCOL=aave-v3
 ...
 ```
 
-For the other commands, check the `Makefile` file.
+For the other commands, check the [Makefile](./Makefile).
 
 ---
 
@@ -121,3 +117,11 @@ For smart contract reviews, a complete report must have been done, not just a re
 For the guidelines on "How to review contracts and write a report?", you can follow this [link](https://morpho-labs.notion.site/How-to-do-a-Smart-Contract-Review-81d1dc692259463993cc7d81544767d1).
 
 By default, PR are rebased with `dev` before merging to keep a clean historic of commits and the branch is deleted. The same process is done from `dev` to `main`.
+
+## External resources & documentation 📚
+
+- [General documentation](https://morpho-labs.gitbook.io/morpho-documentation/)
+- [Developer documentation](https://morpho-labs.gitbook.io/technical-documentation/)
+- [Whitepaper](https://whitepaper.morpho.best)
+- [Foundry](https://github.com/gakonst/foundry)
+- [Solidity Prettier Plugin](https://github.com/prettier-solidity/prettier-plugin-solidity)
