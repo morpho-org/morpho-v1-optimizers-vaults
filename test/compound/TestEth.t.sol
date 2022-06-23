@@ -1,93 +1,87 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "./TestSetupVaults.sol";
+import "./setup/TestSetup.sol";
 
-contract TestEth is TestSetupVaults {
+contract TestEth is TestSetup {
     using CompoundMath for uint256;
 
     function testShouldDepositEthOnVault() public {
-        uint256 toSupply = 100 ether;
+        uint256 amount = 100 ether;
 
-        uint256 poolSupplyIndex = ICToken(cEth).exchangeRateCurrent();
-        uint256 expectedOnPool = toSupply.div(poolSupplyIndex);
+        supplier1.approve(weth, address(wethSupplyHarvestVault), amount);
+        supplier1.deposit(wethSupplyHarvestVault, amount);
 
-        uint256 balanceBefore = supplier1.balanceOf(wEth);
-        supplier1.approve(wEth, address(wEthSupplyHarvestVault), toSupply);
-        supplier1.depositVault(wEthSupplyHarvestVault, toSupply);
-        uint256 balanceAfter = supplier1.balanceOf(wEth);
-
-        testEquality(ERC20(cEth).balanceOf(address(morpho)), expectedOnPool, "balance of cToken");
-
-        (uint256 inP2P, uint256 onPool) = morpho.supplyBalanceInOf(
-            cEth,
-            address(wEthSupplyHarvestVault)
+        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
+            address(cEth),
+            address(wethSupplyHarvestVault)
         );
 
-        assertEq(inP2P, 0);
-        testEquality(onPool, expectedOnPool);
-        testEquality(balanceAfter, balanceBefore - toSupply);
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(address(cEth));
+        uint256 poolSupplyIndex = cEth.exchangeRateCurrent();
+
+        assertApproxEqAbs(
+            supplyBalance.inP2P.mul(p2pSupplyIndex) + supplyBalance.onPool.mul(poolSupplyIndex),
+            amount,
+            1e10
+        );
     }
 
-    function testShouldWithdrawEthOnVault() public {
-        uint256 toSupply = 1 ether;
+    function testShouldWithdrawethOnVault() public {
+        uint256 amount = 1 ether;
 
-        uint256 poolSupplyIndex = ICToken(cEth).exchangeRateCurrent();
-        uint256 expectedOnPool = toSupply.div(poolSupplyIndex);
+        uint256 poolSupplyIndex = cEth.exchangeRateCurrent();
+        uint256 expectedOnPool = amount.div(poolSupplyIndex);
 
-        uint256 balanceBefore = supplier1.balanceOf(wEth);
-        supplier1.approve(wEth, address(wEthSupplyHarvestVault), toSupply);
-        supplier1.depositVault(wEthSupplyHarvestVault, toSupply);
-        supplier1.withdrawVault(wEthSupplyHarvestVault, expectedOnPool.mul(poolSupplyIndex));
-        uint256 balanceAfter = supplier1.balanceOf(wEth);
+        uint256 balanceBefore = supplier1.balanceOf(weth);
+        supplier1.approve(weth, address(wethSupplyHarvestVault), amount);
+        supplier1.deposit(wethSupplyHarvestVault, amount);
+        supplier1.withdraw(wethSupplyHarvestVault, expectedOnPool.mul(poolSupplyIndex));
+        uint256 balanceAfter = supplier1.balanceOf(weth);
 
-        (uint256 inP2P, uint256 onPool) = morpho.supplyBalanceInOf(
-            cEth,
-            address(wEthSupplyHarvestVault)
+        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
+            address(cEth),
+            address(wethSupplyHarvestVault)
         );
 
-        assertEq(onPool, 0);
-        assertEq(inP2P, 0);
-        assertApproxEq(balanceAfter, balanceBefore, 1e9);
+        assertEq(supplyBalance.onPool, 0);
+        assertEq(supplyBalance.inP2P, 0);
+        assertApproxEqAbs(balanceAfter, balanceBefore, 1e9);
     }
 
     function testShouldClaimAndFoldRewardsOnEthVault() public {
         uint256 amount = 10_000 ether;
 
-        supplier1.approve(wEth, address(wEthSupplyHarvestVault), amount);
-        supplier1.depositVault(wEthSupplyHarvestVault, amount);
+        supplier1.approve(weth, address(wethSupplyHarvestVault), amount);
+        supplier1.deposit(wethSupplyHarvestVault, amount);
 
-        hevm.roll(block.number + 1_000);
+        vm.roll(block.number + 1_000);
 
-        morpho.updateP2PIndexes(cEth);
-        (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
-            cEth,
-            address(wEthSupplyHarvestVault)
+        morpho.updateP2PIndexes(address(cEth));
+        Types.SupplyBalance memory supplyBalanceBefore = morpho.supplyBalanceInOf(
+            address(cEth),
+            address(wethSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = wEthSupplyHarvestVault.harvest(
-            wEthSupplyHarvestVault.maxHarvestingSlippage()
+        (uint256 rewardsAmount, uint256 rewardsFee) = wethSupplyHarvestVault.harvest(
+            wethSupplyHarvestVault.maxHarvestingSlippage()
         );
         uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
-            wEthSupplyHarvestVault.harvestingFee()) / wEthSupplyHarvestVault.MAX_BASIS_POINTS();
+            wethSupplyHarvestVault.harvestingFee()) / wethSupplyHarvestVault.MAX_BASIS_POINTS();
 
-        (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
-            cEth,
-            address(wEthSupplyHarvestVault)
+        Types.SupplyBalance memory supplyBalanceAfter = morpho.supplyBalanceInOf(
+            address(cEth),
+            address(wethSupplyHarvestVault)
         );
 
         assertGt(rewardsAmount, 0, "rewards amount is zero");
         assertEq(
-            balanceOnPoolAfter,
-            balanceOnPoolBefore + rewardsAmount.div(ICToken(cEth).exchangeRateCurrent()),
+            supplyBalanceAfter.onPool,
+            supplyBalanceBefore.onPool + rewardsAmount.div(cEth.exchangeRateCurrent()),
             "unexpected balance on pool"
         );
-        assertEq(
-            ERC20(comp).balanceOf(address(wEthSupplyHarvestVault)),
-            0,
-            "comp amount is not zero"
-        );
+        assertEq(comp.balanceOf(address(wethSupplyHarvestVault)), 0, "comp amount is not zero");
         assertEq(rewardsFee, expectedRewardsFee, "unexpected rewards fee amount");
-        assertEq(ERC20(wEth).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+        assertEq(weth.balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 }

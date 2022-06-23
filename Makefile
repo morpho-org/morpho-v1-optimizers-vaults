@@ -6,13 +6,9 @@ NETWORK?=eth-mainnet
 CHAIN_ID?=1
 
 FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
-FOUNDRY_FORK_BLOCK_NUMBER?=14292587
+FOUNDRY_FORK_BLOCK_NUMBER?=15013615
 
-DAPP_REMAPPINGS?=@config/=config/${NETWORK}/${PROTOCOL}/
-
-ifeq (${NETWORK}, eth-mainnet)
-  DAPP_REMAPPINGS=@config/=config/${NETWORK}/
-endif
+DAPP_REMAPPINGS?=@config/=test/${PROTOCOL}/config/${NETWORK}/
 
 ifeq (${NETWORK}, polygon-mainnet)
   FOUNDRY_FORK_BLOCK_NUMBER=29116728
