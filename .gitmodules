@@ -1,9 +1,8 @@
 [submodule "lib/morpho-contracts"]
 	path = lib/morpho-contracts
 	url = https://github.com/morpho-labs/morpho-contracts
-[submodule "lib/forge-std"]
-	path = lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
+	ignore = dirty
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/Rari-Capital/solmate
+	ignore = dirty
