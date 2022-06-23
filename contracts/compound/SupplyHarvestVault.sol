@@ -189,4 +189,23 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
         asset.safeTransfer(msg.sender, rewardsFee_);
     }
+
+    /// INTERNAL ///
+
+    function _beforeWithdraw(
+        address,
+        uint256 _amount,
+        uint256
+    ) internal override {
+        morpho.withdraw(address(poolToken), _amount);
+    }
+
+    function _afterDeposit(
+        address,
+        uint256 _amount,
+        uint256
+    ) internal override {
+        asset.safeApprove(address(morpho), _amount);
+        morpho.supply(address(poolToken), address(this), _amount);
+    }
 }

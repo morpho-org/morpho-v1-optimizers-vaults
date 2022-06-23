@@ -92,7 +92,7 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     /// @param _amount The amount of underlying asset to deposit.
     /// @param _receiver The address of the owner of the shares minted.
     /// @return shares_ The number of shares minted, associated to the deposit.
-    function deposit(uint256 _amount, address _receiver) public virtual returns (uint256 shares_) {
+    function deposit(uint256 _amount, address _receiver) public returns (uint256 shares_) {
         // Check for rounding error since we round down in previewDeposit.
         if ((shares_ = previewDeposit(_amount)) == 0) revert ShareIsZero();
 
@@ -103,14 +103,14 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
         emit Deposit(msg.sender, _receiver, _amount, shares_);
 
-        _afterDeposit(_amount, shares_);
+        _afterDeposit(_receiver, _amount, shares_);
     }
 
     /// @notice Mints a given amount of shares to the receiver, computing the associated required amount of the underlying asset.
     /// @param _shares The amount of shares to mint.
     /// @param _receiver The address of the owner of the shares minted.
     /// @return amount_ The amount of the underlying asset deposited.
-    function mint(uint256 _shares, address _receiver) public virtual returns (uint256 amount_) {
+    function mint(uint256 _shares, address _receiver) public returns (uint256 amount_) {
         amount_ = previewMint(_shares); // No need to check for rounding error, previewMint rounds up.
 
         // Need to transfer before minting or ERC777s could reenter.
@@ -120,7 +120,7 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
         emit Deposit(msg.sender, _receiver, amount_, _shares);
 
-        _afterDeposit(amount_, _shares);
+        _afterDeposit(_receiver, amount_, _shares);
     }
 
     /// @notice Withdraws a given amount of the underlying asset from the vault, burning shares of the owner.
@@ -132,12 +132,12 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         uint256 _amount,
         address _receiver,
         address _owner
-    ) public virtual returns (uint256 shares_) {
+    ) public returns (uint256 shares_) {
         shares_ = previewWithdraw(_amount); // No need to check for rounding error, previewWithdraw rounds up.
 
         if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, shares_);
 
-        _beforeWithdraw(_amount, shares_);
+        _beforeWithdraw(_owner, _amount, shares_);
 
         _burn(_owner, shares_);
 
@@ -155,13 +155,13 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         uint256 _shares,
         address _receiver,
         address _owner
-    ) public virtual returns (uint256 amount_) {
+    ) public returns (uint256 amount_) {
         if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, _shares);
 
         // Check for rounding error since we round down in previewRedeem.
         if ((amount_ = previewRedeem(_shares)) == 0) revert AmountIsZero();
 
-        _beforeWithdraw(amount_, _shares);
+        _beforeWithdraw(_owner, amount_, _shares);
 
         _burn(_owner, _shares);
 
@@ -224,7 +224,15 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
     /// INTERNAL ///
 
-    function _beforeWithdraw(uint256 _amount, uint256 _shares) internal virtual {}
+    function _beforeWithdraw(
+        address _owner,
+        uint256 _amount,
+        uint256 _shares
+    ) internal virtual {}
 
-    function _afterDeposit(uint256 _amount, uint256 _shares) internal virtual {}
+    function _afterDeposit(
+        address _owner,
+        uint256 _amount,
+        uint256 _shares
+    ) internal virtual {}
 }

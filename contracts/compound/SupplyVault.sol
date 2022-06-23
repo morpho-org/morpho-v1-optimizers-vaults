@@ -49,8 +49,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// EXTERNAL ///
 
-    /// @notice Returns the local COMP rewards state.
-    /// @return The local COMP rewards state.
+    /// @notice Returns the local rewards state.
+    /// @return The local rewards state.
     function getLocalCompRewardsState()
         external
         view
@@ -78,11 +78,30 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// INTERNAL ///
 
-    /// @notice Accrues unclaimed COMP rewards for the cToken addresses and returns the total unclaimed COMP rewards.
+    function _beforeWithdraw(
+        address _user,
+        uint256 _amount,
+        uint256
+    ) internal override {
+        _accrueUserUnclaimedRewards(_user);
+
+        morpho.withdraw(address(poolToken), _amount);
+    }
+
+    function _afterDeposit(
+        address _user,
+        uint256 _amount,
+        uint256
+    ) internal override {
+        _accrueUserUnclaimedRewards(_user);
+
+        asset.safeApprove(address(morpho), _amount);
+        morpho.supply(address(poolToken), address(this), _amount);
+    }
+
+    /// @notice Accrues unclaimed rewards for the cToken addresses and returns the total unclaimed rewards.
     /// @param _user The address of the user.
-    function _accrueUserUnclaimedRewards(
-        address _user // ! Needs to get called everytime a user supplies/withdraws
-    ) internal {
+    function _accrueUserUnclaimedRewards(address _user) internal {
         _updateRewardsIndex();
         userUnclaimedCompRewards[_user] += _accrueCompRewards(
             _user,
@@ -90,20 +109,23 @@ contract SupplyVault is SupplyVaultUpgradeable {
         );
     }
 
-    /// @notice Updates supplier index and returns the accrued COMP rewards of the supplier since the last update.
+    /// @notice Updates supplier index and returns the accrued rewards of the supplier since the last update.
     /// @param _user The address of the supplier.
     /// @param _balance The user balance of tokens in the distribution.
-    /// @return The accrued COMP rewards.
-    function _accrueCompRewards(address _user, uint256 _balance) internal returns (uint256) {
-        uint256 rewardsIndex = localCompRewardsState.index;
+    /// @return accruedRewards_ The amount of accrued rewards.
+    function _accrueCompRewards(address _user, uint256 _balance)
+        internal
+        returns (uint256 accruedRewards_)
+    {
+        uint256 currentRewardsIndex = localCompRewardsState.index;
         uint256 userRewardsIndex = compRewardsIndex[_user];
-        compRewardsIndex[_user] = rewardsIndex;
+        compRewardsIndex[_user] = currentRewardsIndex;
 
-        if (userRewardsIndex == 0) return 0;
-        return (_balance * (rewardsIndex - userRewardsIndex)) / 1e36;
+        if (userRewardsIndex != 0)
+            accruedRewards_ = (_balance * (currentRewardsIndex - userRewardsIndex)) / 1e36;
     }
 
-    /// @notice Updates the COMP rewards index.
+    /// @notice Updates the rewards index.
     function _updateRewardsIndex() internal {
         IComptroller.CompMarketState memory _localCompRewardsState = localCompRewardsState;
 
