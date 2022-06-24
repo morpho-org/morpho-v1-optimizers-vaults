@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "@morpho-contracts/contracts/compound/libraries/Types.sol";
 
+import "@vaults/compound/SupplyVault.sol";
 import "@vaults/compound/SupplyHarvestVault.sol";
 
 import {User} from "../helpers/User.sol";
@@ -19,14 +20,22 @@ contract TestSetup is Config, Test {
     uint256 public constant INITIAL_BALANCE = 10_000_000;
 
     ProxyAdmin public proxyAdmin;
+    TransparentUpgradeableProxy internal wethSupplyVaultProxy;
     TransparentUpgradeableProxy internal wethSupplyHarvestVaultProxy;
 
+    SupplyVault internal supplyVaultImplV1;
     SupplyHarvestVault internal supplyHarvestVaultImplV1;
 
+    SupplyVault internal wethSupplyVault;
+    SupplyVault internal daiSupplyVault;
+    SupplyVault internal usdcSupplyVault;
     SupplyHarvestVault internal wethSupplyHarvestVault;
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
 
+    ERC20 mcWeth;
+    ERC20 mcDai;
+    ERC20 mcUsdc;
     ERC20 mchWeth;
     ERC20 mchDai;
     ERC20 mchUsdc;
@@ -51,7 +60,9 @@ contract TestSetup is Config, Test {
     function initContracts() internal {
         proxyAdmin = new ProxyAdmin();
 
+        supplyVaultImplV1 = new SupplyVault();
         supplyHarvestVaultImplV1 = new SupplyHarvestVault();
+
         wethSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
             address(supplyHarvestVaultImplV1),
             address(proxyAdmin),
@@ -117,6 +128,43 @@ contract TestSetup is Config, Test {
             address(cComp)
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
+
+        wethSupplyVaultProxy = new TransparentUpgradeableProxy(
+            address(supplyVaultImplV1),
+            address(proxyAdmin),
+            ""
+        );
+        wethSupplyVault = SupplyVault(address(wethSupplyVaultProxy));
+        wethSupplyVault.initialize(
+            address(morpho),
+            address(cEth),
+            "MorphoCompoundWETH",
+            "mcWETH",
+            0
+        );
+        mcWeth = ERC20(address(wethSupplyVault));
+
+        daiSupplyVault = SupplyVault(
+            address(
+                new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
+            )
+        );
+        daiSupplyVault.initialize(address(morpho), address(cDai), "MorphoCompoundDAI", "mcDAI", 0);
+        mcDai = ERC20(address(daiSupplyVault));
+
+        usdcSupplyVault = SupplyVault(
+            address(
+                new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
+            )
+        );
+        usdcSupplyVault.initialize(
+            address(morpho),
+            address(cUsdc),
+            "MorphoCompoundUSDC",
+            "mcUSDC",
+            0
+        );
+        mcUsdc = ERC20(address(usdcSupplyVault));
     }
 
     function initUsers() internal {
@@ -162,5 +210,9 @@ contract TestSetup is Config, Test {
         vm.label(address(wethSupplyHarvestVault), "SupplyHarvestVault (WETH)");
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
+    }
+
+    function bytes32ToAddress(bytes32 _bytes) internal pure returns (address) {
+        return address(uint160(uint256(_bytes)));
     }
 }
