@@ -17,7 +17,7 @@ contract TestSupplyHarvestVault is TestSetup {
             address(daiSupplyHarvestVault)
         );
 
-        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(address(cEth));
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(address(cDai));
         uint256 poolSupplyIndex = cDai.exchangeRateCurrent();
 
         assertGt(daiSupplyHarvestVault.balanceOf(address(supplier1)), 0, "mchDAI balance is zero");
@@ -46,7 +46,7 @@ contract TestSupplyHarvestVault is TestSetup {
         assertApproxEqAbs(
             daiSupplyHarvestVault.balanceOf(address(supplier1)),
             0,
-            10,
+            1e3,
             "mcDAI balance not zero"
         );
         assertEq(supplyBalance.onPool, 0, "onPool amount not zero");
@@ -253,17 +253,5 @@ contract TestSupplyHarvestVault is TestSetup {
 
         vm.expectRevert("Too little received");
         daiSupplyHarvestVault.harvest(100);
-    }
-
-    function testShouldNotAllowZeroSlippage() public {
-        uint256 amount = 10_000 ether;
-
-        supplier1.approve(dai, address(daiSupplyHarvestVault), amount);
-        supplier1.deposit(daiSupplyHarvestVault, amount);
-
-        vm.roll(block.number + 1_000);
-
-        vm.expectRevert("Too little received");
-        daiSupplyHarvestVault.harvest(0);
     }
 }
