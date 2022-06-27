@@ -154,4 +154,66 @@ contract TestSupplyVault is TestSetup {
         vm.expectRevert("ERC20: burn amount exceeds balance");
         supplier1.redeem(daiSupplyVault, shares + 1);
     }
+
+    function testShouldClaimRewards() public {
+        uint256 amount = 10_000 ether;
+
+        supplier1.approve(dai, address(daiSupplyVault), amount);
+        supplier1.deposit(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        uint256 balanceBefore = supplier1.balanceOf(comp);
+
+        uint256 rewardsAmount = daiSupplyVault.claimRewards(address(supplier1));
+
+        uint256 balanceAfter = supplier1.balanceOf(comp);
+
+        assertEq(comp.balanceOf(address(daiSupplyVault)), 0, "non zero comp balance on vault");
+        assertEq(balanceAfter, balanceBefore + rewardsAmount, "unexpected comp balance");
+    }
+
+    function testShouldClaimTwiceRewardsWhenDepositedForSameAmountAndTwiceDuration() public {
+        uint256 amount = 10_000 ether;
+
+        supplier1.approve(dai, address(daiSupplyVault), amount);
+        supplier1.deposit(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        supplier2.approve(dai, address(daiSupplyVault), amount);
+        supplier2.deposit(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(supplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(supplier2));
+
+        assertEq(rewardsAmount1, 2 * rewardsAmount2, "unexpected rewards amount");
+    }
+
+    function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration() public {
+        uint256 amount = 10_000 ether;
+
+        supplier1.approve(dai, address(daiSupplyVault), amount);
+        uint256 shares1 = supplier1.deposit(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        supplier2.approve(dai, address(daiSupplyVault), amount);
+        uint256 shares2 = supplier2.deposit(daiSupplyVault, amount);
+        supplier1.redeem(daiSupplyVault, shares1 / 2);
+
+        vm.roll(block.number + 1_000);
+
+        supplier1.redeem(daiSupplyVault, shares1 / 2);
+        supplier2.redeem(daiSupplyVault, shares2 / 2);
+
+        vm.roll(block.number + 1_000);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(supplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(supplier2));
+
+        assertEq(rewardsAmount1, rewardsAmount2, "unexpected rewards amount");
+    }
 }
