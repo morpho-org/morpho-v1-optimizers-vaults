@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@contracts/compound/interfaces/compound/ICompound.sol";
-import "@contracts/compound/interfaces/IMorpho.sol";
+import "@aave/core-v3/contracts/interfaces/IAToken.sol";
+import "@aave/core-v3/contracts/interfaces/IPool.sol";
+import "@contracts/aave-v3/interfaces/IMorpho.sol";
 
-import "@contracts/compound/libraries/CompoundMath.sol";
-import "@contracts/compound/libraries/Types.sol";
+import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
+import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import "@contracts/aave-v3/libraries/Types.sol";
 
 import "../ERC4626Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -13,15 +15,17 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 /// @title SupplyVaultUpgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault abstract implementation for Morpho-Compound.
+/// @notice ERC4626-upgradeable tokenized Vault abstract implementation for Morpho-Aave V3.
 abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
-    using CompoundMath for uint256;
+    using PercentageMath for uint256;
+    using WadRayMath for uint256;
 
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
-    ICToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    IAToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    IPool public pool;
 
     bool public isEth; // Whether the underlying asset is WETH.
     address public wEth; // The address of WETH token.
@@ -37,15 +41,17 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     function __SupplyVault_init(
         address _morphoAddress,
         address _poolTokenAddress,
+        address _poolAddress,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
+        pool = IPool(_poolAddress);
         __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
 
         __Ownable_init();
         __ERC4626_init(
-            ERC20(isEth ? wEth : poolToken.underlying()),
+            ERC20(poolToken.UNDERLYING_ASSET_ADDRESS()),
             _name,
             _symbol,
             _initialDeposit
@@ -75,8 +81,9 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         );
 
         return
-            supplyBalance.onPool.mul(poolToken.exchangeRateStored()) +
-            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(address(poolToken)));
+            supplyBalance.onPool.rayMul(
+                pool.getReserveNormalizedIncome(poolToken.UNDERLYING_ASSET_ADDRESS())
+            ) + supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(address(poolToken)));
     }
 
     /// INTERNAL ///

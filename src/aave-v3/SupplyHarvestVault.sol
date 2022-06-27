@@ -11,7 +11,8 @@ import "./SupplyVaultUpgradeable.sol";
 /// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
-    using CompoundMath for uint256;
+    using PercentageMath for uint256;
+    using WadRayMath for uint256;
 
     /// EVENTS ///
 
@@ -68,6 +69,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function initialize(
         address _morphoAddress,
         address _poolTokenAddress,
+        address _poolAddress,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
@@ -77,7 +79,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _cComp
     ) external initializer {
-        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+        __SupplyVault_init(
+            _morphoAddress,
+            _poolTokenAddress,
+            _poolAddress,
+            _name,
+            _symbol,
+            _initialDeposit
+        );
         compSwapFee = _compSwapFee;
         assetSwapFee = _assetSwapFee;
         harvestingFee = _harvestingFee;
