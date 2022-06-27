@@ -73,27 +73,29 @@ contract User {
         return redeem(tokenizedVault, _shares, address(this));
     }
 
-    function compoundSupply(address _cTokenAddress, uint256 _amount) external {
+    function compoundSupply(ICToken _cToken, uint256 _amount) external {
         address[] memory marketToEnter = new address[](1);
-        marketToEnter[0] = _cTokenAddress;
+        marketToEnter[0] = address(_cToken);
         comptroller.enterMarkets(marketToEnter);
-        address underlying = ICToken(_cTokenAddress).underlying();
-        ERC20(underlying).safeApprove(_cTokenAddress, type(uint256).max);
-        require(ICToken(_cTokenAddress).mint(_amount) == 0, "Mint fail");
+
+        address underlying = _cToken.underlying();
+        ERC20(underlying).safeApprove(address(_cToken), _amount);
+        require(_cToken.mint(_amount) == 0, "Mint fail");
     }
 
-    function compoundBorrow(address _cTokenAddress, uint256 _amount) external {
-        require(ICToken(_cTokenAddress).borrow(_amount) == 0, "Borrow fail");
+    function compoundBorrow(ICToken _cToken, uint256 _amount) external {
+        require(_cToken.borrow(_amount) == 0, "Borrow fail");
     }
 
-    function compoundWithdraw(address _cTokenAddress, uint256 _amount) external {
-        ICToken(_cTokenAddress).redeemUnderlying(_amount);
+    function compoundWithdraw(ICToken _cToken, uint256 _amount) external {
+        _cToken.redeemUnderlying(_amount);
     }
 
-    function compoundRepay(address _cTokenAddress, uint256 _amount) external {
-        address underlying = ICToken(_cTokenAddress).underlying();
-        ERC20(underlying).safeApprove(_cTokenAddress, type(uint256).max);
-        ICToken(_cTokenAddress).repayBorrow(_amount);
+    function compoundRepay(ICToken _cToken, uint256 _amount) external {
+        address underlying = _cToken.underlying();
+
+        ERC20(underlying).safeApprove(address(_cToken), _amount);
+        _cToken.repayBorrow(_amount);
     }
 
     function compoundClaimRewards(address[] memory assets) external {

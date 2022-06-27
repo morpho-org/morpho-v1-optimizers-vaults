@@ -220,26 +220,22 @@ contract TestSupplyVault is TestSetup {
     function testShouldUpdateSameIndexAsCompound() public {
         uint256 amount = 10_000 ether;
 
-        borrower1.approve(weth, amount);
-        borrower1.supply(cEth, amount);
-        borrower1.borrow(cDai, amount);
+        supplier1.approve(dai, address(daiSupplyVault), amount);
+        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
 
-        hevm.roll(block.number + 5_000);
+        vm.roll(block.number + 5_000);
 
-        borrower1.approve(dai, cDai, amount);
-        borrower1.compoundSupply(cDai, amount);
-        borrower1.compoundBorrow(cDai, amount / 2);
+        supplier1.redeem(daiSupplyVault, shares);
 
-        hevm.roll(block.number + 5_000);
+        supplier1.compoundSupply(cDai, amount);
 
-        borrower1.approve(dai, amount / 2);
-        borrower1.supply(cDai, amount / 2);
+        vm.roll(block.number + 5_000);
 
-        hevm.roll(block.number + 5_000);
+        uint256 userRewardsIndex = daiSupplyVault.compRewardsIndex(address(supplier1));
+        IComptroller.CompMarketState memory compoundState = comptroller.compSupplyState(
+            address(cDai)
+        );
 
-        uint256 userIndexAfter = rewardsManager.compBorrowerIndex(cDai, address(borrower1));
-        IComptroller.CompMarketState memory compoundAfter = comptroller.compBorrowState(cDai);
-
-        assertEq(userIndexAfter, compoundAfter.index);
+        assertEq(userRewardsIndex, compoundState.index);
     }
 }
