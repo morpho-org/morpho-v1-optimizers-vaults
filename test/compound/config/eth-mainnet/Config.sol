@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@morpho-contracts/contracts/compound/interfaces/compound/ICompound.sol";
-import "@morpho-contracts/contracts/compound/interfaces/IMorpho.sol";
-import "@morpho-contracts/contracts/compound/interfaces/ILens.sol";
+import "@contracts/compound/interfaces/compound/ICompound.sol";
+import "@contracts/compound/interfaces/IMorpho.sol";
+import "@contracts/compound/interfaces/ILens.sol";
 
 import "@rari-capital/solmate/src/tokens/ERC20.sol";
 

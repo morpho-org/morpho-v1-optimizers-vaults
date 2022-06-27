@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "@morpho-contracts/contracts/compound/libraries/Types.sol";
+import "@contracts/compound/libraries/Types.sol";
 
 import "@vaults/compound/SupplyVault.sol";
 import "@vaults/compound/SupplyHarvestVault.sol";

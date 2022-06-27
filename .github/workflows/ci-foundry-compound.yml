@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-          ssh-key: ${{ secrets.MORPHO_CONTRACTS_DEPLOY_KEY }}
+          ssh-key: ${{ secrets.CI_PRIVATE_KEY }}
 
       - uses: actions/setup-node@v3
         with:

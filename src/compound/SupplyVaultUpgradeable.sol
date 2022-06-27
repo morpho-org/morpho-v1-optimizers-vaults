@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@morpho-contracts/contracts/compound/interfaces/compound/ICompound.sol";
-import "@morpho-contracts/contracts/compound/interfaces/IMorpho.sol";
+import "@contracts/compound/interfaces/compound/ICompound.sol";
+import "@contracts/compound/interfaces/IMorpho.sol";
 
-import "@morpho-contracts/contracts/compound/libraries/CompoundMath.sol";
-import "@morpho-contracts/contracts/compound/libraries/Types.sol";
+import "@contracts/compound/libraries/CompoundMath.sol";
+import "@contracts/compound/libraries/Types.sol";
 
 import "../ERC4626Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";

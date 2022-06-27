@@ -1,6 +1,6 @@
 [submodule "lib/morpho-contracts"]
 	path = lib/morpho-contracts
-	url = https://github.com/morpho-labs/morpho-contracts
+	url = git@github.com:morpho-labs/morpho-contracts.git
 	ignore = dirty
 [submodule "lib/solmate"]
 	path = lib/solmate

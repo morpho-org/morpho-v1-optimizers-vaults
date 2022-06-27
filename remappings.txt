@@ -1,5 +1,4 @@
 forge-std/=lib/morpho-contracts/lib/forge-std/src/
-@morpho-contracts/=lib/morpho-contracts/
 @rari-capital/solmate/=lib/solmate/
 
 @vaults/=src/
