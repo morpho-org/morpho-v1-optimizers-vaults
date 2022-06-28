@@ -6,7 +6,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;

@@ -8,7 +8,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
@@ -85,6 +85,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         maxHarvestingSlippage = _maxHarvestingSlippage;
 
         cComp = _cComp;
+
+        comp.safeApprove(address(SWAP_ROUTER), type(uint256).max);
     }
 
     /// GOVERNANCE ///
@@ -137,25 +139,18 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     {
         address poolTokenAddress = address(poolToken);
 
-        {
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = poolTokenAddress;
-            morpho.claimRewards(poolTokenAddresses, false);
-        }
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = poolTokenAddress;
+        morpho.claimRewards(poolTokenAddresses, false);
 
-        uint256 amountOutMinimum;
-        {
-            claimedAmount = comp.balanceOf(address(this)); // TODO: remove this once upgrade deployed on mainnet
+        claimedAmount = comp.balanceOf(address(this)); // TODO: remove this once upgrade deployed on mainnet
 
-            ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
-            amountOutMinimum = claimedAmount
-            .mul(oracle.getUnderlyingPrice(cComp))
-            .div(oracle.getUnderlyingPrice(poolTokenAddress))
-            .mul(MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))
-            .div(MAX_BASIS_POINTS);
-        }
+        ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
+        uint256 amountOutMinimum = (claimedAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
+            oracle.getUnderlyingPrice(poolTokenAddress)
+        ) * (MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))) /
+            MAX_BASIS_POINTS;
 
-        comp.safeApprove(address(SWAP_ROUTER), claimedAmount);
         claimedAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
@@ -174,12 +169,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             })
         );
 
-        rewardsFee = (claimedAmount * harvestingFee) / MAX_BASIS_POINTS;
-        claimedAmount -= rewardsFee;
+        uint16 _harvestingFee = harvestingFee;
+        if (_harvestingFee > 0) {
+            rewardsFee = (claimedAmount * _harvestingFee) / MAX_BASIS_POINTS;
+            claimedAmount -= rewardsFee;
+        }
 
-        asset.safeApprove(address(morpho), claimedAmount);
         morpho.supply(poolTokenAddress, address(this), claimedAmount);
 
-        asset.safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) asset.safeTransfer(msg.sender, rewardsFee);
     }
 }

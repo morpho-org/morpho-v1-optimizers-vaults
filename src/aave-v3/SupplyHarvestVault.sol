@@ -9,7 +9,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Rewardsound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Rewardsound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
