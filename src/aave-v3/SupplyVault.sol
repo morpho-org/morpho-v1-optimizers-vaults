@@ -58,12 +58,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param _user The address of the user.
     /// @param _reward The address of the reward token
     /// @return The user's rewards in reward token.
-    function getUserRewards(address _user, address _reward)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getUserRewards(address _user, address _reward) external view returns (uint256) {
         return _getUserReward(_user, _reward);
     }
 
@@ -76,25 +71,33 @@ contract SupplyVault is SupplyVaultUpgradeable {
         address _user,
         address _asset,
         address _reward
-    ) external view override returns (uint256) {
+    ) external view returns (uint256) {
         return localAssetData.rewards[_reward].usersData[_user].index;
     }
 
-    /// @notice Claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
-    /// @return rewardsAmount_ The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
-    function claimRewards(address _user) external returns (uint256 rewardsAmount_) {
+    function claimRewards(address _user)
+        external
+        returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+    {
+        rewardsList = rewardsController.getRewardsList();
+        uint256 rewardsListLength = rewardsList.length;
+        claimedAmounts = new uint256[](rewardsListLength);
+
         _updateData(_user);
 
-        // TODO: re-write here.
-        rewardsAmount_ = userUnclaimedCompRewards[_user];
-        if (rewardsAmount_ > 0) {
-            userUnclaimedCompRewards[_user] = 0;
+        for (uint256 i; i < rewardsListLength; ) {
+            uint256 rewardAmount = localAssetData.rewards[rewardsList[i]].usersData[_user].accrued;
 
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = address(poolToken);
-            morpho.claimRewards(poolTokenAddresses, false);
+            if (rewardAmount != 0) {
+                claimedAmounts[i] = rewardAmount;
+                localAssetData.rewards[rewardsList[i]].usersData[_user].accrued = 0;
+            }
 
-            comp.safeTransfer(_user, rewardsAmount_);
+            ERC20(rewardsList[i]).safeTransfer(_user, rewardAmount);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -229,7 +232,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 assetUnit;
         // TODO: store this at initilisation.
         unchecked {
-            assetUnit = 10**rewardsController.getAssetDecimals(_asset);
+            assetUnit = 10**rewardsController.getAssetDecimals(asset);
         }
 
         (, uint256 nextIndex) = _getAssetIndex(
