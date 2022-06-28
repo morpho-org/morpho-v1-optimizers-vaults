@@ -85,6 +85,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         maxHarvestingSlippage = _maxHarvestingSlippage;
 
         cComp = _cComp;
+
+        comp.safeApprove(address(SWAP_ROUTER), type(uint256).max);
     }
 
     /// GOVERNANCE ///
@@ -155,7 +157,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             .div(MAX_BASIS_POINTS);
         }
 
-        comp.safeApprove(address(SWAP_ROUTER), claimedAmount);
         claimedAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
