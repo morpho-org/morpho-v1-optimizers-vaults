@@ -146,11 +146,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         claimedAmount = comp.balanceOf(address(this)); // TODO: remove this once upgrade deployed on mainnet
 
         ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
-        uint256 amountOutMinimum = claimedAmount
-        .mul(oracle.getUnderlyingPrice(cComp))
-        .div(oracle.getUnderlyingPrice(poolTokenAddress))
-        .mul(MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))
-        .div(MAX_BASIS_POINTS);
+        uint256 amountOutMinimum = (claimedAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
+            oracle.getUnderlyingPrice(poolTokenAddress)
+        ) * (MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))) /
+            MAX_BASIS_POINTS;
 
         claimedAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
@@ -170,8 +169,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             })
         );
 
-        if (harvestingFee > 0) {
-            rewardsFee = (claimedAmount * harvestingFee) / MAX_BASIS_POINTS;
+        uint16 _harvestingFee = harvestingFee;
+        if (_harvestingFee > 0) {
+            rewardsFee = (claimedAmount * _harvestingFee) / MAX_BASIS_POINTS;
             claimedAmount -= rewardsFee;
         }
 
