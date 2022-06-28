@@ -34,8 +34,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     IRewardsController public rewardsController;
     IPool public pool;
 
-    bool public isEth; // Whether the underlying asset is WETH.
-    address public wEth; // The address of WETH token.
+    address public wrappedNativeToken;
 
     /// UPGRADE ///
 
@@ -74,9 +73,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         poolToken = IAToken(_poolTokenAddress);
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
-
-        isEth = _poolTokenAddress == morpho.cEth();
-        wEth = morpho.wEth();
     }
 
     /// GOVERNANCE ///
