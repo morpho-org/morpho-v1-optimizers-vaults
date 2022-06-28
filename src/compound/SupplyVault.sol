@@ -9,6 +9,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
+    using FixedPointMathLib for uint256;
     using CompoundMath for uint256;
 
     /// STORAGE ///
@@ -55,7 +56,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             address[] memory poolTokenAddresses = new address[](1);
             poolTokenAddresses[0] = address(poolToken);
-            try morpho.claimRewards(poolTokenAddresses, false) {} catch {}
+            morpho.claimRewards(poolTokenAddresses, false);
 
             comp.safeTransfer(_user, rewardsAmount);
         }
@@ -81,28 +82,32 @@ contract SupplyVault is SupplyVaultUpgradeable {
         view
         returns (uint256 accruedRewards, uint256 currentRewardsIndex)
     {
-        address _poolTokenAddress = address(poolToken);
+        address poolTokenAddress = address(poolToken);
         IComptroller.CompMarketState memory supplyState = comptroller.compSupplyState(
-            _poolTokenAddress
+            poolTokenAddress
         );
 
         uint256 deltaBlocks = block.number - supplyState.block;
-        uint256 supplySpeed = comptroller.compSupplySpeeds(_poolTokenAddress);
+        uint256 supplySpeed = comptroller.compSupplySpeeds(poolTokenAddress);
 
         if (deltaBlocks > 0 && supplySpeed > 0) {
-            uint256 supplyTokens = ICToken(_poolTokenAddress).totalSupply();
-            uint256 compAccrued = deltaBlocks * supplySpeed;
-            uint256 ratio = supplyTokens > 0 ? (compAccrued * 1e36) / supplyTokens : 0;
+            uint256 supplyTokens = ICToken(poolTokenAddress).totalSupply();
+            uint256 ratio = supplyTokens > 0
+                ? (deltaBlocks * supplySpeed * 1e36) / supplyTokens
+                : 0;
 
-            currentRewardsIndex = uint224(supplyState.index + ratio);
+            currentRewardsIndex = supplyState.index + ratio;
         } else currentRewardsIndex = supplyState.index;
 
+        uint256 shares = balanceOf(_user);
+        uint256 totalShares = totalSupply();
         uint256 userRewardsIndex = compRewardsIndex[_user];
-        if (userRewardsIndex != 0)
+        if (userRewardsIndex > 0 && totalShares > 0 && shares > 0)
             accruedRewards =
-                (balanceOf(_user) *
-                    morpho.supplyBalanceInOf(_poolTokenAddress, address(this)).onPool *
-                    (currentRewardsIndex - userRewardsIndex)) /
-                (totalSupply() * 1e36);
+                (morpho.supplyBalanceInOf(poolTokenAddress, address(this)).onPool.mulDivDown(
+                    shares,
+                    totalShares
+                ) * (currentRewardsIndex - userRewardsIndex)) /
+                1e36;
     }
 }

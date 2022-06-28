@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "./setup/TestSetup.sol";
+import "./setup/TestSetupVaults.sol";
 
-contract TestUpgradeable is TestSetup {
+contract TestUpgradeable is TestSetupVaults {
     using CompoundMath for uint256;
 
     function testUpgradeSupplyHarvestVault() public {

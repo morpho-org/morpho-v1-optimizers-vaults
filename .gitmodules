@@ -2,7 +2,4 @@
 	path = lib/morpho-contracts
 	url = git@github.com:morpho-labs/morpho-contracts.git
 	ignore = dirty
-[submodule "lib/solmate"]
-	path = lib/solmate
-	url = https://github.com/Rari-Capital/solmate
-	ignore = dirty
+	branch = dev

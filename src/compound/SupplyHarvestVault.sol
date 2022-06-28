@@ -141,9 +141,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
         address[] memory poolTokenAddresses = new address[](1);
         poolTokenAddresses[0] = poolTokenAddress;
-        morpho.claimRewards(poolTokenAddresses, false);
-
-        claimedAmount = comp.balanceOf(address(this)); // TODO: remove this once upgrade deployed on mainnet
+        claimedAmount = morpho.claimRewards(poolTokenAddresses, false);
 
         ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
         uint256 amountOutMinimum = (claimedAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
