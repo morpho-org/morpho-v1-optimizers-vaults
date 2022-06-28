@@ -16,11 +16,27 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    mapping(address => RewardsDataTypes.AssetData) internal localAssetData; // The local data related to a given market.
+    RewardsDataTypes.AssetData public localAssetData; // The local data related to the market.
+
+    /// EVENTS ///
+
+    /// @dev Emitted when rewards of an asset are accrued on behalf of a user.
+    /// @param _reward The address of the reward token.
+    /// @param _user The address of the user that rewards are accrued on behalf of.
+    /// @param _assetIndex The index of the asset distribution.
+    /// @param _userIndex The index of the asset distribution on behalf of the user.
+    /// @param _rewardsAccrued The amount of rewards accrued.
+    event Accrued(
+        address indexed _reward,
+        address indexed _user,
+        uint256 _assetIndex,
+        uint256 _userIndex,
+        uint256 _rewardsAccrued
+    );
 
     /// UPGRADE ///
 
-    /// @notice Initializes the vault.
+    /// @dev Initializes the vault.
     /// @param _morphoAddress The address of the main Morpho contract.
     /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
@@ -38,21 +54,38 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// EXTERNAL ///
 
-    /// @notice Returns the local rewards state.
-    /// @return The local rewards state.
-    function getLocalCompRewardsState()
+    /// @notice Returns user's rewards for the specificied reward token.
+    /// @param _user The address of the user.
+    /// @param _reward The address of the reward token
+    /// @return The user's rewards in reward token.
+    function getUserRewards(address _user, address _reward)
         external
         view
-        returns (IComptroller.CompMarketState memory)
+        override
+        returns (uint256)
     {
-        return localCompRewardsState;
+        return _getUserReward(_user, _reward);
+    }
+
+    /// @notice Returns the user's index for the specified asset and reward token.
+    /// @param _user The address of the user.
+    /// @param _asset The address of the reference asset of the distribution (aToken or variable debt token).
+    /// @param _reward The address of the reward token.
+    /// @return The user's index.
+    function getUserAssetIndex(
+        address _user,
+        address _asset,
+        address _reward
+    ) external view override returns (uint256) {
+        return localAssetData.rewards[_reward].usersData[_user].index;
     }
 
     /// @notice Claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @return rewardsAmount_ The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
     function claimRewards(address _user) external returns (uint256 rewardsAmount_) {
-        _accrueUserUnclaimedRewards(_user);
+        _updateData(_user);
 
+        // TODO: re-write here.
         rewardsAmount_ = userUnclaimedCompRewards[_user];
         if (rewardsAmount_ > 0) {
             userUnclaimedCompRewards[_user] = 0;
@@ -68,7 +101,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// INTERNAL ///
 
     function _beforeInteraction(address _user) internal override {
-        _accrueUserUnclaimedRewards(_user);
+        _updateData(_user);
     }
 
     /// @dev Updates the state of the distribution for the specified reward.
@@ -135,52 +168,39 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// @dev Iterates and accrues all the rewards for asset of the specific user.
     /// @param _user The user address.
-    /// @param _asset The address of the reference asset of the distribution.
-    /// @param _userBalance The current user asset balance.
-    /// @param _totalSupply The total supply of the asset.
-    function _updateData(
-        address _user,
-        address _asset,
-        uint256 _userBalance,
-        uint256 _totalSupply
-    ) internal {
-        address[] memory availableRewards = rewardsController.getRewardsByAsset(_asset);
+    function _updateData(address _user) internal {
+        address $asset = asset;
+        address[] memory availableRewards = rewardsController.getRewardsByAsset($asset);
         uint256 numAvailableRewards = availableRewards.length;
         if (numAvailableRewards == 0) return;
 
         unchecked {
-            uint256 assetUnit = 10**rewardsController.getAssetDecimals(_asset);
+            uint256 assetUnit = 10**rewardsController.getAssetDecimals($asset);
 
             for (uint128 i; i < numAvailableRewards; ++i) {
                 address reward = availableRewards[i];
-                RewardsDataTypes.RewardData storage localRewardData = localAssetData[_asset]
-                .rewards[reward];
+                RewardsDataTypes.RewardData storage localRewardData = localAssetData.rewards[
+                    reward
+                ];
 
                 (uint256 newAssetIndex, bool rewardDataUpdated) = _updateRewardData(
                     localRewardData,
-                    _asset,
+                    $asset,
                     reward,
-                    _totalSupply,
+                    IScaledBalanceToken(address(poolToken)).scaledTotalSupply(),
                     assetUnit
                 );
 
                 (uint256 rewardsAccrued, bool userDataUpdated) = _updateUserData(
                     localRewardData,
                     _user,
-                    _userBalance,
+                    balanceOf(_user),
                     newAssetIndex,
                     assetUnit
                 );
 
                 if (rewardDataUpdated || userDataUpdated)
-                    emit Accrued(
-                        _asset,
-                        reward,
-                        _user,
-                        newAssetIndex,
-                        newAssetIndex,
-                        rewardsAccrued
-                    );
+                    emit Accrued(reward, _user, newAssetIndex, newAssetIndex, rewardsAccrued);
             }
         }
     }
@@ -188,63 +208,41 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @dev Returns the accrued unclaimed amount of a reward from a user over a list of distribution.
     /// @param _user The address of the user.
     /// @param _reward The address of the reward token.
-    /// @param _userAssetBalances List of structs with the user balance and total supply of a set of assets.
     /// @return unclaimedRewards The accrued rewards for the user until the moment.
-    function _getUserReward(
-        address _user,
-        address _reward,
-        RewardsDataTypes.UserAssetBalance[] memory _userAssetBalances
-    ) internal view returns (uint256 unclaimedRewards) {
-        uint256 userAssetBalancesLength = _userAssetBalances.length;
-
-        // Add unrealized rewards.
-        for (uint256 i; i < userAssetBalancesLength; ) {
-            if (_userAssetBalances[i].userBalance == 0) continue;
-
-            unclaimedRewards +=
-                _getPendingRewards(_user, _reward, _userAssetBalances[i]) +
-                localAssetData[_userAssetBalances[i].asset]
-                .rewards[_reward]
-                .usersData[_user]
-                .accrued;
-
-            unchecked {
-                ++i;
-            }
-        }
+    function _getUserReward(address _user, address _reward)
+        internal
+        view
+        returns (uint256 unclaimedRewards)
+    {
+        unclaimedRewards +=
+            _getPendingRewards(_user, _reward) +
+            localAssetData.rewards[_reward].usersData[_user].accrued;
     }
 
     /// @dev Computes the pending (not yet accrued) rewards since the last user action.
     /// @param _user The address of the user.
     /// @param _reward The address of the reward token.
-    /// @param _userAssetBalance The struct with the user balance and total supply of the incentivized asset.
     /// @return The pending rewards for the user since the last user action.
-    function _getPendingRewards(
-        address _user,
-        address _reward,
-        RewardsDataTypes.UserAssetBalance memory _userAssetBalance
-    ) internal view returns (uint256) {
-        RewardsDataTypes.RewardData storage localRewardData = localAssetData[
-            _userAssetBalance.asset
-        ]
-        .rewards[_reward];
+    function _getPendingRewards(address _user, address _reward) internal view returns (uint256) {
+        RewardsDataTypes.RewardData storage localRewardData = localAssetData.rewards[_reward];
 
         uint256 assetUnit;
+        // TODO: store this at initilisation.
         unchecked {
-            assetUnit = 10**rewardsController.getAssetDecimals(_userAssetBalance.asset);
+            assetUnit = 10**rewardsController.getAssetDecimals(_asset);
         }
 
         (, uint256 nextIndex) = _getAssetIndex(
             localRewardData,
-            _userAssetBalance.asset,
+            asset,
             _reward,
-            _userAssetBalance.totalSupply,
+            IScaledBalanceToken(address(poolToken)).scaledTotalSupply(),
             assetUnit
         );
 
         return
             _getRewards(
-                _userAssetBalance.userBalance,
+                balanceOf(_user),
                 nextIndex,
                 localRewardData.usersData[_user].index,
                 assetUnit
@@ -309,44 +307,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
                 firstTerm := div(firstTerm, _totalSupply)
             }
             return (_localRewardData.index, (firstTerm + rewardIndex));
-        }
-    }
-
-    /// @dev Returns user balances and total supply of all the assets specified by the assets parameter.
-    /// @param _assets List of assets to retrieve user balance and total supply.
-    /// @param _user The address of the user.
-    /// @return userAssetBalances The list of structs with user balance and total supply of the given assets.
-    function _getUserAssetBalances(address[] calldata _assets, address _user)
-        internal
-        view
-        returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances)
-    {
-        uint256 assetsLength = _assets.length;
-        userAssetBalances = new RewardsDataTypes.UserAssetBalance[](assetsLength);
-
-        for (uint256 i; i < assetsLength; ) {
-            address asset = _assets[i];
-            userAssetBalances[i].asset = asset;
-
-            DataTypes.ReserveData memory reserve = pool.getReserveData(
-                IGetterUnderlyingAsset(userAssetBalances[i].asset).UNDERLYING_ASSET_ADDRESS()
-            );
-
-            if (asset == reserve.aTokenAddress)
-                userAssetBalances[i].userBalance = morpho
-                .supplyBalanceInOf(reserve.aTokenAddress, _user)
-                .onPool;
-            else if (asset == reserve.variableDebtTokenAddress)
-                userAssetBalances[i].userBalance = morpho
-                .borrowBalanceInOf(reserve.aTokenAddress, _user)
-                .onPool;
-            else revert InvalidAsset();
-
-            userAssetBalances[i].totalSupply = IScaledBalanceToken(asset).scaledTotalSupply();
-
-            unchecked {
-                ++i;
-            }
         }
     }
 }
