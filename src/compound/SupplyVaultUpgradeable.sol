@@ -56,7 +56,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     /// @notice Initializes the vault.
     /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.$
+    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
         internal
         onlyInitializing
