@@ -89,7 +89,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         address,
         uint256 _amount,
         uint256
-    ) internal virtual override {
+    ) internal override {
         morpho.withdraw(address(poolToken), _amount);
     }
 
@@ -97,7 +97,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         address,
         uint256 _amount,
         uint256
-    ) internal virtual override {
+    ) internal override {
         asset.safeApprove(address(morpho), _amount);
         morpho.supply(address(poolToken), address(this), _amount);
     }

@@ -91,57 +91,62 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     /// @notice Deposits a given amount of the underlying asset to the vault, minting shares for the receiver.
     /// @param _amount The amount of underlying asset to deposit.
     /// @param _receiver The address of the owner of the shares minted.
-    /// @return shares_ The number of shares minted, associated to the deposit.
-    function deposit(uint256 _amount, address _receiver) public returns (uint256 shares_) {
+    /// @return shares The number of shares minted, associated to the deposit.
+    function deposit(uint256 _amount, address _receiver) public returns (uint256 shares) {
         // Check for rounding error since we round down in previewDeposit.
-        if ((shares_ = previewDeposit(_amount)) == 0) revert ShareIsZero();
+        if ((shares = previewDeposit(_amount)) == 0) revert ShareIsZero();
 
         // Need to transfer before minting or ERC777s could reenter.
         asset.safeTransferFrom(msg.sender, address(this), _amount);
 
-        _mint(_receiver, shares_);
+        _beforeInteraction(_receiver);
 
-        emit Deposit(msg.sender, _receiver, _amount, shares_);
+        _mint(_receiver, shares);
 
-        _afterDeposit(_receiver, _amount, shares_);
+        emit Deposit(msg.sender, _receiver, _amount, shares);
+
+        _afterDeposit(_receiver, _amount, shares);
     }
 
     /// @notice Mints a given amount of shares to the receiver, computing the associated required amount of the underlying asset.
     /// @param _shares The amount of shares to mint.
     /// @param _receiver The address of the owner of the shares minted.
-    /// @return amount_ The amount of the underlying asset deposited.
-    function mint(uint256 _shares, address _receiver) public returns (uint256 amount_) {
-        amount_ = previewMint(_shares); // No need to check for rounding error, previewMint rounds up.
+    /// @return amount The amount of the underlying asset deposited.
+    function mint(uint256 _shares, address _receiver) public returns (uint256 amount) {
+        amount = previewMint(_shares); // No need to check for rounding error, previewMint rounds up.
 
         // Need to transfer before minting or ERC777s could reenter.
-        asset.safeTransferFrom(msg.sender, address(this), amount_);
+        asset.safeTransferFrom(msg.sender, address(this), amount);
+
+        _beforeInteraction(_receiver);
 
         _mint(_receiver, _shares);
 
-        emit Deposit(msg.sender, _receiver, amount_, _shares);
+        emit Deposit(msg.sender, _receiver, amount, _shares);
 
-        _afterDeposit(_receiver, amount_, _shares);
+        _afterDeposit(_receiver, amount, _shares);
     }
 
     /// @notice Withdraws a given amount of the underlying asset from the vault, burning shares of the owner.
     /// @param _amount The amount of the underlying asset to withdraw.
     /// @param _receiver The address of the receiver of the funds.
     /// @param _owner The address of the owner of the shares redeemed.
-    /// @return shares_ The number of shares burned.
+    /// @return shares The number of shares burned.
     function withdraw(
         uint256 _amount,
         address _receiver,
         address _owner
-    ) public returns (uint256 shares_) {
-        shares_ = previewWithdraw(_amount); // No need to check for rounding error, previewWithdraw rounds up.
+    ) public returns (uint256 shares) {
+        shares = previewWithdraw(_amount); // No need to check for rounding error, previewWithdraw rounds up.
 
-        if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, shares_);
+        if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, shares);
 
-        _beforeWithdraw(_owner, _amount, shares_);
+        _beforeInteraction(_receiver);
+        _beforeWithdraw(_owner, _amount, shares);
 
-        _burn(_owner, shares_);
+        _burn(_owner, shares);
 
-        emit Withdraw(msg.sender, _receiver, _owner, _amount, shares_);
+        emit Withdraw(msg.sender, _receiver, _owner, _amount, shares);
 
         asset.safeTransfer(_receiver, _amount);
     }
@@ -150,24 +155,25 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     /// @param _shares The amount of shares to redeem.
     /// @param _receiver The address of the receiver of the funds.
     /// @param _owner The address of the owner of the shares redeemed.
-    /// @return amount_ The amount of the underlying asset withdrawn.
+    /// @return amount The amount of the underlying asset withdrawn.
     function redeem(
         uint256 _shares,
         address _receiver,
         address _owner
-    ) public returns (uint256 amount_) {
+    ) public returns (uint256 amount) {
         if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, _shares);
 
         // Check for rounding error since we round down in previewRedeem.
-        if ((amount_ = previewRedeem(_shares)) == 0) revert AmountIsZero();
+        if ((amount = previewRedeem(_shares)) == 0) revert AmountIsZero();
 
-        _beforeWithdraw(_owner, amount_, _shares);
+        _beforeInteraction(_receiver);
+        _beforeWithdraw(_owner, amount, _shares);
 
         _burn(_owner, _shares);
 
-        emit Withdraw(msg.sender, _receiver, _owner, amount_, _shares);
+        emit Withdraw(msg.sender, _receiver, _owner, amount, _shares);
 
-        asset.safeTransfer(_receiver, amount_);
+        asset.safeTransfer(_receiver, amount);
     }
 
     /// @notice Returns the total amount of the underlying asset deposited through the vault.
@@ -223,6 +229,8 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     }
 
     /// INTERNAL ///
+
+    function _beforeInteraction(address _owner) internal virtual {}
 
     function _beforeWithdraw(
         address _owner,

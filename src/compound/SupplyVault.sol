@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyVault.
@@ -15,8 +13,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    mapping(address => uint256) public userUnclaimedCompRewards; // The unclaimed rewards of the user.
     mapping(address => uint256) public compRewardsIndex; // The comp rewards index of the user.
+    mapping(address => uint256) public userUnclaimedCompRewards; // The unclaimed rewards of the user.
 
     /// UPGRADE ///
 
@@ -38,6 +36,14 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// EXTERNAL ///
 
+    /// @notice Returns the amount of unclaimed COMP rewards for a given user.
+    /// @param _user The address of the user.
+    function getUserUnclaimedRewards(address _user) external view returns (uint256) {
+        (uint256 accruedRewards, ) = _computeUserAccruedRewards(_user);
+
+        return userUnclaimedCompRewards[_user] + accruedRewards;
+    }
+
     /// @notice Claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
     function claimRewards(address _user) external returns (uint256 rewardsAmount) {
@@ -49,7 +55,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             address[] memory poolTokenAddresses = new address[](1);
             poolTokenAddresses[0] = address(poolToken);
-            morpho.claimRewards(poolTokenAddresses, false);
+            try morpho.claimRewards(poolTokenAddresses, false) {} catch {}
 
             comp.safeTransfer(_user, rewardsAmount);
         }
@@ -57,30 +63,24 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// INTERNAL ///
 
-    function _beforeWithdraw(
-        address _user,
-        uint256 _amount,
-        uint256
-    ) internal override {
+    function _beforeInteraction(address _user) internal override {
         _accrueUserUnclaimedRewards(_user);
-
-        morpho.withdraw(address(poolToken), _amount);
-    }
-
-    function _afterDeposit(
-        address _user,
-        uint256 _amount,
-        uint256
-    ) internal override {
-        _accrueUserUnclaimedRewards(_user);
-
-        asset.safeApprove(address(morpho), _amount);
-        morpho.supply(address(poolToken), address(this), _amount);
     }
 
     /// @notice Accrues unclaimed rewards for the cToken addresses and returns the total unclaimed rewards.
     /// @param _user The address of the user.
     function _accrueUserUnclaimedRewards(address _user) internal {
+        (uint256 accruedRewards, uint256 currentRewardsIndex) = _computeUserAccruedRewards(_user);
+
+        compRewardsIndex[_user] = currentRewardsIndex;
+        if (accruedRewards != 0) userUnclaimedCompRewards[_user] += accruedRewards;
+    }
+
+    function _computeUserAccruedRewards(address _user)
+        internal
+        view
+        returns (uint256 accruedRewards, uint256 currentRewardsIndex)
+    {
         address _poolTokenAddress = address(poolToken);
         IComptroller.CompMarketState memory supplyState = comptroller.compSupplyState(
             _poolTokenAddress
@@ -89,7 +89,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 deltaBlocks = block.number - supplyState.block;
         uint256 supplySpeed = comptroller.compSupplySpeeds(_poolTokenAddress);
 
-        uint224 currentRewardsIndex;
         if (deltaBlocks > 0 && supplySpeed > 0) {
             uint256 supplyTokens = ICToken(_poolTokenAddress).totalSupply();
             uint256 compAccrued = deltaBlocks * supplySpeed;
@@ -99,12 +98,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
         } else currentRewardsIndex = supplyState.index;
 
         uint256 userRewardsIndex = compRewardsIndex[_user];
-        compRewardsIndex[_user] = currentRewardsIndex;
-
         if (userRewardsIndex != 0)
-            userUnclaimedCompRewards[_user] +=
-                (morpho.supplyBalanceInOf(_poolTokenAddress, _user).onPool *
+            accruedRewards =
+                (balanceOf(_user) *
+                    morpho.supplyBalanceInOf(_poolTokenAddress, address(this)).onPool *
                     (currentRewardsIndex - userRewardsIndex)) /
-                1e36;
+                (totalSupply() * 1e36);
     }
 }
