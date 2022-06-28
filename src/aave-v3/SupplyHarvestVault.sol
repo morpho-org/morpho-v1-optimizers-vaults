@@ -144,8 +144,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         }
 
         IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
+        uint256 rewardTokensLength = rewardTokens.length;
 
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokensLength; ) {
             ERC20 rewardToken = ERC20(rewardTokens[i]);
             uint256 rewardsAmount = rewardsAmounts[i];
 
@@ -157,7 +158,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
             rewardsAmount = SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
-                    path: asset == wrappedNativeToken
+                    path: underlyingAddress == wrappedNativeToken
                         ? abi.encodePacked(
                             address(rewardToken),
                             rewardsSwapFee[address(rewardToken)],
