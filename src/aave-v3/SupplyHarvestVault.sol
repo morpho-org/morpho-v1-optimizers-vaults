@@ -152,10 +152,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             uint256 rewardsAmount = rewardsAmounts[i];
 
             uint256 amountOutMinimum = rewardsAmount
-            .mul(oracle.getAssetPrice(address(rewardToken)))
-            .div(oracle.getAssetPrice(underlyingAddress))
-            .mul(MAX_BASIS_POINTS - RewardsoundMath.min(_maxSlippage, maxHarvestingSlippage))
-            .div(MAX_BASIS_POINTS);
+            .rayMul(oracle.getAssetPrice(address(rewardToken)))
+            .rayDiv(oracle.getAssetPrice(underlyingAddress))
+            .percentMul(MAX_BASIS_POINTS - Math.min(_maxSlippage, maxHarvestingSlippage));
 
             rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
             rewardsAmount = SWAP_ROUTER.exactInput(
@@ -176,7 +175,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 })
             );
 
-            rewardsFees[i] = (rewardsAmount * harvestingFee) / MAX_BASIS_POINTS;
+            rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
             rewardsAmount -= rewardsFees[i];
 
             asset.safeApprove(address(morpho), rewardsAmount);

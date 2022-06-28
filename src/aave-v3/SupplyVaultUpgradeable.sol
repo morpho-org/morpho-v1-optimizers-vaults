@@ -7,6 +7,7 @@ import "@contracts/aave-v3/interfaces/IMorpho.sol";
 
 import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import "@contracts/aave-v3/libraries/Math.sol";
 import "@contracts/aave-v3/libraries/Types.sol";
 
 import "../ERC4626Upgradeable.sol";
@@ -18,7 +19,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 /// @notice ERC4626-upgradeable tokenized Vault abstract implementation for Morpho-Aave V3.
 abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
-    using PercentageMath for uint256;
     using WadRayMath for uint256;
 
     /// STORAGE ///
