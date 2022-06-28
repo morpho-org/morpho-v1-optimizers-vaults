@@ -64,7 +64,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     /// @notice Initializes the vault.
     /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.$
+    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
         internal
         onlyInitializing
@@ -73,6 +73,11 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         poolToken = IAToken(_poolTokenAddress);
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
+
+        ERC20(IAToken(_poolTokenAddress).UNDERLYING_ASSET_ADDRESS()).safeApprove(
+            _morphoAddress,
+            type(uint256).max
+        );
     }
 
     /// GOVERNANCE ///
@@ -113,7 +118,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         uint256 _amount,
         uint256
     ) internal override {
-        asset.safeApprove(address(morpho), _amount);
         morpho.supply(address(poolToken), address(this), _amount);
     }
 }

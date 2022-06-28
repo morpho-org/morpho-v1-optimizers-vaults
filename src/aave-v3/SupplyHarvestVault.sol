@@ -180,7 +180,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
             rewardsAmount -= rewardsFees[i];
 
-            asset.safeApprove(address(morpho), rewardsAmount);
             morpho.supply(poolTokenAddress, address(this), rewardsAmount);
 
             asset.safeTransfer(msg.sender, rewardsFees[i]);
