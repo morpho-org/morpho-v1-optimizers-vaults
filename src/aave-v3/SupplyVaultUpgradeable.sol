@@ -34,8 +34,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     IRewardsController public rewardsController;
     IPool public pool;
 
-    bool public isEth; // Whether the underlying asset is WETH.
-    address public wEth; // The address of WETH token.
+    address public wrappedNativeToken;
 
     /// UPGRADE ///
 
@@ -65,7 +64,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     /// @dev Initializes the vault whithout initializing parents contracts (avoid the double initialization problem).
     /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.$
+    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
         internal
         onlyInitializing
@@ -75,8 +74,10 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
-        isEth = _poolTokenAddress == morpho.cEth();
-        wEth = morpho.wEth();
+        ERC20(IAToken(_poolTokenAddress).UNDERLYING_ASSET_ADDRESS()).safeApprove(
+            _morphoAddress,
+            type(uint256).max
+        );
     }
 
     /// GOVERNANCE ///
@@ -91,15 +92,15 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
+        address poolTokenAddress = address(poolToken);
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            address(poolToken),
+            poolTokenAddress,
             address(this)
         );
 
         return
-            supplyBalance.onPool.rayMul(
-                pool.getReserveNormalizedIncome(poolToken.UNDERLYING_ASSET_ADDRESS())
-            ) + supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(address(poolToken)));
+            supplyBalance.onPool.rayMul(pool.getReserveNormalizedIncome(asset)) +
+            supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenAddress));
     }
 
     /// INTERNAL ///
@@ -117,7 +118,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         uint256 _amount,
         uint256
     ) internal override {
-        asset.safeApprove(address(morpho), _amount);
         morpho.supply(address(poolToken), address(this), _amount);
     }
 }

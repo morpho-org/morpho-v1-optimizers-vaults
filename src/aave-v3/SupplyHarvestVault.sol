@@ -17,11 +17,11 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
-    /// @notice Emitted when the fee for swapping rewards for WETH is set.
+    /// @notice Emitted when the fee for swapping rewards for wrapped native token is set.
     /// @param newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
     event RewardsSwapFeeSet(address rewardToken, uint24 newRewardsSwapFee);
 
-    /// @notice Emitted when the fee for swapping WETH for the underlying asset is set.
+    /// @notice Emitted when the fee for swapping wrapped native token for the underlying asset is set.
     /// @param newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
     event AssetSwapFeeSet(address rewardToken, uint24 newAssetSwapFee);
 
@@ -51,8 +51,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     uint16 public maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
 
-    mapping(address => uint24) public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for WETH (in UniswapV3 fee unit).
-    mapping(address => uint24) public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for WETH (in UniswapV3 fee unit).
+    mapping(address => uint24) public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for wrapped native token (in UniswapV3 fee unit).
+    mapping(address => uint24) public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for wrapped native token (in UniswapV3 fee unit).
 
     /// UPGRADE ///
 
@@ -81,24 +81,24 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// GOVERNANCE ///
 
-    /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
+    /// @notice Sets the fee taken by the UniswapV3Pool for swapping token rewards for wrapped native token.
     /// @param _rewardToken The address of the reward token.
     /// @param _newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
     function setRewardsSwapFee(address _rewardToken, uint24 _newRewardsSwapFee) external onlyOwner {
         if (_newRewardsSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
         rewardsSwapFee[_rewardToken] = _newRewardsSwapFee;
-        emit RewardsSwapFeeSet(_newRewardsSwapFee);
+        emit RewardsSwapFeeSet(_rewardToken, _newRewardsSwapFee);
     }
 
-    /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
+    /// @notice Sets the fee taken by the UniswapV3Pool for swapping wrapped native token for the underlying asset.
     /// @param _rewardToken The address of the reward token.
     /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
     function setAssetSwapFee(address _rewardToken, uint24 _newAssetSwapFee) external onlyOwner {
         if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
         assetSwapFee[_rewardToken] = _newAssetSwapFee;
-        emit AssetSwapFeeSet(_newAssetSwapFee);
+        emit AssetSwapFeeSet(_rewardToken, _newAssetSwapFee);
     }
 
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
@@ -144,8 +144,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         }
 
         IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
+        uint256 rewardTokensLength = rewardTokens.length;
 
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokensLength; ) {
             ERC20 rewardToken = ERC20(rewardTokens[i]);
             uint256 rewardsAmount = rewardsAmounts[i];
 
@@ -157,16 +158,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
             rewardsAmount = SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
-                    path: isEth
+                    path: underlyingAddress == wrappedNativeToken
                         ? abi.encodePacked(
                             address(rewardToken),
                             rewardsSwapFee[address(rewardToken)],
-                            wEth
+                            wrappedNativeToken
                         )
                         : abi.encodePacked(
                             address(rewardToken),
                             rewardsSwapFee[address(rewardToken)],
-                            wEth,
+                            wrappedNativeToken,
                             assetSwapFee[address(rewardToken)],
                             underlyingAddress
                         ),
@@ -180,7 +181,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
             rewardsAmount -= rewardsFees[i];
 
-            asset.safeApprove(address(morpho), rewardsAmount);
             morpho.supply(poolTokenAddress, address(this), rewardsAmount);
 
             asset.safeTransfer(msg.sender, rewardsFees[i]);
