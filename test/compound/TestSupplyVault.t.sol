@@ -1,28 +1,27 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "./setup/TestSetup.sol";
+import "./setup/TestSetupVaults.sol";
 
-contract TestSupplyVault is TestSetup {
+contract TestSupplyVault is TestSetupVaults {
     using CompoundMath for uint256;
 
     function testShouldDepositAmount() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        supplier1.deposit(daiSupplyVault, amount);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            address(cDai),
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            cDai,
             address(daiSupplyVault)
         );
 
-        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(address(cDai));
-        uint256 poolSupplyIndex = cDai.exchangeRateCurrent();
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(cDai);
+        uint256 poolSupplyIndex = ICToken(cDai).exchangeRateCurrent();
 
-        assertGt(daiSupplyVault.balanceOf(address(supplier1)), 0, "mcDAI balance is zero");
+        assertGt(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcDAI balance is zero");
         assertApproxEqAbs(
-            supplyBalance.inP2P.mul(p2pSupplyIndex) + supplyBalance.onPool.mul(poolSupplyIndex),
+            balanceInP2P.mul(p2pSupplyIndex) + balanceOnPool.mul(poolSupplyIndex),
             amount.div(poolSupplyIndex).mul(poolSupplyIndex),
             1e10
         );
@@ -31,26 +30,25 @@ contract TestSupplyVault is TestSetup {
     function testShouldWithdrawAllAmount() public {
         uint256 amount = 10000 ether;
 
-        uint256 poolSupplyIndex = cDai.exchangeRateCurrent();
+        uint256 poolSupplyIndex = ICToken(cDai).exchangeRateCurrent();
         uint256 expectedOnPool = amount.div(poolSupplyIndex);
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        supplier1.deposit(daiSupplyVault, amount);
-        supplier1.withdraw(daiSupplyVault, expectedOnPool.mul(poolSupplyIndex));
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+        vaultSupplier1.withdrawVault(daiSupplyVault, expectedOnPool.mul(poolSupplyIndex));
 
-        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            address(cDai),
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            cDai,
             address(daiSupplyVault)
         );
 
         assertApproxEqAbs(
-            daiSupplyVault.balanceOf(address(supplier1)),
+            daiSupplyVault.balanceOf(address(vaultSupplier1)),
             0,
             1e3,
             "mcDAI balance not zero"
         );
-        assertEq(supplyBalance.onPool, 0, "onPool amount not zero");
-        assertEq(supplyBalance.inP2P, 0, "inP2P amount not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
 
     function testShouldWithdrawAllUsdcAmount() public {
@@ -59,180 +57,176 @@ contract TestSupplyVault is TestSetup {
         uint256 poolSupplyIndex = ICToken(cUsdc).exchangeRateCurrent();
         uint256 expectedOnPool = amount.div(poolSupplyIndex);
 
-        supplier1.approve(usdc, address(usdcSupplyVault), amount);
-        supplier1.deposit(usdcSupplyVault, amount);
-        supplier1.withdraw(usdcSupplyVault, expectedOnPool.mul(poolSupplyIndex));
+        vaultSupplier1.depositVault(usdcSupplyVault, amount);
+        vaultSupplier1.withdrawVault(usdcSupplyVault, expectedOnPool.mul(poolSupplyIndex));
 
-        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
             address(cUsdc),
             address(usdcSupplyVault)
         );
 
         assertApproxEqAbs(
-            usdcSupplyVault.balanceOf(address(supplier1)),
+            usdcSupplyVault.balanceOf(address(vaultSupplier1)),
             0,
             10,
             "mcUSDT balance not zero"
         );
-        assertEq(supplyBalance.onPool, 0, "onPool amount not zero");
-        assertEq(supplyBalance.inP2P, 0, "inP2P amount not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
 
     function testShouldWithdrawAllShares() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
-        supplier1.redeem(daiSupplyVault, shares); // cannot withdraw amount because of Compound rounding errors
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares); // cannot withdraw amount because of Compound rounding errors
 
-        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            address(cDai),
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            cDai,
             address(daiSupplyVault)
         );
 
-        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0, "mcDAI balance not zero");
-        assertEq(supplyBalance.onPool, 0, "onPool amount not zero");
-        assertEq(supplyBalance.inP2P, 0, "inP2P amount not zero");
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcDAI balance not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
 
     function testShouldNotWithdrawWhenNotDeposited() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.expectRevert("ERC20: burn amount exceeds balance");
-        supplier2.redeem(daiSupplyVault, shares);
+        vaultSupplier2.redeemVault(daiSupplyVault, shares);
     }
 
     function testShouldNotWithdrawOnBehalfIfNotAllowed() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.expectRevert("ERC20: insufficient allowance");
-        supplier1.redeem(daiSupplyVault, shares, address(supplier2));
+        vaultSupplier1.redeemVault(daiSupplyVault, shares, address(vaultSupplier2));
     }
 
     function testShouldWithdrawOnBehalfIfAllowed() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        supplier1.approve(mcDai, address(supplier2), shares);
-        supplier2.redeem(daiSupplyVault, shares, address(supplier1));
+        vaultSupplier1.approve(address(mcDai), address(vaultSupplier2), shares);
+        vaultSupplier2.redeemVault(daiSupplyVault, shares, address(vaultSupplier1));
     }
 
     function testShouldNotDepositZeroAmount() public {
         vm.expectRevert(abi.encodeWithSignature("ShareIsZero()"));
-        supplier1.deposit(daiSupplyVault, 0);
+        vaultSupplier1.depositVault(daiSupplyVault, 0);
     }
 
     function testShouldNotMintZeroShare() public {
         vm.expectRevert(abi.encodeWithSignature("AmountIsZero()"));
-        supplier1.mint(daiSupplyVault, 0);
+        vaultSupplier1.mintVault(daiSupplyVault, 0);
     }
 
     function testShouldNotWithdrawGreaterAmount() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        supplier1.deposit(daiSupplyVault, amount);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.expectRevert("ERC20: burn amount exceeds balance");
-        supplier1.withdraw(daiSupplyVault, amount * 2);
+        vaultSupplier1.withdrawVault(daiSupplyVault, amount * 2);
     }
 
     function testShouldNotRedeemMoreShares() public {
         uint256 amount = 10000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.expectRevert("ERC20: burn amount exceeds balance");
-        supplier1.redeem(daiSupplyVault, shares + 1);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares + 1);
     }
 
     function testShouldClaimRewards() public {
         uint256 amount = 10_000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        supplier1.deposit(daiSupplyVault, amount);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 1_000);
 
-        uint256 balanceBefore = supplier1.balanceOf(comp);
+        uint256 balanceBefore = vaultSupplier1.balanceOf(comp);
 
-        uint256 rewardsAmount = daiSupplyVault.claimRewards(address(supplier1));
+        uint256 rewardsAmount = daiSupplyVault.claimRewards(address(vaultSupplier1));
 
-        uint256 balanceAfter = supplier1.balanceOf(comp);
+        uint256 balanceAfter = vaultSupplier1.balanceOf(comp);
 
         assertGt(rewardsAmount, 0);
-        assertEq(comp.balanceOf(address(daiSupplyVault)), 0, "non zero comp balance on vault");
+        assertEq(
+            ERC20(comp).balanceOf(address(daiSupplyVault)),
+            0,
+            "non zero comp balance on vault"
+        );
         assertEq(balanceAfter, balanceBefore + rewardsAmount, "unexpected comp balance");
     }
 
     function testShouldClaimTwiceRewardsWhenDepositedForSameAmountAndTwiceDuration() public {
         uint256 amount = 10_000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        supplier1.deposit(daiSupplyVault, amount);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.roll(block.number + 100);
 
-        supplier2.approve(dai, address(daiSupplyVault), amount);
-        supplier2.deposit(daiSupplyVault, amount);
+        vaultSupplier2.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.roll(block.number + 100);
 
         address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = address(cDai);
+        poolTokenAddresses[0] = cDai;
         uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
             poolTokenAddresses,
             address(daiSupplyVault)
         );
 
-        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(supplier1));
-        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(supplier2));
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
 
-        assertEq(
+        assertApproxEqAbs(
             rewardsAmount1 + rewardsAmount2,
             expectedTotalRewardsAmount,
+            1e8,
             "unexpected total rewards amount"
         );
-        assertEq(rewardsAmount1, 2 * rewardsAmount2, "unexpected rewards amount");
+        assertLt(rewardsAmount1 + rewardsAmount2, expectedTotalRewardsAmount);
+        assertApproxEqAbs(rewardsAmount1, 2 * rewardsAmount2, 1e9, "unexpected rewards amount"); // not exact because of compounded interests
     }
 
-    function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration() public {
+    function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration1() public {
         uint256 amount = 10_000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares1 = supplier1.deposit(daiSupplyVault, amount);
+        uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.roll(block.number + 1000_000);
 
-        supplier2.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares2 = supplier2.deposit(daiSupplyVault, amount);
-        supplier1.redeem(daiSupplyVault, shares1 / 2);
+        uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
 
-        vm.roll(block.number + 1_000);
+        vm.roll(block.number + 1000_000);
 
-        supplier1.redeem(daiSupplyVault, shares1 / 2);
-        supplier2.redeem(daiSupplyVault, shares2 / 2);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
+        vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
-        vm.roll(block.number + 1_000);
+        vm.roll(block.number + 1000_000);
 
         address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = address(cDai);
+        poolTokenAddresses[0] = cDai;
         uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
             poolTokenAddresses,
             address(daiSupplyVault)
         );
 
-        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(supplier1));
-        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(supplier2));
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        console.log("3 * rewardsAmount1", 3 * rewardsAmount1);
+        console.log("expectedTotalRewardsAmount", expectedTotalRewardsAmount);
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
 
         assertEq(
             rewardsAmount1 + rewardsAmount2,
@@ -242,24 +236,68 @@ contract TestSupplyVault is TestSetup {
         assertEq(rewardsAmount1, rewardsAmount2, "unexpected rewards amount");
     }
 
+    function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration2() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000_000);
+
+        uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
+
+        vm.roll(block.number + 1000_000);
+
+        uint256 shares3 = vaultSupplier3.depositVault(daiSupplyVault, amount);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
+        vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
+
+        vm.roll(block.number + 1000_000);
+
+        vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
+        vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
+
+        vm.roll(block.number + 1000_000);
+
+        vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
+
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = cDai;
+        uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault)
+        );
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        console.log("3 * rewardsAmount1", 3 * rewardsAmount1);
+        console.log("expectedTotalRewardsAmount", expectedTotalRewardsAmount);
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        uint256 rewardsAmount3 = daiSupplyVault.claimRewards(address(vaultSupplier3));
+
+        assertEq(
+            rewardsAmount1 + rewardsAmount2 + rewardsAmount3,
+            expectedTotalRewardsAmount,
+            "unexpected total rewards amount"
+        );
+        assertEq(rewardsAmount1, rewardsAmount2, "unexpected rewards amount 1-2");
+        assertEq(rewardsAmount2, rewardsAmount3, "unexpected rewards amount 2-3");
+    }
+
     function testShouldUpdateSameIndexAsCompound() public {
         uint256 amount = 10_000 ether;
 
-        supplier1.approve(dai, address(daiSupplyVault), amount);
-        uint256 shares = supplier1.deposit(daiSupplyVault, amount);
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 5_000);
 
-        supplier1.redeem(daiSupplyVault, shares);
+        vaultSupplier1.redeemVault(daiSupplyVault, shares);
 
-        supplier1.compoundSupply(cDai, amount);
+        vaultSupplier1.compoundSupply(cDai, amount);
 
         vm.roll(block.number + 5_000);
 
-        uint256 userRewardsIndex = daiSupplyVault.compRewardsIndex(address(supplier1));
-        IComptroller.CompMarketState memory compoundState = comptroller.compSupplyState(
-            address(cDai)
-        );
+        uint256 userRewardsIndex = daiSupplyVault.compRewardsIndex(address(vaultSupplier1));
+        IComptroller.CompMarketState memory compoundState = comptroller.compSupplyState(cDai);
 
         assertEq(userRewardsIndex, compoundState.index);
     }

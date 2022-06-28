@@ -75,14 +75,15 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
+        address poolTokenAddress = address(poolToken);
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            address(poolToken),
+            poolTokenAddress,
             address(this)
         );
 
         return
             supplyBalance.onPool.mul(poolToken.exchangeRateStored()) +
-            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(address(poolToken)));
+            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenAddress));
     }
 
     /// INTERNAL ///

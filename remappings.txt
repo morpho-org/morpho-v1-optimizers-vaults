@@ -1,7 +1,9 @@
+ds-test/=lib/morpho-contracts/lib/forge-std/lib/ds-test/src/
 forge-std/=lib/morpho-contracts/lib/forge-std/src/
 @aave/core-v3/=lib/morpho-contracts/lib/aave-v3-core/
 @aave/periphery-v3/=lib/morpho-contracts/lib/aave-v3-periphery/
-@rari-capital/solmate/=lib/solmate/
+@rari-capital/solmate/=lib/morpho-contracts/lib/solmate/
 
 @vaults/=src/
+@tests/=lib/morpho-contracts/test-foundry/
 @contracts/=lib/morpho-contracts/contracts/
