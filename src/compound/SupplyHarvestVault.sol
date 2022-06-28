@@ -139,23 +139,18 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     {
         address poolTokenAddress = address(poolToken);
 
-        {
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = poolTokenAddress;
-            morpho.claimRewards(poolTokenAddresses, false);
-        }
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = poolTokenAddress;
+        morpho.claimRewards(poolTokenAddresses, false);
 
-        uint256 amountOutMinimum;
-        {
-            claimedAmount = comp.balanceOf(address(this)); // TODO: remove this once upgrade deployed on mainnet
+        claimedAmount = comp.balanceOf(address(this)); // TODO: remove this once upgrade deployed on mainnet
 
-            ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
-            amountOutMinimum = claimedAmount
-            .mul(oracle.getUnderlyingPrice(cComp))
-            .div(oracle.getUnderlyingPrice(poolTokenAddress))
-            .mul(MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))
-            .div(MAX_BASIS_POINTS);
-        }
+        ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
+        uint256 amountOutMinimum = claimedAmount
+        .mul(oracle.getUnderlyingPrice(cComp))
+        .div(oracle.getUnderlyingPrice(poolTokenAddress))
+        .mul(MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))
+        .div(MAX_BASIS_POINTS);
 
         claimedAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
