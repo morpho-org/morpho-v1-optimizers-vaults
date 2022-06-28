@@ -6,11 +6,8 @@ on:
       - main
     paths:
       - "lib/**"
-      - "config/**"
-      - "contracts/common/**"
+      - "contracts/*"
       - "contracts/compound/**"
-      - "test/**"
-      - "test/common/**"
       - "test/compound/**"
       - "*.lock"
       - "Makefile"
@@ -19,11 +16,8 @@ on:
   pull_request:
     paths:
       - "lib/**"
-      - "config/**"
-      - "contracts/common/**"
+      - "contracts/*"
       - "contracts/compound/**"
-      - "test/**"
-      - "test/common/**"
       - "test/compound/**"
       - "*.lock"
       - "Makefile"
@@ -36,16 +30,17 @@ jobs:
     name: Morpho-Compound
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
+          ssh-key: ${{ secrets.CI_PRIVATE_KEY }}
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: "16"
 
       - name: Node dependencies cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: "**/node_modules"
           key: yarn-${{ hashFiles('**/yarn.lock') }}
