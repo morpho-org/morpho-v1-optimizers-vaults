@@ -16,6 +16,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
+    uint256 public assetUnit;
     RewardsDataTypes.AssetData public localAssetData; // The local data related to the market.
 
     /// EVENTS ///
@@ -50,6 +51,10 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 _initialDeposit
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+
+        unchecked {
+            assetUnit = 10**rewardsController.getAssetDecimals(asset);
+        }
     }
 
     /// EXTERNAL ///
@@ -178,7 +183,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         if (numAvailableRewards == 0) return;
 
         unchecked {
-            uint256 assetUnit = 10**rewardsController.getAssetDecimals($asset);
+            uint256 assetUnit_ = assetUnit;
 
             for (uint128 i; i < numAvailableRewards; ++i) {
                 address reward = availableRewards[i];
@@ -191,7 +196,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
                     $asset,
                     reward,
                     IScaledBalanceToken(address(poolToken)).scaledTotalSupply(),
-                    assetUnit
+                    assetUnit_
                 );
 
                 (uint256 rewardsAccrued, bool userDataUpdated) = _updateUserData(
@@ -199,7 +204,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
                     _user,
                     balanceOf(_user),
                     newAssetIndex,
-                    assetUnit
+                    assetUnit_
                 );
 
                 if (rewardDataUpdated || userDataUpdated)
@@ -228,19 +233,14 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @return The pending rewards for the user since the last user action.
     function _getPendingRewards(address _user, address _reward) internal view returns (uint256) {
         RewardsDataTypes.RewardData storage localRewardData = localAssetData.rewards[_reward];
-
-        uint256 assetUnit;
-        // TODO: store this at initilisation.
-        unchecked {
-            assetUnit = 10**rewardsController.getAssetDecimals(asset);
-        }
+        uint256 assetUnit_ = assetUnit;
 
         (, uint256 nextIndex) = _getAssetIndex(
             localRewardData,
             asset,
             _reward,
             IScaledBalanceToken(address(poolToken)).scaledTotalSupply(),
-            assetUnit
+            assetUnit_
         );
 
         return
@@ -248,7 +248,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
                 balanceOf(_user),
                 nextIndex,
                 localRewardData.usersData[_user].index,
-                assetUnit
+                assetUnit_
             );
     }
 
