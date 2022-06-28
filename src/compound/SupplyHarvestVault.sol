@@ -15,17 +15,17 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
-    /// @notice Emitted when the fee for harvesting is set.
-    /// @param newHarvestingFee The new harvesting fee.
-    event HarvestingFeeSet(uint16 newHarvestingFee);
-
     /// @notice Emitted when the fee for swapping comp for WETH is set.
     /// @param newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
-    event CompSwapFeeSet(uint16 newCompSwapFee);
+    event CompSwapFeeSet(uint24 newCompSwapFee);
 
     /// @notice Emitted when the fee for swapping WETH for the underlying asset is set.
     /// @param newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    event AssetSwapFeeSet(uint16 newAssetSwapFee);
+    event AssetSwapFeeSet(uint24 newAssetSwapFee);
+
+    /// @notice Emitted when the fee for harvesting is set.
+    /// @param newHarvestingFee The new harvesting fee.
+    event HarvestingFeeSet(uint16 newHarvestingFee);
 
     /// @notice Emitted when the maximum slippage for harvesting is set.
     /// @param newMaxHarvestingSlippage The new maximum slippage allowed when swapping rewards for the underlying token (in bps).
@@ -91,7 +91,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
     /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
-    function setCompSwapFee(uint16 _newCompSwapFee) external onlyOwner {
+    function setCompSwapFee(uint24 _newCompSwapFee) external onlyOwner {
         if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
         compSwapFee = _newCompSwapFee;
@@ -100,7 +100,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
     /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    function setAssetSwapFee(uint16 _newAssetSwapFee) external onlyOwner {
+    function setAssetSwapFee(uint24 _newAssetSwapFee) external onlyOwner {
         if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
         assetSwapFee = _newAssetSwapFee;

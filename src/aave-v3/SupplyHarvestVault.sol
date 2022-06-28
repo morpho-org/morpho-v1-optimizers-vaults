@@ -17,17 +17,17 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
-    /// @notice Emitted when the fee for harvesting is set.
-    /// @param newHarvestingFee The new harvesting fee.
-    event HarvestingFeeSet(uint16 newHarvestingFee);
-
     /// @notice Emitted when the fee for swapping rewards for WETH is set.
     /// @param newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
-    event RewardsSwapFeeSet(uint16 newRewardsSwapFee);
+    event RewardsSwapFeeSet(address rewardtoken, uint24 newRewardsSwapFee);
 
     /// @notice Emitted when the fee for swapping WETH for the underlying asset is set.
     /// @param newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    event AssetSwapFeeSet(uint16 newAssetSwapFee);
+    event AssetSwapFeeSet(address rewardtoken, uint24 newAssetSwapFee);
+
+    /// @notice Emitted when the fee for harvesting is set.
+    /// @param newHarvestingFee The new harvesting fee.
+    event HarvestingFeeSet(uint16 newHarvestingFee);
 
     /// @notice Emitted when the maximum slippage for harvesting is set.
     /// @param newMaxHarvestingSlippage The new maximum slippage allowed when swapping rewards for the underlying token (in bps).
@@ -48,10 +48,11 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
-    uint24 public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
-    uint24 public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     uint16 public maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
+
+    mapping(address => uint24) public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for WETH (in UniswapV3 fee unit).
+    mapping(address => uint24) public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for WETH (in UniswapV3 fee unit).
 
     /// UPGRADE ///
 
@@ -61,8 +62,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    /// @param _rewardsSwapFee The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
-    /// @param _assetSwapFee The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
     /// @param _harvestingFee The fee taken by the claimer when harvesting the vault (in bps).
     /// @param _maxHarvestingSlippage The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
     function initialize(
@@ -71,15 +70,11 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
-        uint24 _rewardsSwapFee,
-        uint24 _assetSwapFee,
         uint16 _harvestingFee,
         uint16 _maxHarvestingSlippage
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
 
-        rewardsSwapFee = _rewardsSwapFee;
-        assetSwapFee = _assetSwapFee;
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;
     }
@@ -87,20 +82,22 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// GOVERNANCE ///
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
+    /// @param _rewardtoken The address of the reward token.
     /// @param _newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
-    function setRewardsSwapFee(uint16 _newRewardsSwapFee) external onlyOwner {
+    function setRewardsSwapFee(address _rewardToken, uint24 _newRewardsSwapFee) external onlyOwner {
         if (_newRewardsSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        rewardsSwapFee = _newRewardsSwapFee;
+        rewardsSwapFee[_rewardToken] = _newRewardsSwapFee;
         emit RewardsSwapFeeSet(_newRewardsSwapFee);
     }
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
+    /// @param _rewardtoken The address of the reward token.
     /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    function setAssetSwapFee(uint16 _newAssetSwapFee) external onlyOwner {
+    function setAssetSwapFee(address _rewardToken, uint24 _newAssetSwapFee) external onlyOwner {
         if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        assetSwapFee = _newAssetSwapFee;
+        assetSwapFee[_rewardToken] = _newAssetSwapFee;
         emit AssetSwapFeeSet(_newAssetSwapFee);
     }
 
@@ -160,12 +157,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardsAmount = SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
                     path: isEth
-                        ? abi.encodePacked(address(rewards), rewardsSwapFee, wEth)
+                        ? abi.encodePacked(
+                            address(rewards),
+                            rewardsSwapFee[address(rewardToken)],
+                            wEth
+                        )
                         : abi.encodePacked(
                             address(rewards),
-                            rewardsSwapFee,
+                            rewardsSwapFee[address(rewardToken)],
                             wEth,
-                            assetSwapFee,
+                            assetSwapFee[address(rewardToken)],
                             underlyingAddress
                         ),
                     recipient: address(this),
