@@ -66,8 +66,13 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         comptroller = morpho.comptroller();
         comp = ERC20(comptroller.getCompAddress());
 
-        isEth = _poolTokenAddress == morpho.cEth();
-        wEth = morpho.wEth();
+        bool $isEth = _poolTokenAddress == morpho.cEth();
+        address $wEth = morpho.wEth();
+        ERC20 underlying = ERC20($isEth ? $wEth : ICToken(poolToken).underlying());
+        underlying.safeApprove(_morphoAddress, type(uint256).max);
+
+        isEth = $isEth;
+        wEth = $wEth;
     }
 
     /// PUBLIC ///
@@ -98,7 +103,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         uint256 _amount,
         uint256
     ) internal virtual override {
-        asset.safeApprove(address(morpho), _amount);
         morpho.supply(address(poolToken), address(this), _amount);
     }
 }

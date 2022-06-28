@@ -174,12 +174,13 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             })
         );
 
-        rewardsFee = (claimedAmount * harvestingFee) / MAX_BASIS_POINTS;
-        claimedAmount -= rewardsFee;
+        if (harvestingFee > 0) {
+            rewardsFee = (claimedAmount * harvestingFee) / MAX_BASIS_POINTS;
+            claimedAmount -= rewardsFee;
+        }
 
-        asset.safeApprove(address(morpho), claimedAmount);
         morpho.supply(poolTokenAddress, address(this), claimedAmount);
 
-        asset.safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) asset.safeTransfer(msg.sender, rewardsFee);
     }
 }

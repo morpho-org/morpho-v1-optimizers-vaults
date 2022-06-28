@@ -85,7 +85,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
     ) internal override {
         _accrueUserUnclaimedRewards(_user);
 
-        asset.safeApprove(address(morpho), _amount);
         morpho.supply(address(poolToken), address(this), _amount);
     }
 
