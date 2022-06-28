@@ -13,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 /// @title SupplyVaultUpgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault abstract implementation for Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
 abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
@@ -30,7 +30,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     /// UPGRADE ///
 
-    /// @notice Initializes the vault.
+    /// @dev Initializes the vault.
     /// @param _morphoAddress The address of the main Morpho contract.
     /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
@@ -54,7 +54,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         );
     }
 
-    /// @notice Initializes the vault.
+    /// @dev Initializes the vault whithout initializing parents contracts (avoid the double initialization problem).
     /// @param _morphoAddress The address of the main Morpho contract.
     /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
