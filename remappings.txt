@@ -1,5 +1,6 @@
 forge-std/=lib/morpho-contracts/lib/forge-std/src/
 @aave/core-v3/=lib/morpho-contracts/lib/aave-v3-core/
+@aave/periphery-v3/=lib/morpho-contracts/lib/aave-v3-periphery/
 @rari-capital/solmate/=lib/solmate/
 
 @vaults/=src/

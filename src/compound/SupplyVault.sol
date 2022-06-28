@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyVault.
@@ -15,9 +13,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    IComptroller.CompMarketState public localCompRewardsState; // The local rewards state.
-    mapping(address => uint256) public userUnclaimedCompRewards; // The unclaimed rewards of the user.
     mapping(address => uint256) public compRewardsIndex; // The comp rewards index of the user.
+    mapping(address => uint256) public userUnclaimedCompRewards; // The unclaimed rewards of the user.
 
     /// UPGRADE ///
 
@@ -39,14 +36,12 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// EXTERNAL ///
 
-    /// @notice Returns the local rewards state.
-    /// @return The local rewards state.
-    function getLocalCompRewardsState()
-        external
-        view
-        returns (IComptroller.CompMarketState memory)
-    {
-        return localCompRewardsState;
+    /// @notice Returns the amount of unclaimed COMP rewards for a given user.
+    /// @param _user The address of the user.
+    function getUserUnclaimedRewards(address _user) external view returns (uint256) {
+        (uint256 accruedRewards, ) = _computeUserAccruedRewards(_user);
+
+        return userUnclaimedCompRewards[_user] + accruedRewards;
     }
 
     /// @notice Claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
@@ -60,7 +55,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             address[] memory poolTokenAddresses = new address[](1);
             poolTokenAddresses[0] = address(poolToken);
-            morpho.claimRewards(poolTokenAddresses, false);
+            try morpho.claimRewards(poolTokenAddresses, false) {} catch {}
 
             comp.safeTransfer(_user, rewardsAmount);
         }
@@ -68,79 +63,46 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// INTERNAL ///
 
-    function _beforeWithdraw(
-        address _user,
-        uint256 _amount,
-        uint256
-    ) internal override {
+    function _beforeInteraction(address _user) internal override {
         _accrueUserUnclaimedRewards(_user);
-
-        morpho.withdraw(address(poolToken), _amount);
-    }
-
-    function _afterDeposit(
-        address _user,
-        uint256 _amount,
-        uint256
-    ) internal override {
-        _accrueUserUnclaimedRewards(_user);
-
-        morpho.supply(address(poolToken), address(this), _amount);
     }
 
     /// @notice Accrues unclaimed rewards for the cToken addresses and returns the total unclaimed rewards.
     /// @param _user The address of the user.
     function _accrueUserUnclaimedRewards(address _user) internal {
-        _updateRewardsIndex();
-        userUnclaimedCompRewards[_user] += _accrueCompRewards(
-            _user,
-            morpho.supplyBalanceInOf(address(poolToken), _user).onPool
-        );
-    }
+        (uint256 accruedRewards, uint256 currentRewardsIndex) = _computeUserAccruedRewards(_user);
 
-    /// @notice Updates supplier index and returns the accrued rewards of the supplier since the last update.
-    /// @param _user The address of the supplier.
-    /// @param _balance The user balance of tokens in the distribution.
-    /// @return accruedRewards The amount of accrued rewards.
-    function _accrueCompRewards(address _user, uint256 _balance)
-        internal
-        returns (uint256 accruedRewards)
-    {
-        uint256 currentRewardsIndex = localCompRewardsState.index;
-        uint256 userRewardsIndex = compRewardsIndex[_user];
         compRewardsIndex[_user] = currentRewardsIndex;
-
-        if (userRewardsIndex != 0)
-            accruedRewards = (_balance * (currentRewardsIndex - userRewardsIndex)) / 1e36;
+        if (accruedRewards != 0) userUnclaimedCompRewards[_user] += accruedRewards;
     }
 
-    /// @notice Updates the rewards index.
-    function _updateRewardsIndex() internal {
-        IComptroller.CompMarketState memory _localCompRewardsState = localCompRewardsState;
+    function _computeUserAccruedRewards(address _user)
+        internal
+        view
+        returns (uint256 accruedRewards, uint256 currentRewardsIndex)
+    {
+        address _poolTokenAddress = address(poolToken);
+        IComptroller.CompMarketState memory supplyState = comptroller.compSupplyState(
+            _poolTokenAddress
+        );
 
-        if (_localCompRewardsState.block == block.number) return;
-        else {
-            address _poolTokenAddress = address(poolToken);
-            IComptroller.CompMarketState memory supplyState = comptroller.compSupplyState(
-                _poolTokenAddress
-            );
+        uint256 deltaBlocks = block.number - supplyState.block;
+        uint256 supplySpeed = comptroller.compSupplySpeeds(_poolTokenAddress);
 
-            uint256 deltaBlocks = block.number - supplyState.block;
-            uint256 supplySpeed = comptroller.compSupplySpeeds(_poolTokenAddress);
+        if (deltaBlocks > 0 && supplySpeed > 0) {
+            uint256 supplyTokens = ICToken(_poolTokenAddress).totalSupply();
+            uint256 compAccrued = deltaBlocks * supplySpeed;
+            uint256 ratio = supplyTokens > 0 ? (compAccrued * 1e36) / supplyTokens : 0;
 
-            uint224 newCompSupplyIndex;
-            if (deltaBlocks > 0 && supplySpeed > 0) {
-                uint256 supplyTokens = ICToken(_poolTokenAddress).totalSupply();
-                uint256 compAccrued = deltaBlocks * supplySpeed;
-                uint256 ratio = supplyTokens > 0 ? (compAccrued * 1e36) / supplyTokens : 0;
+            currentRewardsIndex = uint224(supplyState.index + ratio);
+        } else currentRewardsIndex = supplyState.index;
 
-                newCompSupplyIndex = uint224(supplyState.index + ratio);
-            } else newCompSupplyIndex = supplyState.index;
-
-            localCompRewardsState = IComptroller.CompMarketState({
-                index: newCompSupplyIndex,
-                block: CompoundMath.safe32(block.number)
-            });
-        }
+        uint256 userRewardsIndex = compRewardsIndex[_user];
+        if (userRewardsIndex != 0)
+            accruedRewards =
+                (balanceOf(_user) *
+                    morpho.supplyBalanceInOf(_poolTokenAddress, address(this)).onPool *
+                    (currentRewardsIndex - userRewardsIndex)) /
+                (totalSupply() * 1e36);
     }
 }
