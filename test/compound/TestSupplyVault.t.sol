@@ -169,6 +169,7 @@ contract TestSupplyVault is TestSetup {
 
         uint256 balanceAfter = supplier1.balanceOf(comp);
 
+        assertGt(rewardsAmount, 0);
         assertEq(comp.balanceOf(address(daiSupplyVault)), 0, "non zero comp balance on vault");
         assertEq(balanceAfter, balanceBefore + rewardsAmount, "unexpected comp balance");
     }
@@ -186,9 +187,21 @@ contract TestSupplyVault is TestSetup {
 
         vm.roll(block.number + 1_000);
 
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = address(cDai);
+        uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault)
+        );
+
         uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(supplier1));
         uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(supplier2));
 
+        assertEq(
+            rewardsAmount1 + rewardsAmount2,
+            expectedTotalRewardsAmount,
+            "unexpected total rewards amount"
+        );
         assertEq(rewardsAmount1, 2 * rewardsAmount2, "unexpected rewards amount");
     }
 
@@ -211,9 +224,21 @@ contract TestSupplyVault is TestSetup {
 
         vm.roll(block.number + 1_000);
 
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = address(cDai);
+        uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault)
+        );
+
         uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(supplier1));
         uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(supplier2));
 
+        assertEq(
+            rewardsAmount1 + rewardsAmount2,
+            expectedTotalRewardsAmount,
+            "unexpected total rewards amount"
+        );
         assertEq(rewardsAmount1, rewardsAmount2, "unexpected rewards amount");
     }
 

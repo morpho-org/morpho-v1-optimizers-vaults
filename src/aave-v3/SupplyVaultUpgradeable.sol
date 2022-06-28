@@ -7,6 +7,7 @@ import "@contracts/aave-v3/interfaces/IMorpho.sol";
 
 import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import "@contracts/aave-v3/libraries/Math.sol";
 import "@contracts/aave-v3/libraries/Types.sol";
 
 import "../ERC4626Upgradeable.sol";
@@ -18,8 +19,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V3.
 abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
-    using PercentageMath for uint256;
     using WadRayMath for uint256;
+
+    /// EVENTS ///
+
+    /// @notice Emitted when the address of the `rewardsController` is set.
+    /// @param _rewardsController The new address of the `rewardsController`.
+    event RewardsControllerSet(address indexed _rewardsController);
 
     /// STORAGE ///
 
@@ -65,7 +71,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         onlyInitializing
     {
         morpho = IMorpho(_morphoAddress);
-        poolToken = ICToken(_poolTokenAddress);
+        poolToken = IAToken(_poolTokenAddress);
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
@@ -73,7 +79,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         wEth = morpho.wEth();
     }
 
-    /// EXTERNAL ///
+    /// GOVERNANCE ///
 
     /// @notice Sets the `rewardsController`.
     /// @param _rewardsController The address of the new `rewardsController`.
