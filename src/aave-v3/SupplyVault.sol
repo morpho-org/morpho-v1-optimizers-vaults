@@ -16,9 +16,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    ERC20 public comp;
-    IComptroller public comptroller;
-
     IComptroller.CompMarketState public localCompRewardsState; // The local rewards state.
     mapping(address => uint256) public userUnclaimedCompRewards; // The unclaimed rewards of the user.
     mapping(address => uint256) public compRewardsIndex; // The comp rewards index of the user.
@@ -34,21 +31,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
     function initialize(
         address _morphoAddress,
         address _poolTokenAddress,
-        address _poolAddress,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVault_init(
-            _morphoAddress,
-            _poolTokenAddress,
-            _poolAddress,
-            _name,
-            _symbol,
-            _initialDeposit
-        );
-        comptroller = morpho.comptroller();
-        comp = ERC20(comptroller.getCompAddress());
+        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
     }
 
     /// EXTERNAL ///

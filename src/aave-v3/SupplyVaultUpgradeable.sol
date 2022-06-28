@@ -25,6 +25,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     IMorpho public morpho; // The main Morpho contract.
     IAToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    IRewardsController public rewardsController;
     IPool public pool;
 
     bool public isEth; // Whether the underlying asset is WETH.
@@ -41,12 +42,10 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     function __SupplyVault_init(
         address _morphoAddress,
         address _poolTokenAddress,
-        address _poolAddress,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        pool = IPool(_poolAddress);
         __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
 
         __Ownable_init();
@@ -67,9 +66,20 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     {
         morpho = IMorpho(_morphoAddress);
         poolToken = ICToken(_poolTokenAddress);
+        rewardsController = morpho.rewardsController();
+        pool = morpho.pool();
 
         isEth = _poolTokenAddress == morpho.cEth();
         wEth = morpho.wEth();
+    }
+
+    /// EXTERNAL ///
+
+    /// @notice Sets the `rewardsController`.
+    /// @param _rewardsController The address of the new `rewardsController`.
+    function setRewardsController(address _rewardsController) external onlyOwner {
+        rewardsController = IRewardsController(_rewardsController);
+        emit RewardsControllerSet(_rewardsController);
     }
 
     /// PUBLIC ///

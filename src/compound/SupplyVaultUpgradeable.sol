@@ -22,6 +22,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     IMorpho public morpho; // The main Morpho contract.
     ICToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    IComptroller public comptroller;
+    ERC20 public comp;
 
     bool public isEth; // Whether the underlying asset is WETH.
     address public wEth; // The address of WETH token.
@@ -61,6 +63,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     {
         morpho = IMorpho(_morphoAddress);
         poolToken = ICToken(_poolTokenAddress);
+        comptroller = morpho.comptroller();
+        comp = ERC20(comptroller.getCompAddress());
 
         isEth = _poolTokenAddress == morpho.cEth();
         wEth = morpho.wEth();
@@ -85,7 +89,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         address,
         uint256 _amount,
         uint256
-    ) internal override {
+    ) internal virtual override {
         morpho.withdraw(address(poolToken), _amount);
     }
 
@@ -93,7 +97,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         address,
         uint256 _amount,
         uint256
-    ) internal override {
+    ) internal virtual override {
         asset.safeApprove(address(morpho), _amount);
         morpho.supply(address(poolToken), address(this), _amount);
     }

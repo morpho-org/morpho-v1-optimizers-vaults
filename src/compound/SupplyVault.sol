@@ -15,9 +15,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    ERC20 public comp;
-    IComptroller public comptroller;
-
     IComptroller.CompMarketState public localCompRewardsState; // The local rewards state.
     mapping(address => uint256) public userUnclaimedCompRewards; // The unclaimed rewards of the user.
     mapping(address => uint256) public compRewardsIndex; // The comp rewards index of the user.
@@ -38,8 +35,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 _initialDeposit
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
-        comptroller = morpho.comptroller();
-        comp = ERC20(comptroller.getCompAddress());
     }
 
     /// EXTERNAL ///
@@ -55,19 +50,19 @@ contract SupplyVault is SupplyVaultUpgradeable {
     }
 
     /// @notice Claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
-    /// @return rewardsAmount_ The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
-    function claimRewards(address _user) external returns (uint256 rewardsAmount_) {
+    /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
+    function claimRewards(address _user) external returns (uint256 rewardsAmount) {
         _accrueUserUnclaimedRewards(_user);
 
-        rewardsAmount_ = userUnclaimedCompRewards[_user];
-        if (rewardsAmount_ > 0) {
+        rewardsAmount = userUnclaimedCompRewards[_user];
+        if (rewardsAmount > 0) {
             userUnclaimedCompRewards[_user] = 0;
 
             address[] memory poolTokenAddresses = new address[](1);
             poolTokenAddresses[0] = address(poolToken);
             morpho.claimRewards(poolTokenAddresses, false);
 
-            comp.safeTransfer(_user, rewardsAmount_);
+            comp.safeTransfer(_user, rewardsAmount);
         }
     }
 
@@ -107,17 +102,17 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @notice Updates supplier index and returns the accrued rewards of the supplier since the last update.
     /// @param _user The address of the supplier.
     /// @param _balance The user balance of tokens in the distribution.
-    /// @return accruedRewards_ The amount of accrued rewards.
+    /// @return accruedRewards The amount of accrued rewards.
     function _accrueCompRewards(address _user, uint256 _balance)
         internal
-        returns (uint256 accruedRewards_)
+        returns (uint256 accruedRewards)
     {
         uint256 currentRewardsIndex = localCompRewardsState.index;
         uint256 userRewardsIndex = compRewardsIndex[_user];
         compRewardsIndex[_user] = currentRewardsIndex;
 
         if (userRewardsIndex != 0)
-            accruedRewards_ = (_balance * (currentRewardsIndex - userRewardsIndex)) / 1e36;
+            accruedRewards = (_balance * (currentRewardsIndex - userRewardsIndex)) / 1e36;
     }
 
     /// @notice Updates the rewards index.

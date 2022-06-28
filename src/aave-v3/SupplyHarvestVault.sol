@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@aave/core-v3/contracts/interfaces/IPriceOracleGetter.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Rewardsound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
@@ -20,9 +21,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param newHarvestingFee The new harvesting fee.
     event HarvestingFeeSet(uint16 newHarvestingFee);
 
-    /// @notice Emitted when the fee for swapping comp for WETH is set.
-    /// @param newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
-    event CompSwapFeeSet(uint16 newCompSwapFee);
+    /// @notice Emitted when the fee for swapping rewards for WETH is set.
+    /// @param newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
+    event RewardsSwapFeeSet(uint16 newRewardsSwapFee);
 
     /// @notice Emitted when the fee for swapping WETH for the underlying asset is set.
     /// @param newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
@@ -45,11 +46,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     uint16 public constant MAX_BASIS_POINTS = 10_000; // 100% in basis points.
     uint24 public constant MAX_UNISWAP_FEE = 1_000_000; // 100% in UniswapV3 fee units.
     ISwapRouter public constant SWAP_ROUTER =
-        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
+        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
-    address public cComp; // The address of cCOMP token.
-
-    uint24 public compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
+    uint24 public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
     uint24 public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     uint16 public maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
@@ -62,48 +61,38 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    /// @param _compSwapFee The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
+    /// @param _rewardsSwapFee The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
     /// @param _assetSwapFee The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
     /// @param _harvestingFee The fee taken by the claimer when harvesting the vault (in bps).
     /// @param _maxHarvestingSlippage The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
     function initialize(
         address _morphoAddress,
         address _poolTokenAddress,
-        address _poolAddress,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
-        uint24 _compSwapFee,
+        uint24 _rewardsSwapFee,
         uint24 _assetSwapFee,
         uint16 _harvestingFee,
-        uint16 _maxHarvestingSlippage,
-        address _cComp
+        uint16 _maxHarvestingSlippage
     ) external initializer {
-        __SupplyVault_init(
-            _morphoAddress,
-            _poolTokenAddress,
-            _poolAddress,
-            _name,
-            _symbol,
-            _initialDeposit
-        );
-        compSwapFee = _compSwapFee;
+        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+
+        rewardsSwapFee = _rewardsSwapFee;
         assetSwapFee = _assetSwapFee;
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;
-
-        cComp = _cComp;
     }
 
     /// GOVERNANCE ///
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
-    /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
-    function setCompSwapFee(uint16 _newCompSwapFee) external onlyOwner {
-        if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+    /// @param _newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
+    function setRewardsSwapFee(uint16 _newRewardsSwapFee) external onlyOwner {
+        if (_newRewardsSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        compSwapFee = _newCompSwapFee;
-        emit CompSwapFeeSet(_newCompSwapFee);
+        rewardsSwapFee = _newRewardsSwapFee;
+        emit RewardsSwapFeeSet(_newRewardsSwapFee);
     }
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
@@ -138,59 +127,68 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @param _maxSlippage The maximum slippage allowed for the swap (in bps).
     /// @return rewardsAmount_ The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
-    /// @return rewardsFee_ The amount of fees taken by the claimer (in underlying).
+    /// @return rewardsFees The amount of fees taken by the claimer (in underlying).
     function harvest(uint16 _maxSlippage)
         external
-        returns (uint256 rewardsAmount_, uint256 rewardsFee_)
+        returns (
+            address[] memory rewardTokens,
+            uint256[] memory rewardsAmounts,
+            uint256[] memory rewardsFees
+        )
     {
+        address underlyingAddress = address(asset);
         address poolTokenAddress = address(poolToken);
 
         {
             address[] memory poolTokenAddresses = new address[](1);
             poolTokenAddresses[0] = poolTokenAddress;
-            morpho.claimRewards(poolTokenAddresses, false);
+            (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokenAddresses, false);
         }
 
-        ERC20 comp;
-        uint256 amountOutMinimum;
-        {
-            IComptroller comptroller = morpho.comptroller();
-            comp = ERC20(comptroller.getCompAddress());
-            rewardsAmount_ = comp.balanceOf(address(this));
+        IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
 
-            ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
-            amountOutMinimum = rewardsAmount_
-            .mul(oracle.getUnderlyingPrice(cComp))
-            .div(oracle.getUnderlyingPrice(poolTokenAddress))
-            .mul(MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))
+        for (uint256 i; i < rewardTokens.length; ) {
+            ERC20 rewardToken = ERC20(rewardTokens[i]);
+            uint256 rewardsAmount = rewardsAmounts[i];
+
+            uint256 amountOutMinimum = rewardsAmount
+            .mul(oracle.getAssetPrice(address(rewardToken)))
+            .div(oracle.getAssetPrice(underlyingAddress))
+            .mul(MAX_BASIS_POINTS - RewardsoundMath.min(_maxSlippage, maxHarvestingSlippage))
             .div(MAX_BASIS_POINTS);
+
+            rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
+            rewardsAmount = SWAP_ROUTER.exactInput(
+                ISwapRouter.ExactInputParams({
+                    path: isEth
+                        ? abi.encodePacked(address(rewards), rewardsSwapFee, wEth)
+                        : abi.encodePacked(
+                            address(rewards),
+                            rewardsSwapFee,
+                            wEth,
+                            assetSwapFee,
+                            underlyingAddress
+                        ),
+                    recipient: address(this),
+                    deadline: block.timestamp,
+                    amountIn: rewardsAmount,
+                    amountOutMinimum: amountOutMinimum
+                })
+            );
+
+            rewardsFees[i] = (rewardsAmount * harvestingFee) / MAX_BASIS_POINTS;
+            rewardsAmount -= rewardsFees[i];
+
+            asset.safeApprove(address(morpho), rewardsAmount);
+            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+
+            asset.safeTransfer(msg.sender, rewardsFees[i]);
+
+            rewardsAmounts[i] = rewardsAmount;
+
+            unchecked {
+                ++i;
+            }
         }
-
-        comp.safeApprove(address(SWAP_ROUTER), rewardsAmount_);
-        rewardsAmount_ = SWAP_ROUTER.exactInput(
-            ISwapRouter.ExactInputParams({
-                path: isEth
-                    ? abi.encodePacked(address(comp), compSwapFee, wEth)
-                    : abi.encodePacked(
-                        address(comp),
-                        compSwapFee,
-                        wEth,
-                        assetSwapFee,
-                        address(asset)
-                    ),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: rewardsAmount_,
-                amountOutMinimum: amountOutMinimum
-            })
-        );
-
-        rewardsFee_ = (rewardsAmount_ * harvestingFee) / MAX_BASIS_POINTS;
-        rewardsAmount_ -= rewardsFee_;
-
-        asset.safeApprove(address(morpho), rewardsAmount_);
-        morpho.supply(poolTokenAddress, address(this), rewardsAmount_);
-
-        asset.safeTransfer(msg.sender, rewardsFee_);
     }
 }
