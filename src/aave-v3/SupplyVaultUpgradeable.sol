@@ -21,6 +21,12 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     using SafeTransferLib for ERC20;
     using WadRayMath for uint256;
 
+    /// EVENTS ///
+
+    /// @notice Emitted when the address of the `rewardsController` is set.
+    /// @param _rewardsController The new address of the `rewardsController`.
+    event RewardsControllerSet(address indexed _rewardsController);
+
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
@@ -65,7 +71,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         onlyInitializing
     {
         morpho = IMorpho(_morphoAddress);
-        poolToken = ICToken(_poolTokenAddress);
+        poolToken = IAToken(_poolTokenAddress);
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
@@ -73,7 +79,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         wEth = morpho.wEth();
     }
 
-    /// EXTERNAL ///
+    /// GOVERNANCE ///
 
     /// @notice Sets the `rewardsController`.
     /// @param _rewardsController The address of the new `rewardsController`.

@@ -19,11 +19,11 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// @notice Emitted when the fee for swapping rewards for WETH is set.
     /// @param newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
-    event RewardsSwapFeeSet(address rewardtoken, uint24 newRewardsSwapFee);
+    event RewardsSwapFeeSet(address rewardToken, uint24 newRewardsSwapFee);
 
     /// @notice Emitted when the fee for swapping WETH for the underlying asset is set.
     /// @param newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    event AssetSwapFeeSet(address rewardtoken, uint24 newAssetSwapFee);
+    event AssetSwapFeeSet(address rewardToken, uint24 newAssetSwapFee);
 
     /// @notice Emitted when the fee for harvesting is set.
     /// @param newHarvestingFee The new harvesting fee.
@@ -82,7 +82,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// GOVERNANCE ///
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
-    /// @param _rewardtoken The address of the reward token.
+    /// @param _rewardToken The address of the reward token.
     /// @param _newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
     function setRewardsSwapFee(address _rewardToken, uint24 _newRewardsSwapFee) external onlyOwner {
         if (_newRewardsSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
@@ -92,7 +92,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     }
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
-    /// @param _rewardtoken The address of the reward token.
+    /// @param _rewardToken The address of the reward token.
     /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
     function setAssetSwapFee(address _rewardToken, uint24 _newAssetSwapFee) external onlyOwner {
         if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
@@ -123,8 +123,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @param _maxSlippage The maximum slippage allowed for the swap (in bps).
-    /// @return rewardsAmount_ The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
-    /// @return rewardsFees The amount of fees taken by the claimer (in underlying).
+    /// @return rewardTokens The addresses of reward tokens claimed.
+    /// @return rewardsAmounts The amount of rewards claimed for each reward token (in underlying).
+    /// @return rewardsFees The amount of fees taken by the claimer for each reward token (in underlying).
     function harvest(uint16 _maxSlippage)
         external
         returns (
@@ -158,12 +159,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 ISwapRouter.ExactInputParams({
                     path: isEth
                         ? abi.encodePacked(
-                            address(rewards),
+                            address(rewardToken),
                             rewardsSwapFee[address(rewardToken)],
                             wEth
                         )
                         : abi.encodePacked(
-                            address(rewards),
+                            address(rewardToken),
                             rewardsSwapFee[address(rewardToken)],
                             wEth,
                             assetSwapFee[address(rewardToken)],
