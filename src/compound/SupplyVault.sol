@@ -39,11 +39,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
     }
 
-    /// PUBLIC ///
+    /// EXTERNAL ///
 
     /// @notice Claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
-    function claimRewards(address _user) public returns (uint256 rewardsAmount) {
+    function claimRewards(address _user) external returns (uint256 rewardsAmount) {
         _accrueUserUnclaimedRewards(_user);
 
         rewardsAmount = userRewards[_user].unclaimed;
