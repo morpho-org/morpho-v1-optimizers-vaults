@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import {ERC20, SafeTransferLib} from "@solmate/utils/SafeTransferLib.sol";
+import "@solmate/utils/FixedPointMathLib.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
@@ -77,7 +77,7 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         // Set to 0 at your own risk.
         // Caller must have approved the asset to this contract's address.
         // See: https://github.com/Rari-Capital/solmate/issues/178
-        if (_initialDeposit > 0) deposit(_initialDeposit, address(0));
+        if (_initialDeposit > 0) deposit(_initialDeposit, address(this));
     }
 
     /// PUBLIC ///

@@ -2,4 +2,4 @@
 	path = lib/morpho-contracts
 	url = git@github.com:morpho-labs/morpho-contracts.git
 	ignore = dirty
-	branch = dev
+	branch = refactor/test-setup

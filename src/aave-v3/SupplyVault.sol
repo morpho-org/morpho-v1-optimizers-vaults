@@ -1,44 +1,51 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@aave/periphery-v3/contracts/rewards/libraries/RewardsDataTypes.sol";
+import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
-    using PercentageMath for uint256;
     using WadRayMath for uint256;
 
     /// STRUCTS ///
 
-    struct UserData {
-        uint128 index;
-        uint128 accrued;
+    struct UserRewards {
+        uint128 index; // User rewards index for a given reward token (in wad).
+        uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
     /// STORAGE ///
 
-    uint256 public assetUnit;
-    mapping(address => mapping(address => UserData)) public userData;
+    IRewardsManager public rewardsManager; // Morpho's rewards manager.
+
+    mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
+    mapping(address => mapping(address => UserRewards)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
 
     /// EVENTS ///
 
-    /// @dev Emitted when rewards of an asset are accrued on behalf of a user.
-    /// @param _reward The address of the reward token.
-    /// @param _user The address of the user that rewards are accrued on behalf of.
-    /// @param _userIndex The index of the asset distribution on behalf of the user.
-    /// @param _rewardsAccrued The amount of rewards accrued.
-    event Accrued(
-        address indexed _reward,
-        address indexed _user,
-        uint256 _userIndex,
-        uint256 _rewardsAccrued
+    /// @notice Emitted when rewards of an asset are accrued on behalf of a user.
+    /// @param rewardToken The address of the reward token.
+    /// @param user The address of the user that rewards are accrued on behalf of.
+    /// @param rewardsIndex The index of the asset distribution on behalf of the user.
+    /// @param accruedRewards The amount of rewards accrued.
+    event RewardsAccrued(
+        address indexed rewardToken,
+        address indexed user,
+        uint128 rewardsIndex,
+        uint128 accruedRewards
     );
+
+    /// @notice Emitted when rewards of an asset are claimed on behalf of a user.
+    /// @param rewardToken The address of the reward token.
+    /// @param user The address of the user that rewards are claimed on behalf of.
+    /// @param claimedRewards The amount of rewards claimed.
+    event RewardsClaimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
 
     /// UPGRADE ///
 
@@ -57,40 +64,38 @@ contract SupplyVault is SupplyVaultUpgradeable {
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
 
-        unchecked {
-            assetUnit = 10**rewardsController.getAssetDecimals(asset);
-        }
+        rewardsManager = IMorpho(_morphoAddress).rewardsManager();
     }
 
     /// EXTERNAL ///
 
-    /// @notice Returns user's rewards for the specificied reward token.
-    /// @param _user The address of the user.
-    /// @param _reward The address of the reward token
-    /// @return The user's rewards in reward token.
-    function getUserRewards(address _user, address _reward) external view returns (uint256) {
-        return _getUserReward(_user, _reward);
-    }
-
+    /// @notice Claims rewards on behalf of `_user`.
+    /// @param _user The address of the user to claim rewards for.
+    /// @return rewardTokens The list of reward tokens.
+    /// @return claimedAmounts The list of claimed amounts for each reward tokens.
     function claimRewards(address _user)
         external
-        returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+        returns (address[] memory rewardTokens, uint256[] memory claimedAmounts)
     {
-        rewardsList = rewardsController.getRewardsList();
-        uint256 rewardsListLength = rewardsList.length;
-        claimedAmounts = new uint256[](rewardsListLength);
+        _accrueUnclaimedRewards(_user);
 
-        _updateData(_user);
+        rewardTokens = rewardsController.getRewardsByAsset(address(poolToken));
 
-        for (uint256 i; i < rewardsListLength; ) {
-            uint256 rewardAmount = userData[rewardsList[i]][_user].accrued;
+        uint256 nbRewardTokens = rewardTokens.length;
+        claimedAmounts = new uint256[](nbRewardTokens);
 
-            if (rewardAmount != 0) {
-                claimedAmounts[i] = rewardAmount;
-                userData[rewardsList[i]][_user].accrued = 0;
+        for (uint256 i; i < nbRewardTokens; ) {
+            address rewardToken = rewardTokens[i];
+            uint128 unclaimedAmount = userRewards[rewardToken][_user].unclaimed;
+
+            if (unclaimedAmount > 0) {
+                claimedAmounts[i] = unclaimedAmount;
+                userRewards[rewardToken][_user].unclaimed = 0;
+
+                ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
+
+                emit RewardsClaimed(rewardToken, _user, unclaimedAmount);
             }
-
-            ERC20(rewardsList[i]).safeTransfer(_user, rewardAmount);
 
             unchecked {
                 ++i;
@@ -98,154 +103,117 @@ contract SupplyVault is SupplyVaultUpgradeable {
         }
     }
 
+    /// @notice Returns a given user's unclaimed rewards for all reward tokens.
+    /// @param _user The address of the user.
+    /// @return rewardTokens The list of reward tokens.
+    /// @return unclaimedAmounts The list of unclaimed amounts for each reward token.
+    function getAllUnclaimedRewards(address _user)
+        external
+        view
+        returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
+    {
+        uint256 supply = totalSupply();
+        if (supply > 0) {
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = address(poolToken);
+
+            uint256[] memory claimableAmounts;
+            (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
+                poolTokens,
+                address(this)
+            );
+
+            uint256 nbRewardTokens = rewardTokens.length;
+            for (uint256 i; i < nbRewardTokens; ) {
+                address rewardToken = rewardTokens[i];
+
+                unclaimedAmounts[i] =
+                    userRewards[rewardToken][_user].unclaimed +
+                    balanceOf(_user).wadMul(
+                        rewardsIndex[rewardToken] +
+                            claimableAmounts[i].wadDiv(totalSupply()) -
+                            userRewards[rewardToken][_user].index
+                    );
+
+                unchecked {
+                    ++i;
+                }
+            }
+        }
+    }
+
+    /// @notice Returns user's rewards for the specificied reward token.
+    /// @param _user The address of the user.
+    /// @param _rewardToken The address of the reward token
+    /// @return The user's rewards in reward token.
+    function getUnclaimedRewards(address _user, address _rewardToken)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 supply = totalSupply();
+        if (supply == 0) return 0;
+
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = address(poolToken);
+
+        uint256 claimableRewards = rewardsManager.getUserRewards(
+            poolTokens,
+            address(this),
+            _rewardToken
+        );
+        UserRewards memory _userRewards = userRewards[_rewardToken][_user];
+
+        return
+            _userRewards.unclaimed +
+            balanceOf(_user).wadMul(
+                rewardsIndex[_rewardToken] +
+                    claimableRewards.wadDiv(totalSupply()) -
+                    _userRewards.index
+            );
+    }
+
     /// INTERNAL ///
 
     function _beforeInteraction(address _user) internal override {
-        _updateData(_user);
+        _accrueUnclaimedRewards(_user);
     }
 
-    /// @dev Updates the state of the distribution for the specific user.
-    /// @param _user The address of the user.
-    /// @param _userBalance The current user asset balance.
-    /// @param _newAssetIndex The new index of the asset distribution.
-    /// @param _assetUnit The asset's unit (10**decimals).
-    /// @return rewardsAccrued The rewards accrued since the last update.
-    /// @return dataUpdated True if the data was updated, false otherwise.
-    function _updateUserData(
-        address _user,
-        address _reward,
-        uint256 _userBalance,
-        uint256 _newAssetIndex,
-        uint256 _assetUnit
-    ) internal returns (uint256 rewardsAccrued, bool dataUpdated) {
-        uint256 userIndex = userData[_reward][_user].index;
+    function _accrueUnclaimedRewards(address _user) internal {
+        uint256 supply = totalSupply();
+        if (supply == 0) return;
 
-        if ((dataUpdated = userIndex != _newAssetIndex)) {
-            userData[_reward][_user].index = uint128(_newAssetIndex);
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = address(poolToken);
 
-            if (_userBalance != 0) {
-                rewardsAccrued = _getRewards(_userBalance, _newAssetIndex, userIndex, _assetUnit);
-
-                userData[_reward][_user].accrued += uint128(rewardsAccrued);
-            }
-        }
-    }
-
-    /// @dev Iterates and accrues all the rewards for asset of the specific user.
-    /// @param _user The user address.
-    function _updateData(address _user) internal {
-        address $asset = asset;
-        address[] memory availableRewards = rewardsController.getRewardsByAsset($asset);
-        uint256 numAvailableRewards = availableRewards.length;
-        if (numAvailableRewards == 0) return;
-
-        unchecked {
-            uint256 assetUnit_ = assetUnit;
-
-            for (uint128 i; i < numAvailableRewards; ++i) {
-                address reward = availableRewards[i];
-
-                uint256 newAssetIndex = _getAssetIndex(
-                    $asset,
-                    reward,
-                    IScaledBalanceToken(address(poolToken)).scaledTotalSupply(),
-                    assetUnit_
-                );
-
-                (uint256 rewardsAccrued, bool userDataUpdated) = _updateUserData(
-                    _user,
-                    reward,
-                    balanceOf(_user),
-                    newAssetIndex,
-                    assetUnit_
-                );
-
-                if (userDataUpdated) emit Accrued(reward, _user, newAssetIndex, rewardsAccrued);
-            }
-        }
-    }
-
-    /// @dev Returns the accrued unclaimed amount of a reward from a user over a list of distribution.
-    /// @param _user The address of the user.
-    /// @param _reward The address of the reward token.
-    /// @return unclaimedRewards The accrued rewards for the user until the moment.
-    function _getUserReward(address _user, address _reward)
-        internal
-        view
-        returns (uint256 unclaimedRewards)
-    {
-        unclaimedRewards += _getPendingRewards(_user, _reward) + userData[_reward][_user].accrued;
-    }
-
-    /// @dev Computes the pending (not yet accrued) rewards since the last user action.
-    /// @param _user The address of the user.
-    /// @param _reward The address of the reward token.
-    /// @return The pending rewards for the user since the last user action.
-    function _getPendingRewards(address _user, address _reward) internal view returns (uint256) {
-        UserData storage rewardsData = userData.rewards[_reward];
-        uint256 assetUnit_ = assetUnit;
-
-        (, uint256 nextIndex) = _getAssetIndex(
-            asset,
-            _reward,
-            IScaledBalanceToken(address(poolToken)).scaledTotalSupply(),
-            assetUnit_
+        (address[] memory rewardTokens, uint256[] memory claimedAmounts) = morpho.claimRewards(
+            poolTokens,
+            false
         );
 
-        return _getRewards(balanceOf(_user), nextIndex, userData[_user].index, assetUnit_);
-    }
+        uint256 nbRewardTokens = rewardTokens.length;
+        for (uint256 i; i < nbRewardTokens; ) {
+            address rewardToken = rewardTokens[i];
+            uint256 claimedAmount = claimedAmounts[i];
 
-    /// @dev Computes user's accrued rewards on a distribution.
-    /// @param _userBalance The current user asset balance.
-    /// @param _reserveIndex The current index of the distribution.
-    /// @param _userIndex The index stored for the user, representing its staking moment.
-    /// @param _assetUnit The asset's unit (10**decimals).
-    /// @return rewards The rewards accrued.
-    function _getRewards(
-        uint256 _userBalance,
-        uint256 _reserveIndex,
-        uint256 _userIndex,
-        uint256 _assetUnit
-    ) internal view returns (uint256 rewards) {
-        rewards = _userBalance * (_reserveIndex - _userIndex);
-        assembly {
-            rewards := div(rewards, _assetUnit)
+            uint128 newRewardsIndex = rewardsIndex[rewardToken];
+            if (claimedAmount > 0) {
+                newRewardsIndex += uint128(claimedAmount.wadDiv(supply));
+                rewardsIndex[rewardToken] = newRewardsIndex;
+            }
+
+            uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
+            if (rewardsIndexDiff > 0) {
+                uint128 accruedRewards = uint128(balanceOf(_user).wadMul(rewardsIndexDiff));
+                userRewards[rewardToken][_user].unclaimed += accruedRewards;
+                userRewards[rewardToken][_user].index = newRewardsIndex;
+
+                emit RewardsAccrued(rewardToken, _user, newRewardsIndex, accruedRewards);
+            }
+
+            unchecked {
+                ++i;
+            }
         }
-    }
-
-    /// @dev Computes the next value of an specific distribution index, with validations.
-    /// @param _totalSupply of the asset being rewarded.
-    /// @param _assetUnit The asset's unit (10**decimals).
-    /// @return The new index.
-    function _getAssetIndex(
-        address _asset,
-        address _reward,
-        uint256 _totalSupply,
-        uint256 _assetUnit
-    ) internal view returns (uint256) {
-        uint256 currentTimestamp = block.timestamp;
-
-        (
-            uint256 rewardIndex,
-            uint256 emissionPerSecond,
-            uint256 lastUpdateTimestamp,
-            uint256 distributionEnd
-        ) = rewardsController.getRewardsData(_asset, _reward);
-
-        if (
-            emissionPerSecond == 0 ||
-            _totalSupply == 0 ||
-            lastUpdateTimestamp == currentTimestamp ||
-            lastUpdateTimestamp >= distributionEnd
-        ) return rewardIndex;
-
-        currentTimestamp = currentTimestamp > distributionEnd ? distributionEnd : currentTimestamp;
-        uint256 firstTerm = emissionPerSecond *
-            (currentTimestamp - lastUpdateTimestamp) *
-            _assetUnit;
-        assembly {
-            firstTerm := div(firstTerm, _totalSupply)
-        }
-        return firstTerm + rewardIndex;
     }
 }
