@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
+import "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyVault.
@@ -8,8 +10,8 @@ import "./SupplyVaultUpgradeable.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyVault is SupplyVaultUpgradeable {
+    using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
-    using CompoundMath for uint256;
 
     /// STORAGE ///
 
@@ -66,12 +68,12 @@ contract SupplyVault is SupplyVaultUpgradeable {
         if (supply > 0) {
             address[] memory poolTokenAddresses = new address[](1);
             poolTokenAddresses[0] = address(poolToken);
-            rewardsIndex += morpho.claimRewards(poolTokenAddresses, false).div(supply);
+            rewardsIndex += morpho.claimRewards(poolTokenAddresses, false).divWadDown(supply);
         }
 
         uint256 rewardsIndexDiff = rewardsIndex - userRewards[_user].index;
         if (rewardsIndexDiff > 0) {
-            userRewards[_user].unclaimed += uint128(balanceOf(_user).mul(rewardsIndexDiff));
+            userRewards[_user].unclaimed += uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
             userRewards[_user].index = uint128(rewardsIndex);
         }
     }
