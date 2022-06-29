@@ -3,29 +3,36 @@
 
 PROTOCOL?=compound
 NETWORK?=eth-mainnet
-CHAIN_ID?=1
 
+FOUNDRY_SRC=contracts/${PROTOCOL}/
+FOUNDRY_TEST=test/${PROTOCOL}/
+FOUNDRY_REMAPPINGS=@config/=lib/morpho-contracts/config/${NETWORK}/${PROTOCOL}/
 FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
-FOUNDRY_FORK_BLOCK_NUMBER?=14292587
+FOUNDRY_CONTRACT_PATTERN_INVERSE="GasConsumption"
 
-export FOUNDRY_REMAPPINGS?=@config/=lib/morpho-contracts/config/${NETWORK}/${PROTOCOL}/
-export FOUNDRY_TEST=test/${PROTOCOL}
+ifeq (${NETWORK}, eth-mainnet)
+  FOUNDRY_CHAIN_ID=1
+  FOUNDRY_FORK_BLOCK_NUMBER=14292587
+endif
 
 ifeq (${NETWORK}, polygon-mainnet)
-	export FOUNDRY_FORK_BLOCK_NUMBER=22116728
+  FOUNDRY_CHAIN_ID=137
+  FOUNDRY_FORK_BLOCK_NUMBER=22116728
 
   ifeq (${PROTOCOL}, aave-v3)
-  	export FOUNDRY_FORK_BLOCK_NUMBER=29116728
+    FOUNDRY_FORK_BLOCK_NUMBER=29116728
   endif
 endif
 
 ifeq (${NETWORK}, avalanche-mainnet)
-	export FOUNDRY_ETH_RPC_URL=https://api.avax.network/ext/bc/C/rpc
-	export FOUNDRY_FORK_BLOCK_NUMBER=12675271
+  FOUNDRY_CHAIN_ID=43114
+  FOUNDRY_ETH_RPC_URL=https://api.avax.network/ext/bc/C/rpc
+  FOUNDRY_FORK_BLOCK_NUMBER=12675271
 
-	ifeq (${PROTOCOL}, aave-v3)
-		export FOUNDRY_FORK_BLOCK_NUMBER=15675271
-	endif
+  ifeq (${PROTOCOL}, aave-v3)
+    FOUNDRY_FORK_BLOCK_NUMBER=15675271
+  endif
+else
 endif
 
 ifneq (, $(filter ${NETWORK}, ropsten rinkeby))
