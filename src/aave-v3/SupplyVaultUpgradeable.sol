@@ -51,15 +51,10 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
+        ERC20 underlying = __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
 
         __Ownable_init();
-        __ERC4626_init(
-            ERC20(poolToken.UNDERLYING_ASSET_ADDRESS()),
-            _name,
-            _symbol,
-            _initialDeposit
-        );
+        __ERC4626_init(underlying, _name, _symbol, _initialDeposit);
     }
 
     /// @dev Initializes the vault whithout initializing parents contracts (avoid the double initialization problem).
@@ -68,16 +63,15 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
         internal
         onlyInitializing
+        returns (ERC20 underlying)
     {
         morpho = IMorpho(_morphoAddress);
         poolToken = IAToken(_poolTokenAddress);
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
-        ERC20(IAToken(_poolTokenAddress).UNDERLYING_ASSET_ADDRESS()).safeApprove(
-            _morphoAddress,
-            type(uint256).max
-        );
+        underlying = ERC20(poolToken.UNDERLYING_ASSET_ADDRESS());
+        underlying.safeApprove(_morphoAddress, type(uint256).max);
     }
 
     /// GOVERNANCE ///
