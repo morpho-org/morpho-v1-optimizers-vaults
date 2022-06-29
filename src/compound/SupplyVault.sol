@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import "@solmate/utils/FixedPointMathLib.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
