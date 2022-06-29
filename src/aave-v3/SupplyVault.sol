@@ -22,7 +22,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     }
 
     struct UserData {
-        uint128 index;
+        uint128 index; // User index for a given reward
         uint128 accrued;
     }
 
@@ -154,7 +154,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
         return
             userData[reward][_user].accrued +
-            shares[_user] *
+            balanceOf(_user) *
             (userData[_reward][_user].index - newIndex);
     }
 
@@ -169,7 +169,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
             false
         );
         uint256 rewardsListLength = rewardsList.length;
-        uint256 userShare = shares[_user];
+        uint256 userBalance = balanceOf(_user);
 
         for (uint256 i; i < rewardsListLength; ) {
             address reward = rewardsList[i];
@@ -183,7 +183,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
             }
 
             uint256 accrued = userData[reward][_user].accrued +
-                userShare *
+                userBalance *
                 (userData[reward][_user].index - newIndex);
 
             userData[reward][_user].accrued = accrued;
