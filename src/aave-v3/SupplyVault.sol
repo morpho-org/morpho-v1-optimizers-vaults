@@ -128,7 +128,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             uint256 newIndex = rewardIndex[reward].index +
                 (claimableAmounts[i] * 1e18) /
-                totalShares;
+                totalSupply();
 
             unclaimedAmounts[i] =
                 userData[reward][_user].accrued +
@@ -150,7 +150,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         poolTokenArray[0] = address(poolToken);
 
         uint256 claimable = rewardsManager.getUserRewards(poolTokenArray, address(this), _reward);
-        uint256 newIndex = rewardIndex[_reward].index + (claimable * 1e18) / totalShares;
+        uint256 newIndex = rewardIndex[_reward].index + (claimable * 1e18) / totalSupply();
 
         return
             userData[reward][_user].accrued +
@@ -177,7 +177,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
             uint256 newIndex = rewardIndex[reward].index;
 
             if (claimed != 0) {
-                newIndex += (claimed * 1e18) / totalShares;
+                newIndex += (claimed * 1e18) / totalSupply();
                 rewardIndex[reward].index = newIndex;
                 rewardIndex[reward].accrued += claimed;
             }
