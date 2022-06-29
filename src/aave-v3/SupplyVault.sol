@@ -34,16 +34,18 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// EVENTS ///
 
     /// @dev Emitted when rewards of an asset are accrued on behalf of a user.
-    /// @param _reward The address of the reward token.
-    /// @param _user The address of the user that rewards are accrued on behalf of.
-    /// @param _userIndex The index of the asset distribution on behalf of the user.
-    /// @param _rewardsAccrued The amount of rewards accrued.
+    /// @param reward The address of the reward token.
+    /// @param user The address of the user that rewards are accrued on behalf of.
+    /// @param userIndex The index of the asset distribution on behalf of the user.
+    /// @param rewardsAccrued The amount of rewards accrued.
     event Accrued(
-        address indexed _reward,
-        address indexed _user,
-        uint256 _userIndex,
-        uint256 _rewardsAccrued
+        address indexed reward,
+        address indexed user,
+        uint256 userIndex,
+        uint256 rewardsAccrued
     );
+
+    event Claimed(address reward, address user, uint256 claimed);
 
     /// UPGRADE ///
 
@@ -85,6 +87,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             ERC20(rewardsList[i]).safeTransfer(_user, rewardAmount);
 
+            emit Claimed(reward, _user, rewardAmount);
+
             unchecked {
                 ++i;
             }
@@ -109,10 +113,12 @@ contract SupplyVault is SupplyVaultUpgradeable {
             rewardIndex[reward].index = newIndex;
             rewardIndex[reward].accrued += claimed;
 
-            userData[reward][_user].accrued =
-                shares[_user] *
-                (userData[reward][_user].index - newIndex);
+            uint256 accrued = shares[_user] * (userData[reward][_user].index - newIndex);
+
+            userData[reward][_user].accrued = accrued;
             userData[reward][_user].index = newIndex;
+
+            emit Accrued(rewards, _user, newIndex, accrued);
 
             unchecked {
                 ++i;
