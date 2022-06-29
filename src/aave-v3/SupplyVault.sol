@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@aave/periphery-v3/contracts/rewards/libraries/RewardsDataTypes.sol";
+import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
@@ -11,26 +11,20 @@ import "./SupplyVaultUpgradeable.sol";
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
-    using PercentageMath for uint256;
     using WadRayMath for uint256;
 
     /// STRUCTS ///
 
-    struct RewardData {
-        uint128 index;
-        uint128 accrued;
-    }
-
     struct UserData {
-        uint128 index;
-        uint128 accrued;
+        uint128 index; // User index for a given reward token.
+        uint128 accrued; // Rewards accrued for the given reward token.
     }
 
     /// STORAGE ///
 
-    IRewardsManager public rewardsManager;
-    mapping(address => uint256) public rewardIndex;
-    mapping(address => mapping(address => UserData)) public userData;
+    IRewardsManager public rewardsManager; // Morpho's rewards manager.
+    mapping(address => uint256) public rewardIndex; // The current reward index for the given reward token.
+    mapping(address => mapping(address => UserData)) public userData; // User data. reward -> user -> userData.
 
     /// EVENTS ///
 
@@ -127,13 +121,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
             address reward = rewardsList[i];
 
             uint256 newIndex = rewardIndex[reward].index +
-                (claimableAmounts[i] * 1e18) /
-                totalShares;
+                claimableAmounts[i].wadDiv(totalSupply());
 
             unclaimedAmounts[i] =
                 userData[reward][_user].accrued +
-                shares[_user] *
-                (userData[reward][_user].index - newIndex);
+                shares[_user].wadMul(userData[reward][_user].index - newIndex);
 
             unchecked {
                 ++i;
@@ -150,12 +142,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
         poolTokenArray[0] = address(poolToken);
 
         uint256 claimable = rewardsManager.getUserRewards(poolTokenArray, address(this), _reward);
-        uint256 newIndex = rewardIndex[_reward].index + (claimable * 1e18) / totalShares;
+        uint256 newIndex = rewardIndex[_reward].index + claimable.wadDiv(totalSupply());
 
         return
             userData[reward][_user].accrued +
-            shares[_user] *
-            (userData[_reward][_user].index - newIndex);
+            balanceOf(_user).wadMul(userData[_reward][_user].index - newIndex);
     }
 
     /// INTERNAL ///
@@ -169,7 +160,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
             false
         );
         uint256 rewardsListLength = rewardsList.length;
-        uint256 userShare = shares[_user];
+        uint256 userBalance = balanceOf(_user);
+        uint256 supply = totalSupply();
 
         for (uint256 i; i < rewardsListLength; ) {
             address reward = rewardsList[i];
@@ -177,14 +169,13 @@ contract SupplyVault is SupplyVaultUpgradeable {
             uint256 newIndex = rewardIndex[reward].index;
 
             if (claimed != 0) {
-                newIndex += (claimed * 1e18) / totalShares;
+                newIndex += claimed.wadDiv(supply);
                 rewardIndex[reward].index = newIndex;
                 rewardIndex[reward].accrued += claimed;
             }
 
             uint256 accrued = userData[reward][_user].accrued +
-                userShare *
-                (userData[reward][_user].index - newIndex);
+                userBalance.wadMul(userData[reward][_user].index - newIndex);
 
             userData[reward][_user].accrued = accrued;
             userData[reward][_user].index = newIndex;
