@@ -8,7 +8,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
@@ -34,7 +34,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
-    /// @dev Emitted when rewards of an asset are accrued on behalf of a user.
+    /// @notice Emitted when rewards of an asset are accrued on behalf of a user.
     /// @param reward The address of the reward token.
     /// @param user The address of the user that rewards are accrued on behalf of.
     /// @param userIndex The index of the asset distribution on behalf of the user.
@@ -46,6 +46,10 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 rewardsAccrued
     );
 
+    /// @notice Emitted when rewards of an asset are claimed on behalf of a user.
+    /// @param reward The address of the reward token.
+    /// @param user The address of the user that rewards are claimed on behalf of.
+    /// @param claimed The amount of rewards claimed.
     event Claimed(address reward, address user, uint256 claimed);
 
     /// UPGRADE ///
@@ -70,15 +74,19 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// EXTERNAL ///
 
+    /// @notice Claims rewards on behalf of `_user`.
+    /// @param _user The address of the user to claim rewards for.
+    /// @return rewardsList The list of reward tokens.
+    /// @return claimedAmounts The list of claimed reward amounts.
     function claimRewards(address _user)
         external
         returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
     {
+        _beforeInteraction(_user);
+
         rewardsList = rewardsController.getRewardsByAsset(address(poolToken));
         uint256 rewardsListLength = rewardsList.length;
         claimedAmounts = new uint256[](rewardsListLength);
-
-        _beforeInteraction(_user);
 
         for (uint256 i; i < rewardsListLength; ) {
             uint256 rewardAmount = userData[rewardsList[i]][_user].accrued;
@@ -117,9 +125,10 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
         for (uint256 i; i < rewardsListLength; ) {
             address reward = rewardsList[i];
-            uint256 claimed = claimableAmounts[i];
 
-            uint256 newIndex = rewardIndex[reward].index + (claimed * 1e18) / totalShares;
+            uint256 newIndex = rewardIndex[reward].index +
+                (claimableAmounts[i] * 1e18) /
+                totalShares;
 
             unclaimedAmounts[i] =
                 userData[reward][_user].accrued +
@@ -160,17 +169,21 @@ contract SupplyVault is SupplyVaultUpgradeable {
             false
         );
         uint256 rewardsListLength = rewardsList.length;
+        uint256 userShare = shares[_user];
 
         for (uint256 i; i < rewardsListLength; ) {
             address reward = rewardsList[i];
             uint256 claimed = claimedAmounts[i];
+            uint256 newIndex = rewardIndex[reward].index;
 
-            uint256 newIndex = rewardIndex[reward].index + (claimed * 1e18) / totalShares;
-            rewardIndex[reward].index = newIndex;
-            rewardIndex[reward].accrued += claimed;
+            if (claimed != 0) {
+                newIndex += (claimed * 1e18) / totalShares;
+                rewardIndex[reward].index = newIndex;
+                rewardIndex[reward].accrued += claimed;
+            }
 
             uint256 accrued = userData[reward][_user].accrued +
-                shares[_user] *
+                userShare *
                 (userData[reward][_user].index - newIndex);
 
             userData[reward][_user].accrued = accrued;
