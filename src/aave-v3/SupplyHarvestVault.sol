@@ -138,15 +138,15 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address poolTokenAddress = address(poolToken);
 
         {
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = poolTokenAddress;
-            (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokenAddresses, false);
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = poolTokenAddress;
+            (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
         IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
-        uint256 rewardTokensLength = rewardTokens.length;
 
-        for (uint256 i; i < rewardTokensLength; ) {
+        uint256 nbRewardTokens = rewardTokens.length;
+        for (uint256 i; i < nbRewardTokens; ) {
             ERC20 rewardToken = ERC20(rewardTokens[i]);
             uint256 rewardsAmount = rewardsAmounts[i];
 
@@ -178,14 +178,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 })
             );
 
-            rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
-            rewardsAmount -= rewardsFees[i];
-
-            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
-
-            asset.safeTransfer(msg.sender, rewardsFees[i]);
+            uint16 _harvestingFee = harvestingFee;
+            if (_harvestingFee > 0) {
+                rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
+                rewardsAmount -= rewardsFees[i];
+            }
 
             rewardsAmounts[i] = rewardsAmount;
+
+            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+            asset.safeTransfer(msg.sender, rewardsFees[i]);
 
             unchecked {
                 ++i;

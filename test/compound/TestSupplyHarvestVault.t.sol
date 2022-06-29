@@ -244,7 +244,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         ERC20(comp).approve(address(swapRouter), flashloanAmount);
         swapRouter.exactInputSingle(
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: address(comp),
+                tokenIn: comp,
                 tokenOut: wEth,
                 fee: daiSupplyHarvestVault.compSwapFee(),
                 recipient: address(this),

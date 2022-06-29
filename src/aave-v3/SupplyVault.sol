@@ -24,7 +24,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     IRewardsManager public rewardsManager; // Morpho's rewards manager.
 
-    mapping(address => uint256) public rewardsIndex; // The current reward index for the given reward token.
+    mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewards)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
 
     /// EVENTS ///
@@ -77,7 +77,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         external
         returns (address[] memory rewardTokens, uint256[] memory claimedAmounts)
     {
-        _accrueUserUnclaimedRewards(_user);
+        _accrueUnclaimedRewards(_user);
 
         rewardTokens = rewardsController.getRewardsByAsset(address(poolToken));
 
@@ -103,21 +103,23 @@ contract SupplyVault is SupplyVaultUpgradeable {
         }
     }
 
-    /// @notice Returns a given user's unclaimed rewards for the specified assets and for all reward tokens.
-    /// @param _assets The list of assets to retrieve rewards.
+    /// @notice Returns a given user's unclaimed rewards for all reward tokens.
     /// @param _user The address of the user.
     /// @return rewardTokens The list of reward tokens.
-    /// @return unclaimedAmounts The list of unclaimed amounts for all reward tokens.
-    function getAllUserUnclaimedRewards(address[] calldata _assets, address _user)
+    /// @return unclaimedAmounts The list of unclaimed amounts for each reward token.
+    function getAllUnclaimedRewards(address _user)
         external
         view
         returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
         uint256 supply = totalSupply();
         if (supply > 0) {
-            address[] memory claimableAmounts;
-            (rewardTokens, claimableAmounts) = morpho.getAllUserRewards(
-                [address(poolToken)],
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = address(poolToken);
+
+            uint256[] memory claimableAmounts;
+            (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
+                poolTokens,
                 address(this)
             );
 
@@ -144,7 +146,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param _user The address of the user.
     /// @param _rewardToken The address of the reward token
     /// @return The user's rewards in reward token.
-    function getUserUnclaimedRewards(address _user, address _rewardToken)
+    function getUnclaimedRewards(address _user, address _rewardToken)
         external
         view
         returns (uint256)
@@ -152,36 +154,40 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 supply = totalSupply();
         if (supply == 0) return 0;
 
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = address(poolToken);
+
         uint256 claimableRewards = rewardsManager.getUserRewards(
-            [address(poolToken)],
+            poolTokens,
             address(this),
             _rewardToken
         );
-        UserRewards memory userRewards_ = userRewards[_rewardToken][_user];
+        UserRewards memory _userRewards = userRewards[_rewardToken][_user];
 
         return
-            userRewards_.unclaimed +
+            _userRewards.unclaimed +
             balanceOf(_user).wadMul(
                 rewardsIndex[_rewardToken] +
                     claimableRewards.wadDiv(totalSupply()) -
-                    userRewards_.index
+                    _userRewards.index
             );
     }
 
     /// INTERNAL ///
 
     function _beforeInteraction(address _user) internal override {
-        _accrueUserUnclaimedRewards(_user);
+        _accrueUnclaimedRewards(_user);
     }
 
-    function _accrueUserUnclaimedRewards(address _user) internal {
+    function _accrueUnclaimedRewards(address _user) internal {
         uint256 supply = totalSupply();
         if (supply == 0) return;
 
-        address[] memory poolTokenAddresses = [](1);
-        poolTokenAddresses[0] = address(poolToken);
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = address(poolToken);
+
         (address[] memory rewardTokens, uint256[] memory claimedAmounts) = morpho.claimRewards(
-            poolTokenAddresses,
+            poolTokens,
             false
         );
 
@@ -190,15 +196,15 @@ contract SupplyVault is SupplyVaultUpgradeable {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
 
-            uint256 newRewardsIndex = rewardsIndex[rewardToken];
+            uint128 newRewardsIndex = rewardsIndex[rewardToken];
             if (claimedAmount > 0) {
-                newRewardsIndex += claimedAmount.wadDiv(supply);
+                newRewardsIndex += uint128(claimedAmount.wadDiv(supply));
                 rewardsIndex[rewardToken] = newRewardsIndex;
             }
 
             uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
             if (rewardsIndexDiff > 0) {
-                uint256 accruedRewards = balanceOf(_user).wadMul(rewardsIndexDiff);
+                uint128 accruedRewards = uint128(balanceOf(_user).wadMul(rewardsIndexDiff));
                 userRewards[rewardToken][_user].unclaimed += accruedRewards;
                 userRewards[rewardToken][_user].index = newRewardsIndex;
 

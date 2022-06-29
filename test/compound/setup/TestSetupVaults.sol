@@ -52,7 +52,7 @@ contract TestSetupVaults is TestSetup {
         wethSupplyHarvestVault = SupplyHarvestVault(address(wethSupplyHarvestVaultProxy));
         wethSupplyHarvestVault.initialize(
             address(morpho),
-            address(cEth),
+            cEth,
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
@@ -60,7 +60,7 @@ contract TestSetupVaults is TestSetup {
             0,
             50,
             100,
-            address(cComp)
+            cComp
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
 
@@ -75,7 +75,7 @@ contract TestSetupVaults is TestSetup {
         );
         daiSupplyHarvestVault.initialize(
             address(morpho),
-            address(cDai),
+            cDai,
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
@@ -83,7 +83,7 @@ contract TestSetupVaults is TestSetup {
             500,
             50,
             100,
-            address(cComp)
+            cComp
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
 
@@ -96,17 +96,19 @@ contract TestSetupVaults is TestSetup {
                 )
             )
         );
+        deal(usdc, address(this), 100 ether);
+        ERC20(usdc).safeApprove(address(usdcSupplyHarvestVault), 100 ether);
         usdcSupplyHarvestVault.initialize(
             address(morpho),
-            address(cUsdc),
+            cUsdc,
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
-            0,
+            100 ether,
             3000,
             500,
             50,
             100,
-            address(cComp)
+            cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
 
@@ -116,13 +118,7 @@ contract TestSetupVaults is TestSetup {
             ""
         );
         wethSupplyVault = SupplyVault(address(wethSupplyVaultProxy));
-        wethSupplyVault.initialize(
-            address(morpho),
-            address(cEth),
-            "MorphoCompoundWETH",
-            "mcWETH",
-            0
-        );
+        wethSupplyVault.initialize(address(morpho), cEth, "MorphoCompoundWETH", "mcWETH", 0);
         mcWeth = ERC20(address(wethSupplyVault));
 
         daiSupplyVault = SupplyVault(

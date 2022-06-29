@@ -131,25 +131,25 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @param _maxSlippage The maximum slippage allowed for the swap (in bps).
-    /// @return claimedAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
+    /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
     /// @return rewardsFee The amount of fees taken by the claimer (in underlying).
     function harvest(uint16 _maxSlippage)
         external
-        returns (uint256 claimedAmount, uint256 rewardsFee)
+        returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
         address poolTokenAddress = address(poolToken);
 
         address[] memory poolTokenAddresses = new address[](1);
         poolTokenAddresses[0] = poolTokenAddress;
-        claimedAmount = morpho.claimRewards(poolTokenAddresses, false);
+        rewardsAmount = morpho.claimRewards(poolTokenAddresses, false);
 
         ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
-        uint256 amountOutMinimum = (claimedAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
+        uint256 amountOutMinimum = (rewardsAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
             oracle.getUnderlyingPrice(poolTokenAddress)
         ) * (MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))) /
             MAX_BASIS_POINTS;
 
-        claimedAmount = SWAP_ROUTER.exactInput(
+        rewardsAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
                     ? abi.encodePacked(address(comp), compSwapFee, wEth)
@@ -162,18 +162,18 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                     ),
                 recipient: address(this),
                 deadline: block.timestamp,
-                amountIn: claimedAmount,
+                amountIn: rewardsAmount,
                 amountOutMinimum: amountOutMinimum
             })
         );
 
         uint16 _harvestingFee = harvestingFee;
         if (_harvestingFee > 0) {
-            rewardsFee = (claimedAmount * _harvestingFee) / MAX_BASIS_POINTS;
-            claimedAmount -= rewardsFee;
+            rewardsFee = (rewardsAmount * _harvestingFee) / MAX_BASIS_POINTS;
+            rewardsAmount -= rewardsFee;
         }
 
-        morpho.supply(poolTokenAddress, address(this), claimedAmount);
+        morpho.supply(poolTokenAddress, address(this), rewardsAmount);
 
         if (rewardsFee > 0) asset.safeTransfer(msg.sender, rewardsFee);
     }

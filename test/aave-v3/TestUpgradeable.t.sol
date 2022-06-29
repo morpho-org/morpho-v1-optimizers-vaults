@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./setup/TestSetupVaults.sol";
 
 contract TestUpgradeable is TestSetupVaults {
-    using CompoundMath for uint256;
+    using WadRayMath for uint256;
 
     function testUpgradeSupplyHarvestVault() public {
         SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault();
@@ -58,15 +58,12 @@ contract TestUpgradeable is TestSetupVaults {
         vm.expectRevert("Initializable: contract is already initialized");
         supplyHarvestVaultImplV1.initialize(
             address(morpho),
-            address(cEth),
+            address(aWeth),
             "MorphoCompoundETH",
             "mcETH",
             0,
-            3000,
-            0,
             10,
-            100,
-            address(cComp)
+            100
         );
     }
 
@@ -122,7 +119,7 @@ contract TestUpgradeable is TestSetupVaults {
         vm.expectRevert("Initializable: contract is already initialized");
         supplyVaultImplV1.initialize(
             address(morpho),
-            address(cEth),
+            address(aWeth),
             "MorphoCompoundETH",
             "mcETH",
             0

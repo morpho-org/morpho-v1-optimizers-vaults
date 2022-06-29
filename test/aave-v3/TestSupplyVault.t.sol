@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./setup/TestSetupVaults.sol";
 
 contract TestSupplyVault is TestSetupVaults {
-    using CompoundMath for uint256;
+    using WadRayMath for uint256;
 
     function testShouldDepositAmount() public {
         uint256 amount = 10000 ether;
@@ -12,17 +12,17 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
-            cDai,
+            aDai,
             address(daiSupplyVault)
         );
 
-        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(cDai);
-        uint256 poolSupplyIndex = ICToken(cDai).exchangeRateCurrent();
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(aDai);
+        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
 
         assertGt(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcDAI balance is zero");
         assertApproxEqAbs(
-            balanceInP2P.mul(p2pSupplyIndex) + balanceOnPool.mul(poolSupplyIndex),
-            amount.div(poolSupplyIndex).mul(poolSupplyIndex),
+            balanceInP2P.rayMul(p2pSupplyIndex) + balanceOnPool.rayMul(poolSupplyIndex),
+            amount.rayDiv(poolSupplyIndex).rayMul(poolSupplyIndex),
             1e10
         );
     }
@@ -30,14 +30,14 @@ contract TestSupplyVault is TestSetupVaults {
     function testShouldWithdrawAllAmount() public {
         uint256 amount = 10000 ether;
 
-        uint256 poolSupplyIndex = ICToken(cDai).exchangeRateCurrent();
-        uint256 expectedOnPool = amount.div(poolSupplyIndex);
+        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
+        uint256 expectedOnPool = amount.rayDiv(poolSupplyIndex);
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
-        vaultSupplier1.withdrawVault(daiSupplyVault, expectedOnPool.mul(poolSupplyIndex));
+        vaultSupplier1.withdrawVault(daiSupplyVault, expectedOnPool.rayMul(poolSupplyIndex));
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
-            cDai,
+            aDai,
             address(daiSupplyVault)
         );
 
@@ -54,14 +54,14 @@ contract TestSupplyVault is TestSetupVaults {
     function testShouldWithdrawAllUsdcAmount() public {
         uint256 amount = 1e9;
 
-        uint256 poolSupplyIndex = ICToken(cUsdc).exchangeRateCurrent();
-        uint256 expectedOnPool = amount.div(poolSupplyIndex);
+        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(usdc);
+        uint256 expectedOnPool = amount.rayDiv(poolSupplyIndex);
 
         vaultSupplier1.depositVault(usdcSupplyVault, amount);
-        vaultSupplier1.withdrawVault(usdcSupplyVault, expectedOnPool.mul(poolSupplyIndex));
+        vaultSupplier1.withdrawVault(usdcSupplyVault, expectedOnPool.rayMul(poolSupplyIndex));
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
-            address(cUsdc),
+            address(aUsdc),
             address(usdcSupplyVault)
         );
 
@@ -82,7 +82,7 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier1.redeemVault(daiSupplyVault, shares); // cannot withdraw amount because of Compound rounding errors
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
-            cDai,
+            aDai,
             address(daiSupplyVault)
         );
 
@@ -114,7 +114,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vaultSupplier1.approve(address(mcDai), address(vaultSupplier2), shares);
+        vaultSupplier1.approve(address(maDai), address(vaultSupplier2), shares);
         vaultSupplier2.redeemVault(daiSupplyVault, shares, address(vaultSupplier1));
     }
 
@@ -153,152 +153,241 @@ contract TestSupplyVault is TestSetupVaults {
 
         vm.roll(block.number + 1_000);
 
-        uint256 balanceBefore = vaultSupplier1.balanceOf(comp);
+        uint256 balanceBefore = vaultSupplier1.balanceOf(rewardToken);
 
-        uint256 rewardsAmount = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        (address[] memory rewardTokens, uint256[] memory claimedAmounts) = daiSupplyVault
+        .claimRewards(address(vaultSupplier1));
 
-        uint256 balanceAfter = vaultSupplier1.balanceOf(comp);
+        assertEq(rewardTokens.length, 1);
+        assertEq(rewardTokens[0], rewardToken);
+        assertEq(claimedAmounts.length, 1);
 
-        assertGt(rewardsAmount, 0);
-        assertEq(
-            ERC20(comp).balanceOf(address(daiSupplyVault)),
+        uint256 balanceAfter = vaultSupplier1.balanceOf(rewardToken);
+
+        assertGt(claimedAmounts[0], 0);
+        assertApproxEqAbs(
+            ERC20(rewardToken).balanceOf(address(daiSupplyVault)),
             0,
-            "non zero comp balance on vault"
+            1e4,
+            "non zero rewardToken balance on vault"
         );
-        assertEq(balanceAfter, balanceBefore + rewardsAmount, "unexpected comp balance");
+        assertEq(balanceAfter, balanceBefore + claimedAmounts[0], "unexpected rewardToken balance");
     }
 
     function testShouldClaimTwiceRewardsWhenDepositedForSameAmountAndTwiceDuration() public {
         uint256 amount = 10_000 ether;
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = aDai;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 100);
 
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
+
         vaultSupplier2.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 100);
 
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = cDai;
-        uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
-            address(daiSupplyVault)
+            address(daiSupplyVault),
+            rewardToken
         );
 
-        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
-        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
+        .claimRewards(address(vaultSupplier1));
+
+        assertEq(rewardTokens1.length, 1);
+        assertEq(rewardTokens1[0], rewardToken);
+        assertEq(claimedAmounts1.length, 1);
+
+        (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
+        .claimRewards(address(vaultSupplier2));
+
+        assertEq(rewardTokens2.length, 1);
+        assertEq(rewardTokens2[0], rewardToken);
+        assertEq(claimedAmounts2.length, 1);
 
         assertApproxEqAbs(
-            rewardsAmount1 + rewardsAmount2,
+            claimedAmounts1[0] + claimedAmounts2[0],
             expectedTotalRewardsAmount,
-            1e8,
+            1e5,
             "unexpected total rewards amount"
         );
-        assertLt(rewardsAmount1 + rewardsAmount2, expectedTotalRewardsAmount);
-        assertApproxEqAbs(rewardsAmount1, 2 * rewardsAmount2, 1e9, "unexpected rewards amount"); // not exact because of compounded interests
+        assertLt(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
+        assertApproxEqAbs(
+            claimedAmounts1[0],
+            2 * claimedAmounts2[0],
+            1e9,
+            "unexpected rewards amount"
+        ); // not exact because of rewardTokenounded interests
     }
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration1() public {
         uint256 amount = 10_000 ether;
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = aDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
+
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
 
         uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
+
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
 
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
 
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = cDai;
-        uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
-            address(daiSupplyVault)
+            address(daiSupplyVault),
+            rewardToken
         );
 
-        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
-        console.log("3 * rewardsAmount1", 3 * rewardsAmount1);
-        console.log("expectedTotalRewardsAmount", expectedTotalRewardsAmount);
-        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
+        .claimRewards(address(vaultSupplier1));
 
-        assertEq(
-            rewardsAmount1 + rewardsAmount2,
+        assertEq(rewardTokens1.length, 1);
+        assertEq(rewardTokens1[0], rewardToken);
+        assertEq(claimedAmounts1.length, 1);
+
+        (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
+        .claimRewards(address(vaultSupplier2));
+
+        assertEq(rewardTokens2.length, 1);
+        assertEq(rewardTokens2[0], rewardToken);
+        assertEq(claimedAmounts2.length, 1);
+
+        assertApproxEqAbs(
+            claimedAmounts1[0] + claimedAmounts2[0],
             expectedTotalRewardsAmount,
+            1e5,
             "unexpected total rewards amount"
         );
-        assertEq(rewardsAmount1, rewardsAmount2, "unexpected rewards amount");
+        assertLt(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
+        assertApproxEqAbs(claimedAmounts1[0], claimedAmounts2[0], 1e8, "unexpected rewards amount"); // not exact because of rewardTokenounded interests
     }
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration2() public {
         uint256 amount = 10_000 ether;
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = aDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
+
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
 
         uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
+
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
 
         uint256 shares3 = vaultSupplier3.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
+
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
 
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
         vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
 
-        vm.roll(block.number + 1000_000);
+        vm.roll(block.number + 100);
+
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
 
         vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
 
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = cDai;
-        uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
-            address(daiSupplyVault)
-        );
+        (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
+        .claimRewards(address(vaultSupplier1));
 
-        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
-        console.log("3 * rewardsAmount1", 3 * rewardsAmount1);
-        console.log("expectedTotalRewardsAmount", expectedTotalRewardsAmount);
-        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
-        uint256 rewardsAmount3 = daiSupplyVault.claimRewards(address(vaultSupplier3));
+        assertEq(rewardTokens1.length, 1);
+        assertEq(rewardTokens1[0], rewardToken);
+        assertEq(claimedAmounts1.length, 1);
 
-        assertEq(
-            rewardsAmount1 + rewardsAmount2 + rewardsAmount3,
+        (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
+        .claimRewards(address(vaultSupplier2));
+
+        assertEq(rewardTokens2.length, 1);
+        assertEq(rewardTokens2[0], rewardToken);
+        assertEq(claimedAmounts2.length, 1);
+
+        (address[] memory rewardTokens3, uint256[] memory claimedAmounts3) = daiSupplyVault
+        .claimRewards(address(vaultSupplier3));
+
+        assertEq(rewardTokens3.length, 1);
+        assertEq(rewardTokens3[0], rewardToken);
+        assertEq(claimedAmounts3.length, 1);
+
+        assertApproxEqAbs(
+            claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0],
             expectedTotalRewardsAmount,
+            1e5,
             "unexpected total rewards amount"
         );
-        assertEq(rewardsAmount1, rewardsAmount2, "unexpected rewards amount 1-2");
-        assertEq(rewardsAmount2, rewardsAmount3, "unexpected rewards amount 2-3");
-    }
-
-    function testShouldUpdateSameIndexAsCompound() public {
-        uint256 amount = 10_000 ether;
-
-        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
-
-        vm.roll(block.number + 5_000);
-
-        vaultSupplier1.redeemVault(daiSupplyVault, shares);
-
-        vaultSupplier1.compoundSupply(cDai, amount);
-
-        vm.roll(block.number + 5_000);
-
-        uint256 userRewardsIndex = daiSupplyVault.compRewardsIndex(address(vaultSupplier1));
-        IComptroller.CompMarketState memory compoundState = comptroller.compSupplyState(cDai);
-
-        assertEq(userRewardsIndex, compoundState.index);
+        assertLt(
+            claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0],
+            expectedTotalRewardsAmount
+        );
+        assertApproxEqAbs(
+            ERC20(rewardToken).balanceOf(address(daiSupplyVault)),
+            0,
+            1e5,
+            "non zero rewardToken balance on vault"
+        );
+        assertApproxEqAbs(
+            claimedAmounts1[0],
+            claimedAmounts2[0],
+            1e9,
+            "unexpected rewards amount 1-2"
+        ); // not exact because of rewardTokenounded interests
+        assertApproxEqAbs(
+            claimedAmounts2[0],
+            claimedAmounts3[0],
+            1e8,
+            "unexpected rewards amount 2-3"
+        ); // not exact because of rewardTokenounded interests
     }
 }
