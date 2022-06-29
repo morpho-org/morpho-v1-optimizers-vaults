@@ -28,6 +28,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
+    IRewardsManager public rewardsManager;
     mapping(address => uint256) public rewardIndex;
     mapping(address => mapping(address => UserData)) public userData;
 
@@ -63,6 +64,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 _initialDeposit
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+
+        rewardsManager = IMoprho(_morphoAddress).rewardsManager();
     }
 
     /// EXTERNAL ///
@@ -71,7 +74,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         external
         returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
     {
-        rewardsList = rewardsController.getRewardsList();
+        rewardsList = rewardsController.getRewardsByAsset(address(poolToken));
         uint256 rewardsListLength = rewardsList.length;
         claimedAmounts = new uint256[](rewardsListLength);
 
@@ -95,14 +98,55 @@ contract SupplyVault is SupplyVaultUpgradeable {
         }
     }
 
+    /// @notice Returns user's rewards for the specified assets and for all reward tokens.
+    /// @param _assets The list of assets to retrieve rewards.
+    /// @param _user The address of the user.
+    /// @return rewardsList The list of reward tokens.
+    /// @return unclaimedAmounts The list of unclaimed reward amounts.
+    function getAllUserRewards(address[] calldata _assets, address _user)
+        external
+        view
+        returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts)
+    {
+        address[] memory poolTokenArray = [](1);
+        poolTokenArray[0] = address(poolToken);
+
+        address[] memory claimableAmounts;
+        (rewardsList, claimableAmounts) = morpho.getAllUserRewards(poolTokenArray, address(this));
+        uint256 rewardsListLength = rewardsList.length;
+
+        for (uint256 i; i < rewardsListLength; ) {
+            address reward = rewardsList[i];
+            uint256 claimed = claimableAmounts[i];
+
+            uint256 newIndex = rewardIndex[reward].index + (claimed * 1e18) / totalShares;
+
+            unclaimedAmounts[i] =
+                userData[reward][_user].accrued +
+                shares[_user] *
+                (userData[reward][_user].index - newIndex);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     /// @notice Returns user's rewards for the specificied reward token.
     /// @param _user The address of the user.
     /// @param _reward The address of the reward token
     /// @return The user's rewards in reward token.
     function getUserRewards(address _user, address _reward) external view returns (uint256) {
-        // TODO: get pending rewards on morpho ?
+        address[] memory poolTokenArray = [](1);
+        poolTokenArray[0] = address(poolToken);
 
-        uint256 newIndex = rewardIndex[reward].index + (claimed * 1e18) / totalShares;
+        uint256 claimable = rewardsManager.getUserRewards(poolTokenArray, address(this), _reward);
+        uint256 newIndex = rewardIndex[_reward].index + (claimable * 1e18) / totalShares;
+
+        return
+            userData[reward][_user].accrued +
+            shares[_user] *
+            (userData[_reward][_user].index - newIndex);
     }
 
     /// INTERNAL ///
@@ -111,8 +155,10 @@ contract SupplyVault is SupplyVaultUpgradeable {
         address[] memory poolTokenArray = [](1);
         poolTokenArray[0] = address(poolToken);
 
-        (address[] memory rewardsList, uint256[] memory claimedAmounts) = rewardsController
-        .claimAllRewardsToSelf(poolTokenArray);
+        (address[] memory rewardsList, uint256[] memory claimedAmounts) = morpho.claimRewards(
+            poolTokenArray,
+            false
+        );
         uint256 rewardsListLength = rewardsList.length;
 
         for (uint256 i; i < rewardsListLength; ) {
