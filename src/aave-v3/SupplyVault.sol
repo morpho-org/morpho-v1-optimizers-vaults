@@ -8,43 +8,44 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using WadRayMath for uint256;
 
     /// STRUCTS ///
 
-    struct UserData {
-        uint128 index; // User index for a given reward token.
-        uint128 accrued; // Rewards accrued for the given reward token.
+    struct UserRewards {
+        uint128 index; // User rewards index for a given reward token (in wad).
+        uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
     /// STORAGE ///
 
     IRewardsManager public rewardsManager; // Morpho's rewards manager.
-    mapping(address => uint256) public rewardIndex; // The current reward index for the given reward token.
-    mapping(address => mapping(address => UserData)) public userData; // User data. reward -> user -> userData.
+
+    mapping(address => uint256) public rewardsIndex; // The current reward index for the given reward token.
+    mapping(address => mapping(address => UserRewards)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
 
     /// EVENTS ///
 
     /// @notice Emitted when rewards of an asset are accrued on behalf of a user.
-    /// @param reward The address of the reward token.
+    /// @param rewardToken The address of the reward token.
     /// @param user The address of the user that rewards are accrued on behalf of.
-    /// @param userIndex The index of the asset distribution on behalf of the user.
-    /// @param rewardsAccrued The amount of rewards accrued.
-    event Accrued(
-        address indexed reward,
+    /// @param rewardsIndex The index of the asset distribution on behalf of the user.
+    /// @param accruedRewards The amount of rewards accrued.
+    event RewardsAccrued(
+        address indexed rewardToken,
         address indexed user,
-        uint256 userIndex,
-        uint256 rewardsAccrued
+        uint128 rewardsIndex,
+        uint128 accruedRewards
     );
 
     /// @notice Emitted when rewards of an asset are claimed on behalf of a user.
-    /// @param reward The address of the reward token.
+    /// @param rewardToken The address of the reward token.
     /// @param user The address of the user that rewards are claimed on behalf of.
-    /// @param claimed The amount of rewards claimed.
-    event Claimed(address reward, address user, uint256 claimed);
+    /// @param claimedRewards The amount of rewards claimed.
+    event RewardsClaimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
 
     /// UPGRADE ///
 
@@ -63,36 +64,38 @@ contract SupplyVault is SupplyVaultUpgradeable {
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
 
-        rewardsManager = IMoprho(_morphoAddress).rewardsManager();
+        rewardsManager = IMorpho(_morphoAddress).rewardsManager();
     }
 
     /// EXTERNAL ///
 
     /// @notice Claims rewards on behalf of `_user`.
     /// @param _user The address of the user to claim rewards for.
-    /// @return rewardsList The list of reward tokens.
-    /// @return claimedAmounts The list of claimed reward amounts.
+    /// @return rewardTokens The list of reward tokens.
+    /// @return claimedAmounts The list of claimed amounts for each reward tokens.
     function claimRewards(address _user)
         external
-        returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+        returns (address[] memory rewardTokens, uint256[] memory claimedAmounts)
     {
-        _beforeInteraction(_user);
+        _accrueUserUnclaimedRewards(_user);
 
-        rewardsList = rewardsController.getRewardsByAsset(address(poolToken));
-        uint256 rewardsListLength = rewardsList.length;
-        claimedAmounts = new uint256[](rewardsListLength);
+        rewardTokens = rewardsController.getRewardsByAsset(address(poolToken));
 
-        for (uint256 i; i < rewardsListLength; ) {
-            uint256 rewardAmount = userData[rewardsList[i]][_user].accrued;
+        uint256 nbRewardTokens = rewardTokens.length;
+        claimedAmounts = new uint256[](nbRewardTokens);
 
-            if (rewardAmount != 0) {
-                claimedAmounts[i] = rewardAmount;
-                userData[rewardsList[i]][_user].accrued = 0;
+        for (uint256 i; i < nbRewardTokens; ) {
+            address rewardToken = rewardTokens[i];
+            uint128 unclaimedAmount = userRewards[rewardToken][_user].unclaimed;
+
+            if (unclaimedAmount > 0) {
+                claimedAmounts[i] = unclaimedAmount;
+                userRewards[rewardToken][_user].unclaimed = 0;
+
+                ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
+
+                emit RewardsClaimed(rewardToken, _user, unclaimedAmount);
             }
-
-            ERC20(rewardsList[i]).safeTransfer(_user, rewardAmount);
-
-            emit Claimed(reward, _user, rewardAmount);
 
             unchecked {
                 ++i;
@@ -100,87 +103,107 @@ contract SupplyVault is SupplyVaultUpgradeable {
         }
     }
 
-    /// @notice Returns user's rewards for the specified assets and for all reward tokens.
+    /// @notice Returns a given user's unclaimed rewards for the specified assets and for all reward tokens.
     /// @param _assets The list of assets to retrieve rewards.
     /// @param _user The address of the user.
-    /// @return rewardsList The list of reward tokens.
-    /// @return unclaimedAmounts The list of unclaimed reward amounts.
-    function getAllUserRewards(address[] calldata _assets, address _user)
+    /// @return rewardTokens The list of reward tokens.
+    /// @return unclaimedAmounts The list of unclaimed amounts for all reward tokens.
+    function getAllUserUnclaimedRewards(address[] calldata _assets, address _user)
         external
         view
-        returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts)
+        returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
-        address[] memory poolTokenArray = [](1);
-        poolTokenArray[0] = address(poolToken);
+        uint256 supply = totalSupply();
+        if (supply > 0) {
+            address[] memory claimableAmounts;
+            (rewardTokens, claimableAmounts) = morpho.getAllUserRewards(
+                [address(poolToken)],
+                address(this)
+            );
 
-        address[] memory claimableAmounts;
-        (rewardsList, claimableAmounts) = morpho.getAllUserRewards(poolTokenArray, address(this));
-        uint256 rewardsListLength = rewardsList.length;
+            uint256 nbRewardTokens = rewardTokens.length;
+            for (uint256 i; i < nbRewardTokens; ) {
+                address rewardToken = rewardTokens[i];
 
-        for (uint256 i; i < rewardsListLength; ) {
-            address reward = rewardsList[i];
+                unclaimedAmounts[i] =
+                    userRewards[rewardToken][_user].unclaimed +
+                    balanceOf(_user).wadMul(
+                        rewardsIndex[rewardToken] +
+                            claimableAmounts[i].wadDiv(totalSupply()) -
+                            userRewards[rewardToken][_user].index
+                    );
 
-            uint256 newIndex = rewardIndex[reward].index +
-                claimableAmounts[i].wadDiv(totalSupply());
-
-            unclaimedAmounts[i] =
-                userData[reward][_user].accrued +
-                shares[_user].wadMul(userData[reward][_user].index - newIndex);
-
-            unchecked {
-                ++i;
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
 
     /// @notice Returns user's rewards for the specificied reward token.
     /// @param _user The address of the user.
-    /// @param _reward The address of the reward token
+    /// @param _rewardToken The address of the reward token
     /// @return The user's rewards in reward token.
-    function getUserRewards(address _user, address _reward) external view returns (uint256) {
-        address[] memory poolTokenArray = [](1);
-        poolTokenArray[0] = address(poolToken);
+    function getUserUnclaimedRewards(address _user, address _rewardToken)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 supply = totalSupply();
+        if (supply == 0) return 0;
 
-        uint256 claimable = rewardsManager.getUserRewards(poolTokenArray, address(this), _reward);
-        uint256 newIndex = rewardIndex[_reward].index + claimable.wadDiv(totalSupply());
+        uint256 claimableRewards = rewardsManager.getUserRewards(
+            [address(poolToken)],
+            address(this),
+            _rewardToken
+        );
+        UserRewards memory userRewards_ = userRewards[_rewardToken][_user];
 
         return
-            userData[reward][_user].accrued +
-            balanceOf(_user).wadMul(userData[_reward][_user].index - newIndex);
+            userRewards_.unclaimed +
+            balanceOf(_user).wadMul(
+                rewardsIndex[_rewardToken] +
+                    claimableRewards.wadDiv(totalSupply()) -
+                    userRewards_.index
+            );
     }
 
     /// INTERNAL ///
 
     function _beforeInteraction(address _user) internal override {
-        address[] memory poolTokenArray = [](1);
-        poolTokenArray[0] = address(poolToken);
+        _accrueUserUnclaimedRewards(_user);
+    }
 
-        (address[] memory rewardsList, uint256[] memory claimedAmounts) = morpho.claimRewards(
-            poolTokenArray,
+    function _accrueUserUnclaimedRewards(address _user) internal {
+        uint256 supply = totalSupply();
+        if (supply == 0) return;
+
+        address[] memory poolTokenAddresses = [](1);
+        poolTokenAddresses[0] = address(poolToken);
+        (address[] memory rewardTokens, uint256[] memory claimedAmounts) = morpho.claimRewards(
+            poolTokenAddresses,
             false
         );
-        uint256 rewardsListLength = rewardsList.length;
-        uint256 userBalance = balanceOf(_user);
-        uint256 supply = totalSupply();
 
-        for (uint256 i; i < rewardsListLength; ) {
-            address reward = rewardsList[i];
-            uint256 claimed = claimedAmounts[i];
-            uint256 newIndex = rewardIndex[reward].index;
+        uint256 nbRewardTokens = rewardTokens.length;
+        for (uint256 i; i < nbRewardTokens; ) {
+            address rewardToken = rewardTokens[i];
+            uint256 claimedAmount = claimedAmounts[i];
 
-            if (claimed != 0) {
-                newIndex += claimed.wadDiv(supply);
-                rewardIndex[reward].index = newIndex;
-                rewardIndex[reward].accrued += claimed;
+            uint256 newRewardsIndex = rewardsIndex[rewardToken];
+            if (claimedAmount > 0) {
+                newRewardsIndex += claimedAmount.wadDiv(supply);
+                rewardsIndex[rewardToken] = newRewardsIndex;
             }
 
-            uint256 accrued = userData[reward][_user].accrued +
-                userBalance.wadMul(userData[reward][_user].index - newIndex);
+            uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
+            if (rewardsIndexDiff > 0) {
+                uint256 accruedRewards = balanceOf(_user).wadMul(rewardsIndexDiff);
+                userRewards[rewardToken][_user].unclaimed += accruedRewards;
+                userRewards[rewardToken][_user].index = newRewardsIndex;
 
-            userData[reward][_user].accrued = accrued;
-            userData[reward][_user].index = newIndex;
-
-            emit Accrued(rewards, _user, newIndex, accrued);
+                emit RewardsAccrued(rewardToken, _user, newRewardsIndex, accruedRewards);
+            }
 
             unchecked {
                 ++i;
