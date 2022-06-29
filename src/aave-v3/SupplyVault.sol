@@ -121,13 +121,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
             address reward = rewardsList[i];
 
             uint256 newIndex = rewardIndex[reward].index +
-                (claimableAmounts[i] * 1e18) /
-                totalSupply();
+                claimableAmounts[i].wadDiv(totalSupply());
 
             unclaimedAmounts[i] =
                 userData[reward][_user].accrued +
-                shares[_user] *
-                (userData[reward][_user].index - newIndex);
+                shares[_user].wadMul(userData[reward][_user].index - newIndex);
 
             unchecked {
                 ++i;
@@ -144,12 +142,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
         poolTokenArray[0] = address(poolToken);
 
         uint256 claimable = rewardsManager.getUserRewards(poolTokenArray, address(this), _reward);
-        uint256 newIndex = rewardIndex[_reward].index + (claimable * 1e18) / totalSupply();
+        uint256 newIndex = rewardIndex[_reward].index + claimable.wadDiv(totalSupply());
 
         return
             userData[reward][_user].accrued +
-            balanceOf(_user) *
-            (userData[_reward][_user].index - newIndex);
+            balanceOf(_user).wadMul(userData[_reward][_user].index - newIndex);
     }
 
     /// INTERNAL ///
@@ -172,14 +169,13 @@ contract SupplyVault is SupplyVaultUpgradeable {
             uint256 newIndex = rewardIndex[reward].index;
 
             if (claimed != 0) {
-                newIndex += (claimed * 1e18) / supply;
+                newIndex += claimed.wadDiv(supply);
                 rewardIndex[reward].index = newIndex;
                 rewardIndex[reward].accrued += claimed;
             }
 
             uint256 accrued = userData[reward][_user].accrued +
-                userBalance *
-                (userData[reward][_user].index - newIndex);
+                userBalance.wadMul(userData[reward][_user].index - newIndex);
 
             userData[reward][_user].accrued = accrued;
             userData[reward][_user].index = newIndex;
