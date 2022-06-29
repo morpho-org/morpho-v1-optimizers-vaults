@@ -47,7 +47,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param _user The address of the user to claim rewards for.
     /// @return rewardsAmount The amount of rewards claimed.
     function claimRewards(address _user) external returns (uint256 rewardsAmount) {
-        _accrueUserUnclaimedRewards(_user);
+        _accrueUnclaimedRewards(_user);
 
         rewardsAmount = userRewards[_user].unclaimed;
         if (rewardsAmount > 0) {
@@ -60,10 +60,10 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// INTERNAL ///
 
     function _beforeInteraction(address _user) internal override {
-        _accrueUserUnclaimedRewards(_user);
+        _accrueUnclaimedRewards(_user);
     }
 
-    function _accrueUserUnclaimedRewards(address _user) internal {
+    function _accrueUnclaimedRewards(address _user) internal {
         uint256 supply = totalSupply();
         if (supply > 0) {
             address[] memory poolTokenAddresses = new address[](1);
