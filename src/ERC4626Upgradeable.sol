@@ -77,7 +77,7 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         // Set to 0 at your own risk.
         // Caller must have approved the asset to this contract's address.
         // See: https://github.com/Rari-Capital/solmate/issues/178
-        if (_initialDeposit > 0) deposit(_initialDeposit, address(0));
+        if (_initialDeposit > 0) deposit(_initialDeposit, address(this));
     }
 
     /// PUBLIC ///

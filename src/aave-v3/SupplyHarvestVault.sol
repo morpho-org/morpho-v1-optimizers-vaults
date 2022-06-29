@@ -48,6 +48,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
+    address public wrappedNativeToken; // The wrapped native token of the chain this vault is deployed on.
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     uint16 public maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
 
@@ -71,12 +72,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit,
         uint16 _harvestingFee,
-        uint16 _maxHarvestingSlippage
+        uint16 _maxHarvestingSlippage,
+        address _wrappedNativeToken
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;
+        wrappedNativeToken = _wrappedNativeToken;
     }
 
     /// GOVERNANCE ///
@@ -138,15 +141,15 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address poolTokenAddress = address(poolToken);
 
         {
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = poolTokenAddress;
-            (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokenAddresses, false);
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = poolTokenAddress;
+            (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
         IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
-        uint256 rewardTokensLength = rewardTokens.length;
 
-        for (uint256 i; i < rewardTokensLength; ) {
+        uint256 nbRewardTokens = rewardTokens.length;
+        for (uint256 i; i < nbRewardTokens; ) {
             ERC20 rewardToken = ERC20(rewardTokens[i]);
             uint256 rewardsAmount = rewardsAmounts[i];
 
@@ -178,14 +181,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 })
             );
 
-            rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
-            rewardsAmount -= rewardsFees[i];
-
-            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
-
-            asset.safeTransfer(msg.sender, rewardsFees[i]);
+            uint16 _harvestingFee = harvestingFee;
+            if (_harvestingFee > 0) {
+                rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
+                rewardsAmount -= rewardsFees[i];
+            }
 
             rewardsAmounts[i] = rewardsAmount;
+
+            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+            asset.safeTransfer(msg.sender, rewardsFees[i]);
 
             unchecked {
                 ++i;
