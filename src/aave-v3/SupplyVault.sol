@@ -95,6 +95,16 @@ contract SupplyVault is SupplyVaultUpgradeable {
         }
     }
 
+    /// @notice Returns user's rewards for the specificied reward token.
+    /// @param _user The address of the user.
+    /// @param _reward The address of the reward token
+    /// @return The user's rewards in reward token.
+    function getUserRewards(address _user, address _reward) external view returns (uint256) {
+        // TODO: get pending rewards on morpho ?
+
+        uint256 newIndex = rewardIndex[reward].index + (claimed * 1e18) / totalShares;
+    }
+
     /// INTERNAL ///
 
     function _beforeInteraction(address _user) internal override {
@@ -113,7 +123,9 @@ contract SupplyVault is SupplyVaultUpgradeable {
             rewardIndex[reward].index = newIndex;
             rewardIndex[reward].accrued += claimed;
 
-            uint256 accrued = shares[_user] * (userData[reward][_user].index - newIndex);
+            uint256 accrued = userData[reward][_user].accrued +
+                shares[_user] *
+                (userData[reward][_user].index - newIndex);
 
             userData[reward][_user].accrued = accrued;
             userData[reward][_user].index = newIndex;
