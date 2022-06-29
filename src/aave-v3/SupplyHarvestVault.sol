@@ -48,6 +48,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
+    address public wrappedNativeToken; // The wrapped native token of the chain this vault is deployed on.
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     uint16 public maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
 
@@ -71,12 +72,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit,
         uint16 _harvestingFee,
-        uint16 _maxHarvestingSlippage
+        uint16 _maxHarvestingSlippage,
+        address _wrappedNativeToken
     ) external initializer {
         __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;
+        wrappedNativeToken = _wrappedNativeToken;
     }
 
     /// GOVERNANCE ///

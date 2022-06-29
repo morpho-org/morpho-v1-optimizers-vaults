@@ -46,6 +46,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
 
+    bool public isEth; // Whether the underlying asset is WETH.
+    address public wEth; // The address of WETH token.
     address public cComp; // The address of cCOMP token.
 
     uint24 public compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
@@ -77,7 +79,13 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _cComp
     ) external initializer {
-        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+        (isEth, wEth) = __SupplyVault_init(
+            _morphoAddress,
+            _poolTokenAddress,
+            _name,
+            _symbol,
+            _initialDeposit
+        );
 
         compSwapFee = _compSwapFee;
         assetSwapFee = _assetSwapFee;

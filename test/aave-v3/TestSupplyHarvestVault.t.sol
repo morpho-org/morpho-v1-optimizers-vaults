@@ -56,7 +56,12 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     }
 
     function testShouldWithdrawAllUsdcAmount() public {
-        uint256 amount = 1e9;
+        uint256 amount = 1000e6;
+
+        (, uint256 initialDepositOnPool) = morpho.supplyBalanceInOf(
+            aUsdc,
+            address(usdcSupplyHarvestVault)
+        );
 
         uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(usdc);
         uint256 expectedOnPool = amount.rayDiv(poolSupplyIndex);
@@ -68,17 +73,16 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
-            address(aUsdc),
+            aUsdc,
             address(usdcSupplyHarvestVault)
         );
 
-        assertApproxEqAbs(
+        assertEq(
             usdcSupplyHarvestVault.balanceOf(address(vaultSupplier1)),
             0,
-            10,
-            "mcUSDT balance not zero"
+            "maUSDC balance not zero"
         );
-        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertApproxEqAbs(balanceOnPool, initialDepositOnPool, 1e4, "unexpected onPool amount");
         assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
 

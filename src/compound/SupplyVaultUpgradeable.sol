@@ -25,9 +25,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     IComptroller public comptroller;
     ERC20 public comp;
 
-    bool public isEth; // Whether the underlying asset is WETH.
-    address public wEth; // The address of WETH token.
-
     /// UPGRADE ///
 
     /// @dev Initializes the vault.
@@ -42,11 +39,15 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
-    ) internal onlyInitializing {
-        ERC20 underlying = __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
+    ) internal onlyInitializing returns (bool isEth, address wEth) {
+        ERC20 underlyingToken;
+        (isEth, wEth, underlyingToken) = __SupplyVault_init_unchained(
+            _morphoAddress,
+            _poolTokenAddress
+        );
 
         __Ownable_init();
-        __ERC4626_init(underlying, _name, _symbol, _initialDeposit);
+        __ERC4626_init(underlyingToken, _name, _symbol, _initialDeposit);
     }
 
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
@@ -55,21 +56,22 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
         internal
         onlyInitializing
-        returns (ERC20 underlying)
+        returns (
+            bool isEth,
+            address wEth,
+            ERC20 underlyingToken
+        )
     {
         morpho = IMorpho(_morphoAddress);
         poolToken = ICToken(_poolTokenAddress);
         comptroller = morpho.comptroller();
         comp = ERC20(comptroller.getCompAddress());
 
-        bool isEth_ = _poolTokenAddress == morpho.cEth();
-        address wEth_ = morpho.wEth();
+        isEth = _poolTokenAddress == morpho.cEth();
+        wEth = morpho.wEth();
 
-        underlying = ERC20(isEth_ ? wEth_ : ICToken(poolToken).underlying());
-        underlying.safeApprove(_morphoAddress, type(uint256).max);
-
-        isEth = isEth_;
-        wEth = wEth_;
+        underlyingToken = ERC20(isEth ? wEth : ICToken(poolToken).underlying());
+        underlyingToken.safeApprove(_morphoAddress, type(uint256).max);
     }
 
     /// PUBLIC ///

@@ -9,6 +9,8 @@ import "@vaults/compound/SupplyHarvestVault.sol";
 import "../helpers/VaultUser.sol";
 
 contract TestSetupVaults is TestSetup {
+    using SafeTransferLib for ERC20;
+
     TransparentUpgradeableProxy internal wethSupplyVaultProxy;
     TransparentUpgradeableProxy internal wethSupplyHarvestVaultProxy;
 
@@ -87,6 +89,7 @@ contract TestSetupVaults is TestSetup {
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
 
+        uint256 initialUsdcDeposit = 1000e6;
         usdcSupplyHarvestVault = SupplyHarvestVault(
             address(
                 new TransparentUpgradeableProxy(
@@ -96,14 +99,14 @@ contract TestSetupVaults is TestSetup {
                 )
             )
         );
-        deal(usdc, address(this), 100 ether);
-        ERC20(usdc).safeApprove(address(usdcSupplyHarvestVault), 100 ether);
+        deal(usdc, address(this), initialUsdcDeposit);
+        ERC20(usdc).safeApprove(address(usdcSupplyHarvestVault), initialUsdcDeposit);
         usdcSupplyHarvestVault.initialize(
             address(morpho),
             cUsdc,
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
-            100 ether,
+            initialUsdcDeposit,
             3000,
             500,
             50,

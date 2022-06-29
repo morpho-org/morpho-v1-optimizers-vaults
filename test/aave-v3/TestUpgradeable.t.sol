@@ -59,11 +59,12 @@ contract TestUpgradeable is TestSetupVaults {
         supplyHarvestVaultImplV1.initialize(
             address(morpho),
             address(aWeth),
-            "MorphoCompoundETH",
-            "mcETH",
+            "MorphoAaveWETH",
+            "mahWETH",
             0,
             10,
-            100
+            100,
+            rewardToken
         );
     }
 
@@ -120,8 +121,8 @@ contract TestUpgradeable is TestSetupVaults {
         supplyVaultImplV1.initialize(
             address(morpho),
             address(aWeth),
-            "MorphoCompoundETH",
-            "mcETH",
+            "MorphoAaveWETH",
+            "maWETH",
             0
         );
     }
