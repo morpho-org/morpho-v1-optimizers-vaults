@@ -13,9 +13,13 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
+    struct UserRewards {
+        uint128 index; // User index for the reward token.
+        uint128 unclaimed; // User's unclaimed rewards.
+    }
+
     uint256 public rewardsIndex; // The vault's rewards index.
-    mapping(address => uint256) public userRewardsIndex; // The rewards index of a user, used to track rewards accrued.
-    mapping(address => uint256) public userUnclaimedRewards; // The total unclaimed rewards of a user.
+    mapping(address => UserRewards) public userRewards; // The rewards index of a user, used to track rewards accrued.
 
     /// UPGRADE ///
 
@@ -42,9 +46,9 @@ contract SupplyVault is SupplyVaultUpgradeable {
     function claimRewards(address _user) public returns (uint256 rewardsAmount) {
         _accrueUserUnclaimedRewards(_user);
 
-        rewardsAmount = userUnclaimedRewards[_user];
+        rewardsAmount = userRewards[_user].unclaimed;
         if (rewardsAmount > 0) {
-            userUnclaimedRewards[_user] = 0;
+            userRewards[_user].unclaimed = 0;
 
             comp.safeTransfer(_user, rewardsAmount);
         }
@@ -64,10 +68,10 @@ contract SupplyVault is SupplyVaultUpgradeable {
             rewardsIndex += morpho.claimRewards(poolTokenAddresses, false).div(supply);
         }
 
-        uint256 rewardsIndexDiff = rewardsIndex - userRewardsIndex[_user];
+        uint256 rewardsIndexDiff = rewardsIndex - userRewards[_user].index;
         if (rewardsIndexDiff > 0) {
-            userUnclaimedRewards[_user] += balanceOf(_user).mul(rewardsIndexDiff);
-            userRewardsIndex[_user] = rewardsIndex;
+            userRewards[_user].unclaimed += uint128(balanceOf(_user).mul(rewardsIndexDiff));
+            userRewards[_user].index = uint128(rewardsIndex);
         }
     }
 }
