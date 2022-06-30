@@ -9,11 +9,11 @@ contract TestWrappedNativeToken is TestSetupVaults {
     function testShouldDepositWrappedNativeTokenOnVault() public {
         uint256 amount = 100 ether;
 
-        vaultSupplier1.depositVault(wNativeSupplyHarvestVault, amount);
+        vaultSupplier1.depositVault(wrappedNativeTokenSupplyHarvestVault, amount);
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
             aWrappedNativeToken,
-            address(wNativeSupplyHarvestVault)
+            address(wrappedNativeTokenSupplyHarvestVault)
         );
 
         uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(aWrappedNativeToken);
@@ -33,16 +33,16 @@ contract TestWrappedNativeToken is TestSetupVaults {
         uint256 expectedOnPool = amount.rayDiv(poolSupplyIndex);
 
         uint256 balanceBefore = vaultSupplier1.balanceOf(wrappedNativeToken);
-        vaultSupplier1.depositVault(wNativeSupplyHarvestVault, amount);
+        vaultSupplier1.depositVault(wrappedNativeTokenSupplyHarvestVault, amount);
         vaultSupplier1.withdrawVault(
-            wNativeSupplyHarvestVault,
+            wrappedNativeTokenSupplyHarvestVault,
             expectedOnPool.rayMul(poolSupplyIndex)
         );
         uint256 balanceAfter = vaultSupplier1.balanceOf(wrappedNativeToken);
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
             aWrappedNativeToken,
-            address(wNativeSupplyHarvestVault)
+            address(wrappedNativeTokenSupplyHarvestVault)
         );
 
         assertEq(balanceInP2P, 0);
@@ -53,21 +53,23 @@ contract TestWrappedNativeToken is TestSetupVaults {
     function testShouldClaimAndFoldRewardsOnWrappedNativeTokenVault() public {
         uint256 amount = 10_000 ether;
 
-        vaultSupplier1.depositVault(wNativeSupplyHarvestVault, amount);
+        vaultSupplier1.depositVault(wrappedNativeTokenSupplyHarvestVault, amount);
 
         vm.roll(block.number + 1_000);
 
         morpho.updateIndexes(aWrappedNativeToken);
         (, uint256 balanceOnPoolbefore) = morpho.supplyBalanceInOf(
             aWrappedNativeToken,
-            address(wNativeSupplyHarvestVault)
+            address(wrappedNativeTokenSupplyHarvestVault)
         );
 
         (
             address[] memory rewardTokens,
             uint256[] memory rewardsAmounts,
             uint256[] memory rewardsFees
-        ) = wNativeSupplyHarvestVault.harvest(wNativeSupplyHarvestVault.maxHarvestingSlippage());
+        ) = wrappedNativeTokenSupplyHarvestVault.harvest(
+            wrappedNativeTokenSupplyHarvestVault.maxHarvestingSlippage()
+        );
 
         assertEq(rewardTokens.length, 1);
         assertEq(rewardTokens[0], rewardToken);
@@ -75,12 +77,12 @@ contract TestWrappedNativeToken is TestSetupVaults {
         assertEq(rewardsFees.length, 1);
 
         uint256 expectedRewardsFee = ((rewardsAmounts[0] + rewardsFees[0]) *
-            wNativeSupplyHarvestVault.harvestingFee()) /
-            wNativeSupplyHarvestVault.MAX_BASIS_POINTS();
+            wrappedNativeTokenSupplyHarvestVault.harvestingFee()) /
+            wrappedNativeTokenSupplyHarvestVault.MAX_BASIS_POINTS();
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             aWrappedNativeToken,
-            address(wNativeSupplyHarvestVault)
+            address(wrappedNativeTokenSupplyHarvestVault)
         );
 
         assertGt(rewardsAmounts[0], 0, "rewards amount is zero");
@@ -91,7 +93,7 @@ contract TestWrappedNativeToken is TestSetupVaults {
             "unexpected balance on pool"
         );
         assertEq(
-            ERC20(rewardToken).balanceOf(address(wNativeSupplyHarvestVault)),
+            ERC20(rewardToken).balanceOf(address(wrappedNativeTokenSupplyHarvestVault)),
             0,
             "rewardToken amount is not zero"
         );

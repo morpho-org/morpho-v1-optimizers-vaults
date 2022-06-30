@@ -11,26 +11,26 @@ import "../helpers/VaultUser.sol";
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
 
-    TransparentUpgradeableProxy internal wNativeSupplyVaultProxy;
-    TransparentUpgradeableProxy internal wNativeSupplyHarvestVaultProxy;
+    TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
+    TransparentUpgradeableProxy internal wrappedNativeTokenSupplyHarvestVaultProxy;
 
     SupplyVault internal supplyVaultImplV1;
     SupplyHarvestVault internal supplyHarvestVaultImplV1;
 
-    SupplyVault internal wNativeSupplyVault;
+    SupplyVault internal wrappedNativeTokenSupplyVault;
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
-    SupplyHarvestVault internal wNativeSupplyHarvestVault;
+    SupplyHarvestVault internal wrappedNativeTokenSupplyHarvestVault;
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
 
     address internal aWrappedNativeToken;
     address internal wrappedNativeToken;
 
-    ERC20 maWrappedNative;
+    ERC20 maWrappedNativeToken;
     ERC20 maDai;
     ERC20 maUsdc;
-    ERC20 mahWrappedNative;
+    ERC20 mahWrappedNativeToken;
     ERC20 mahDai;
     ERC20 mahUsdc;
 
@@ -51,20 +51,20 @@ contract TestSetupVaults is TestSetup {
             wrappedNativeToken = wavax;
         }
 
-        console.log(aWrappedNativeToken);
-
         createMarket(aWrappedNativeToken);
 
         supplyVaultImplV1 = new SupplyVault();
         supplyHarvestVaultImplV1 = new SupplyHarvestVault();
 
-        wNativeSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
+        wrappedNativeTokenSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
             address(supplyHarvestVaultImplV1),
             address(proxyAdmin),
             ""
         );
-        wNativeSupplyHarvestVault = SupplyHarvestVault(address(wNativeSupplyHarvestVaultProxy));
-        wNativeSupplyHarvestVault.initialize(
+        wrappedNativeTokenSupplyHarvestVault = SupplyHarvestVault(
+            address(wrappedNativeTokenSupplyHarvestVaultProxy)
+        );
+        wrappedNativeTokenSupplyHarvestVault.initialize(
             address(morpho),
             aWrappedNativeToken,
             "MorphoAaveHarvestWNATIVE",
@@ -74,7 +74,7 @@ contract TestSetupVaults is TestSetup {
             100,
             wrappedNativeToken
         );
-        mahWrappedNative = ERC20(address(wNativeSupplyHarvestVault));
+        mahWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyHarvestVault));
 
         daiSupplyHarvestVault = SupplyHarvestVault(
             address(
@@ -121,20 +121,20 @@ contract TestSetupVaults is TestSetup {
         );
         mahUsdc = ERC20(address(usdcSupplyHarvestVault));
 
-        wNativeSupplyVaultProxy = new TransparentUpgradeableProxy(
+        wrappedNativeTokenSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
             address(proxyAdmin),
             ""
         );
-        wNativeSupplyVault = SupplyVault(address(wNativeSupplyVaultProxy));
-        wNativeSupplyVault.initialize(
+        wrappedNativeTokenSupplyVault = SupplyVault(address(wrappedNativeTokenSupplyVaultProxy));
+        wrappedNativeTokenSupplyVault.initialize(
             address(morpho),
             address(aWrappedNativeToken),
             "MorphoAaveWNATIVE",
             "maWNATIVE",
             0
         );
-        maWrappedNative = ERC20(address(wNativeSupplyVault));
+        maWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyVault));
 
         daiSupplyVault = SupplyVault(
             address(
@@ -177,7 +177,7 @@ contract TestSetupVaults is TestSetup {
 
     function setVaultContractsLabels() internal {
         vm.label(address(supplyHarvestVaultImplV1), "SupplyHarvestVaultImplV1");
-        vm.label(address(wNativeSupplyHarvestVault), "SupplyHarvestVault (wNATIVE)");
+        vm.label(address(wrappedNativeTokenSupplyHarvestVault), "SupplyHarvestVault (wNATIVE)");
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
     }
