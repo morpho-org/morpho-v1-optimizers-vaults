@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
+import "@solmate/utils/FixedPointMathLib.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
@@ -10,8 +10,8 @@ import "./SupplyVaultUpgradeable.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
+    using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
-    using WadRayMath for uint256;
 
     /// STRUCTS ///
 
@@ -21,6 +21,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
     }
 
     /// STORAGE ///
+
+    uint256 public constant SCALE = 1e36;
 
     IRewardsManager public rewardsManager; // Morpho's rewards manager.
 
@@ -129,10 +131,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
                 unclaimedAmounts[i] =
                     userRewards[rewardToken][_user].unclaimed +
-                    balanceOf(_user).wadMul(
-                        rewardsIndex[rewardToken] +
-                            claimableAmounts[i].wadDiv(totalSupply()) -
-                            userRewards[rewardToken][_user].index
+                    balanceOf(_user).mulDivDown(
+                        (rewardsIndex[rewardToken] +
+                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) -
+                            userRewards[rewardToken][_user].index,
+                        SCALE
                     );
 
                 unchecked {
@@ -166,10 +169,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
         return
             _userRewards.unclaimed +
-            balanceOf(_user).wadMul(
-                rewardsIndex[_rewardToken] +
-                    claimableRewards.wadDiv(totalSupply()) -
-                    _userRewards.index
+            balanceOf(_user).mulDivDown(
+                (rewardsIndex[_rewardToken] +
+                    claimableRewards.mulDivDown(SCALE, totalSupply()) -
+                    _userRewards.index),
+                SCALE
             );
     }
 
@@ -190,7 +194,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
             poolTokens,
             false
         );
-
         uint256 nbRewardTokens = rewardTokens.length;
         for (uint256 i; i < nbRewardTokens; ) {
             address rewardToken = rewardTokens[i];
@@ -198,13 +201,15 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             uint128 newRewardsIndex = rewardsIndex[rewardToken];
             if (claimedAmount > 0) {
-                newRewardsIndex += uint128(claimedAmount.wadDiv(supply));
+                newRewardsIndex += uint128(claimedAmount.mulDivDown(SCALE, supply));
                 rewardsIndex[rewardToken] = newRewardsIndex;
             }
 
             uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
             if (rewardsIndexDiff > 0) {
-                uint128 accruedRewards = uint128(balanceOf(_user).wadMul(rewardsIndexDiff));
+                uint128 accruedRewards = uint128(
+                    balanceOf(_user).mulDivDown(rewardsIndexDiff, SCALE)
+                );
                 userRewards[rewardToken][_user].unclaimed += accruedRewards;
                 userRewards[rewardToken][_user].index = newRewardsIndex;
 

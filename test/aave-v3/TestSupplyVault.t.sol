@@ -214,8 +214,8 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(claimedAmounts2.length, 1);
 
         assertApproxEqAbs(
-            claimedAmounts1[0] + claimedAmounts2[0],
             expectedTotalRewardsAmount,
+            claimedAmounts1[0] + claimedAmounts2[0],
             1e5,
             "unexpected total rewards amount"
         );
@@ -224,6 +224,65 @@ contract TestSupplyVault is TestSetupVaults {
             claimedAmounts1[0],
             2 * claimedAmounts2[0],
             1e9,
+            "unexpected rewards amount"
+        ); // not exact because of rewardTokenounded interests
+    }
+
+    function testShouldClaimSameRewardsWhenDepositedAtSameTime() public {
+        uint256 amount = 10_000 ether;
+        address[] memory poolTokenAddresses = new address[](1);
+        poolTokenAddresses[0] = aDai;
+
+        uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
+        uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
+
+        vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
+        vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
+
+        vm.warp(block.timestamp + 10 days);
+
+        expectedTotalRewardsAmount += rewardsManager.getUserRewards(
+            poolTokenAddresses,
+            address(daiSupplyVault),
+            rewardToken
+        );
+
+        vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
+        vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
+
+        (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
+        .claimRewards(address(vaultSupplier1));
+
+        assertEq(rewardTokens1.length, 1);
+        assertEq(rewardTokens1[0], rewardToken);
+        assertEq(claimedAmounts1.length, 1);
+
+        (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
+        .claimRewards(address(vaultSupplier2));
+
+        assertEq(rewardTokens2.length, 1);
+        assertEq(rewardTokens2[0], rewardToken);
+        assertEq(claimedAmounts2.length, 1);
+
+        assertApproxEqAbs(
+            expectedTotalRewardsAmount,
+            claimedAmounts1[0] + claimedAmounts2[0],
+            1e5,
+            "unexpected total rewards amount"
+        );
+        assertGe(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
+        assertApproxEqAbs(
+            claimedAmounts1[0],
+            claimedAmounts2[0],
+            1e15,
             "unexpected rewards amount"
         ); // not exact because of rewardTokenounded interests
     }
@@ -286,7 +345,12 @@ contract TestSupplyVault is TestSetupVaults {
             "unexpected total rewards amount"
         );
         assertGt(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
-        assertApproxEqAbs(claimedAmounts1[0], claimedAmounts2[0], 1e8, "unexpected rewards amount"); // not exact because of rewardTokenounded interests
+        assertApproxEqAbs(
+            claimedAmounts1[0],
+            claimedAmounts2[0],
+            1e15,
+            "unexpected rewards amount"
+        ); // not exact because of rewardTokenounded interests
     }
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration2() public {
@@ -362,14 +426,14 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(claimedAmounts3.length, 1);
 
         assertApproxEqAbs(
-            claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0],
             expectedTotalRewardsAmount,
+            claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0],
             1e5,
             "unexpected total rewards amount"
         );
         assertLt(
-            claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0],
-            expectedTotalRewardsAmount
+            expectedTotalRewardsAmount,
+            claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0]
         );
         assertApproxEqAbs(
             ERC20(rewardToken).balanceOf(address(daiSupplyVault)),
