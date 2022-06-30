@@ -55,7 +55,7 @@ contract TestWrappedNativeToken is TestSetupVaults {
 
         vaultSupplier1.depositVault(wrappedNativeTokenSupplyHarvestVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.warp(block.timestamp + 365 days);
 
         morpho.updateIndexes(aWrappedNativeToken);
         (, uint256 balanceOnPoolbefore) = morpho.supplyBalanceInOf(
@@ -71,10 +71,10 @@ contract TestWrappedNativeToken is TestSetupVaults {
             wrappedNativeTokenSupplyHarvestVault.maxHarvestingSlippage()
         );
 
-        assertEq(rewardTokens.length, 1);
-        assertEq(rewardTokens[0], rewardToken);
-        assertEq(rewardsAmounts.length, 1);
-        assertEq(rewardsFees.length, 1);
+        assertEq(rewardTokens.length, 1, "unexpected reward tokens length");
+        assertEq(rewardTokens[0], rewardToken, "unexpected reward token");
+        assertEq(rewardsAmounts.length, 1, "unexpected rewards amounts length");
+        assertEq(rewardsFees.length, 1, "unexpected rewards fees length");
 
         uint256 expectedRewardsFee = ((rewardsAmounts[0] + rewardsFees[0]) *
             wrappedNativeTokenSupplyHarvestVault.harvestingFee()) /
