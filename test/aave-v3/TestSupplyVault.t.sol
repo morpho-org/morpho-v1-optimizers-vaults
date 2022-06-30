@@ -151,7 +151,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.warp(block.timestamp + 20 days);
 
         uint256 balanceBefore = vaultSupplier1.balanceOf(rewardToken);
 
@@ -181,7 +181,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -191,7 +191,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier2.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -235,7 +235,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -246,7 +246,7 @@ contract TestSupplyVault is TestSetupVaults {
         uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -257,7 +257,7 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -280,12 +280,12 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(claimedAmounts2.length, 1);
 
         assertApproxEqAbs(
-            claimedAmounts1[0] + claimedAmounts2[0],
             expectedTotalRewardsAmount,
+            claimedAmounts1[0] + claimedAmounts2[0],
             1e5,
             "unexpected total rewards amount"
         );
-        assertLt(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
+        assertGt(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
         assertApproxEqAbs(claimedAmounts1[0], claimedAmounts2[0], 1e8, "unexpected rewards amount"); // not exact because of rewardTokenounded interests
     }
 
@@ -296,7 +296,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -307,7 +307,7 @@ contract TestSupplyVault is TestSetupVaults {
         uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -319,7 +319,7 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier1.redeemVault(daiSupplyVault, shares1 / 2);
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
@@ -330,7 +330,7 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
         vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
             poolTokenAddresses,
