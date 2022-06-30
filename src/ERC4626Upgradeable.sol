@@ -104,8 +104,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         // Need to transfer before minting or ERC777s could reenter.
         asset.safeTransferFrom(msg.sender, address(this), _amount);
 
-        _beforeInteraction(_receiver);
-
         _mint(_receiver, shares);
 
         emit Deposit(msg.sender, _receiver, _amount, shares);
@@ -122,8 +120,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
         // Need to transfer before minting or ERC777s could reenter.
         asset.safeTransferFrom(msg.sender, address(this), amount);
-
-        _beforeInteraction(_receiver);
 
         _mint(_receiver, _shares);
 
@@ -146,7 +142,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
         if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, shares);
 
-        _beforeInteraction(_receiver);
         _beforeWithdraw(_owner, _amount, shares);
 
         _burn(_owner, shares);
@@ -171,7 +166,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         // Check for rounding error since we round down in previewRedeem.
         if ((amount = previewRedeem(_shares)) == 0) revert AmountIsZero();
 
-        _beforeInteraction(_receiver);
         _beforeWithdraw(_owner, amount, _shares);
 
         _burn(_owner, _shares);
@@ -234,8 +228,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     }
 
     /// INTERNAL ///
-
-    function _beforeInteraction(address _owner) internal virtual {}
 
     function _beforeWithdraw(
         address _owner,
