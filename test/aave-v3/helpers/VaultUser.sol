@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@vaults/ERC4626Upgradeable.sol";
+import "@vaults/ERC4626UpgradeableSafe.sol";
 import "@tests/aave-v3/helpers/User.sol";
 
 contract VaultUser is User {
-    using SafeTransferLib for ERC20;
+    using SafeTransferLib for IERC20Upgradeable;
 
     constructor(Morpho _morpho) User(_morpho) {}
 
-    function depositVault(ERC4626Upgradeable tokenizedVault, uint256 _amount)
+    function depositVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _amount)
         external
         returns (uint256)
     {
@@ -17,7 +17,7 @@ contract VaultUser is User {
         return tokenizedVault.deposit(_amount, address(this));
     }
 
-    function mintVault(ERC4626Upgradeable tokenizedVault, uint256 _shares)
+    function mintVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _shares)
         external
         returns (uint256)
     {
@@ -29,14 +29,14 @@ contract VaultUser is User {
     }
 
     function withdrawVault(
-        ERC4626Upgradeable tokenizedVault,
+        ERC4626UpgradeableSafe tokenizedVault,
         uint256 _amount,
         address _owner
     ) public returns (uint256) {
         return tokenizedVault.withdraw(_amount, address(this), _owner);
     }
 
-    function withdrawVault(ERC4626Upgradeable tokenizedVault, uint256 _amount)
+    function withdrawVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _amount)
         external
         returns (uint256)
     {
@@ -44,14 +44,14 @@ contract VaultUser is User {
     }
 
     function redeemVault(
-        ERC4626Upgradeable tokenizedVault,
+        ERC4626UpgradeableSafe tokenizedVault,
         uint256 _shares,
         address _owner
     ) public returns (uint256) {
         return tokenizedVault.redeem(_shares, address(this), _owner);
     }
 
-    function redeemVault(ERC4626Upgradeable tokenizedVault, uint256 _shares)
+    function redeemVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _shares)
         external
         returns (uint256)
     {

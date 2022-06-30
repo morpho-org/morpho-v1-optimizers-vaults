@@ -79,7 +79,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _cComp
     ) external initializer {
-        (isEth, wEth) = __SupplyVault_init(
+        (isEth, wEth) = __SupplyVaultUpgradeable_init(
             _morphoAddress,
             _poolTokenAddress,
             _name,
@@ -161,13 +161,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             ISwapRouter.ExactInputParams({
                 path: isEth
                     ? abi.encodePacked(address(comp), compSwapFee, wEth)
-                    : abi.encodePacked(
-                        address(comp),
-                        compSwapFee,
-                        wEth,
-                        assetSwapFee,
-                        address(asset)
-                    ),
+                    : abi.encodePacked(address(comp), compSwapFee, wEth, assetSwapFee, asset()),
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: rewardsAmount,
@@ -183,6 +177,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
         morpho.supply(poolTokenAddress, address(this), rewardsAmount);
 
-        if (rewardsFee > 0) asset.safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) ERC20(asset()).safeTransfer(msg.sender, rewardsFee);
     }
 }

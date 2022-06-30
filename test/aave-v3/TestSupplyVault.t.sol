@@ -96,7 +96,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier2.redeemVault(daiSupplyVault, shares);
     }
 
@@ -105,7 +105,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyVault, shares, address(vaultSupplier2));
     }
 
@@ -118,11 +118,6 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier2.redeemVault(daiSupplyVault, shares, address(vaultSupplier1));
     }
 
-    function testShouldNotDepositZeroAmount() public {
-        vm.expectRevert(abi.encodeWithSignature("ShareIsZero()"));
-        vaultSupplier1.depositVault(daiSupplyVault, 0);
-    }
-
     function testShouldNotMintZeroShare() public {
         vm.expectRevert(abi.encodeWithSignature("AmountIsZero()"));
         vaultSupplier1.mintVault(daiSupplyVault, 0);
@@ -133,7 +128,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: withdraw more than max");
         vaultSupplier1.withdrawVault(daiSupplyVault, amount * 2);
     }
 
@@ -142,7 +137,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyVault, shares + 1);
     }
 

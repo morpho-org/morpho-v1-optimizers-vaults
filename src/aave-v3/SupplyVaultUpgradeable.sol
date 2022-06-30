@@ -5,19 +5,19 @@ import "@aave/core-v3/contracts/interfaces/IAToken.sol";
 import "@aave/core-v3/contracts/interfaces/IPool.sol";
 import "@contracts/aave-v3/interfaces/IMorpho.sol";
 
-import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 import "@contracts/aave-v3/libraries/Math.sol";
 import "@contracts/aave-v3/libraries/Types.sol";
 
-import "../ERC4626Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultUpgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V3.
-abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeable {
+abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using WadRayMath for uint256;
 
@@ -52,10 +52,11 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
         ERC20 underlyingToken = __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
 
         __Ownable_init();
-        __ERC4626_init(underlyingToken, _name, _symbol, _initialDeposit);
+        __ERC20_init(_name, _symbol);
+        __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
     }
 
-    /// @dev Initializes the vault whithout initializing parents contracts (avoid the double initialization problem).
+    /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
     /// @param _morphoAddress The address of the main Morpho contract.
     /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
     function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
@@ -97,19 +98,24 @@ abstract contract SupplyVaultUpgradeable is ERC4626Upgradeable, OwnableUpgradeab
 
     /// INTERNAL ///
 
-    function _beforeWithdraw(
-        address,
-        uint256 _amount,
-        uint256
+    function _deposit(
+        address _caller,
+        address _receiver,
+        uint256 _assets,
+        uint256 _shares
     ) internal virtual override {
-        morpho.withdraw(address(poolToken), _amount);
+        morpho.supply(address(poolToken), address(this), _assets);
+        super._deposit(_caller, _receiver, _assets, _shares);
     }
 
-    function _afterDeposit(
-        address,
-        uint256 _amount,
-        uint256
+    function _withdraw(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _assets,
+        uint256 _shares
     ) internal virtual override {
-        morpho.supply(address(poolToken), address(this), _amount);
+        morpho.withdraw(address(poolToken), _assets);
+        super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 }

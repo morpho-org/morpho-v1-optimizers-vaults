@@ -75,7 +75,13 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _wrappedNativeToken
     ) external initializer {
-        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+        __SupplyVaultupgradeable_init(
+            _morphoAddress,
+            _poolTokenAddress,
+            _name,
+            _symbol,
+            _initialDeposit
+        );
 
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;

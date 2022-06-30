@@ -64,7 +64,13 @@ contract SupplyVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+        __SupplyVaultupgradeable_init(
+            _morphoAddress,
+            _poolTokenAddress,
+            _name,
+            _symbol,
+            _initialDeposit
+        );
 
         rewardsManager = IMorpho(_morphoAddress).rewardsManager();
     }

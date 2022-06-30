@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: GNU AGPLv3
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+
+/// @title ERC4626UpgradeableSafe.
+/// @author Morpho Labs.
+/// @custom:contact security@morpho.xyz
+/// @notice ERC4626 Tokenized Vault abstract upgradeable implementation, heavily inspired by Solmate's non-upgradeable implementation (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol).
+abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
+    /// CONSTRUCTOR ///
+
+    /// @notice Constructs the contract.
+    /// @dev The contract is automatically marked as initialized when deployed so that nobody can highjack the implementation contract.
+    constructor() initializer {}
+
+    /// UPGRADE ///
+
+    function __ERC4626UpgradeableSafe_init(
+        IERC20MetadataUpgradeable _asset,
+        uint256 _initialDeposit
+    ) internal {
+        __ERC4626UpgradeableSafe_init_unchained(_asset, _initialDeposit);
+    }
+
+    function __ERC4626UpgradeableSafe_init_unchained(
+        IERC20MetadataUpgradeable _asset,
+        uint256 _initialDeposit
+    ) internal {
+        __ERC4626_init_unchained(_asset);
+
+        // Sacrifice an initial seed of shares to ensure a healthy amount of precision in minting shares.
+        // Set to 0 at your own risk.
+        // Caller must have approved the asset to this contract's address.
+        // See: https://github.com/Rari-Capital/solmate/issues/178
+        if (_initialDeposit > 0) deposit(_initialDeposit, address(this));
+    }
+}
