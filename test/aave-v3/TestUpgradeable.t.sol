@@ -10,14 +10,14 @@ contract TestUpgradeable is TestSetupVaults {
         SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault();
 
         vm.record();
-        proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(wethSupplyHarvestVaultImplV2));
-        (, bytes32[] memory writes) = vm.accesses(address(wethSupplyHarvestVault));
+        proxyAdmin.upgrade(wNativeSupplyHarvestVaultProxy, address(wethSupplyHarvestVaultImplV2));
+        (, bytes32[] memory writes) = vm.accesses(address(wNativeSupplyHarvestVault));
 
         // 1 write for the implemention.
         assertEq(writes.length, 1);
         address newImplem = bytes32ToAddress(
             vm.load(
-                address(wethSupplyHarvestVault),
+                address(wNativeSupplyHarvestVault),
                 bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1) // Implementation slot.
             )
         );
@@ -29,9 +29,9 @@ contract TestUpgradeable is TestSetupVaults {
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
-        proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
+        proxyAdmin.upgrade(wNativeSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
 
-        proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
+        proxyAdmin.upgrade(wNativeSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyHarvestVault() public {
@@ -40,7 +40,7 @@ contract TestUpgradeable is TestSetupVaults {
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgradeAndCall(
-            wethSupplyHarvestVaultProxy,
+            wNativeSupplyHarvestVaultProxy,
             payable(address(wethSupplyHarvestVaultImplV2)),
             ""
         );
@@ -48,7 +48,7 @@ contract TestUpgradeable is TestSetupVaults {
         // Revert for wrong data not wrong caller.
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
-            wethSupplyHarvestVaultProxy,
+            wNativeSupplyHarvestVaultProxy,
             payable(address(wethSupplyHarvestVaultImplV2)),
             ""
         );
@@ -58,7 +58,7 @@ contract TestUpgradeable is TestSetupVaults {
         vm.expectRevert("Initializable: contract is already initialized");
         supplyHarvestVaultImplV1.initialize(
             address(morpho),
-            address(aWeth),
+            address(aWrappedNativeToken),
             "MorphoAaveWETH",
             "mahWETH",
             0,
@@ -72,14 +72,14 @@ contract TestUpgradeable is TestSetupVaults {
         SupplyVault wethSupplyVaultImplV2 = new SupplyVault();
 
         vm.record();
-        proxyAdmin.upgrade(wethSupplyVaultProxy, address(wethSupplyVaultImplV2));
-        (, bytes32[] memory writes) = vm.accesses(address(wethSupplyVault));
+        proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(wethSupplyVaultImplV2));
+        (, bytes32[] memory writes) = vm.accesses(address(wNativeSupplyVault));
 
         // 1 write for the implemention.
         assertEq(writes.length, 1);
         address newImplem = bytes32ToAddress(
             vm.load(
-                address(wethSupplyVault),
+                address(wNativeSupplyVault),
                 bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1) // Implementation slot.
             )
         );
@@ -91,9 +91,9 @@ contract TestUpgradeable is TestSetupVaults {
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
-        proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
+        proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
 
-        proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
+        proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
@@ -102,7 +102,7 @@ contract TestUpgradeable is TestSetupVaults {
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgradeAndCall(
-            wethSupplyVaultProxy,
+            wNativeSupplyVaultProxy,
             payable(address(wethSupplyVaultImplV2)),
             ""
         );
@@ -110,7 +110,7 @@ contract TestUpgradeable is TestSetupVaults {
         // Revert for wrong data not wrong caller.
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
-            wethSupplyVaultProxy,
+            wNativeSupplyVaultProxy,
             payable(address(wethSupplyVaultImplV2)),
             ""
         );
@@ -120,7 +120,7 @@ contract TestUpgradeable is TestSetupVaults {
         vm.expectRevert("Initializable: contract is already initialized");
         supplyVaultImplV1.initialize(
             address(morpho),
-            address(aWeth),
+            address(aWrappedNativeToken),
             "MorphoAaveWETH",
             "maWETH",
             0

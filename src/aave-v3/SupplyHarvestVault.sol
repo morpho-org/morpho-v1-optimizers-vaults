@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@aave/core-v3/contracts/interfaces/IPriceOracleGetter.sol";
 
+import "forge-std/console.sol";
+
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyHarvestVault.

@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 /// @title ERC4626Upgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626 Tokenized Vault abstract upgradeable implementation, heavily inspired by Solmate's non-upgradeable implementation (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol)
+/// @notice ERC4626 Tokenized Vault abstract upgradeable implementation, heavily inspired by Solmate's non-upgradeable implementation (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol).
 abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;

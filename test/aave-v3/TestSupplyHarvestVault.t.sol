@@ -268,7 +268,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         swapRouter.exactInputSingle(
             ISwapRouter.ExactInputSingleParams({
                 tokenIn: rewardToken,
-                tokenOut: wEth,
+                tokenOut: wrappedNativeToken,
                 fee: daiSupplyHarvestVault.rewardsSwapFee(rewardToken),
                 recipient: address(this),
                 deadline: block.timestamp,
