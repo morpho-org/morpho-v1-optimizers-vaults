@@ -149,48 +149,53 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
 
         uint256 nbRewardTokens = rewardTokens.length;
+        rewardsFees = new uint256[](nbRewardTokens);
+
         for (uint256 i; i < nbRewardTokens; ) {
-            ERC20 rewardToken = ERC20(rewardTokens[i]);
             uint256 rewardsAmount = rewardsAmounts[i];
 
-            uint256 amountOutMinimum = rewardsAmount
-            .rayMul(oracle.getAssetPrice(address(rewardToken)))
-            .rayDiv(oracle.getAssetPrice(underlyingAddress))
-            .percentMul(MAX_BASIS_POINTS - Math.min(_maxSlippage, maxHarvestingSlippage));
+            if (rewardsAmount > 0) {
+                ERC20 rewardToken = ERC20(rewardTokens[i]);
 
-            rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
-            rewardsAmount = SWAP_ROUTER.exactInput(
-                ISwapRouter.ExactInputParams({
-                    path: underlyingAddress == wrappedNativeToken
-                        ? abi.encodePacked(
-                            address(rewardToken),
-                            rewardsSwapFee[address(rewardToken)],
-                            wrappedNativeToken
-                        )
-                        : abi.encodePacked(
-                            address(rewardToken),
-                            rewardsSwapFee[address(rewardToken)],
-                            wrappedNativeToken,
-                            assetSwapFee[address(rewardToken)],
-                            underlyingAddress
-                        ),
-                    recipient: address(this),
-                    deadline: block.timestamp,
-                    amountIn: rewardsAmount,
-                    amountOutMinimum: amountOutMinimum
-                })
-            );
+                uint256 amountOutMinimum = rewardsAmount
+                .rayMul(oracle.getAssetPrice(address(rewardToken)))
+                .rayDiv(oracle.getAssetPrice(underlyingAddress))
+                .percentMul(MAX_BASIS_POINTS - Math.min(_maxSlippage, maxHarvestingSlippage));
 
-            uint16 _harvestingFee = harvestingFee;
-            if (_harvestingFee > 0) {
-                rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
-                rewardsAmount -= rewardsFees[i];
+                rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
+                rewardsAmount = SWAP_ROUTER.exactInput(
+                    ISwapRouter.ExactInputParams({
+                        path: underlyingAddress == wrappedNativeToken
+                            ? abi.encodePacked(
+                                address(rewardToken),
+                                rewardsSwapFee[address(rewardToken)],
+                                wrappedNativeToken
+                            )
+                            : abi.encodePacked(
+                                address(rewardToken),
+                                rewardsSwapFee[address(rewardToken)],
+                                wrappedNativeToken,
+                                assetSwapFee[address(rewardToken)],
+                                underlyingAddress
+                            ),
+                        recipient: address(this),
+                        deadline: block.timestamp,
+                        amountIn: rewardsAmount,
+                        amountOutMinimum: amountOutMinimum
+                    })
+                );
+
+                uint16 _harvestingFee = harvestingFee;
+                if (_harvestingFee > 0) {
+                    rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
+                    rewardsAmount -= rewardsFees[i];
+                }
+
+                rewardsAmounts[i] = rewardsAmount;
+
+                morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+                asset.safeTransfer(msg.sender, rewardsFees[i]);
             }
-
-            rewardsAmounts[i] = rewardsAmount;
-
-            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
-            asset.safeTransfer(msg.sender, rewardsFees[i]);
 
             unchecked {
                 ++i;
