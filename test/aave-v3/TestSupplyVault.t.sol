@@ -431,26 +431,26 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertLt(
+        assertGe(
             expectedTotalRewardsAmount,
             claimedAmounts1[0] + claimedAmounts2[0] + claimedAmounts3[0]
         );
         assertApproxEqAbs(
             ERC20(rewardToken).balanceOf(address(daiSupplyVault)),
             0,
-            1e5,
+            1e15,
             "non zero rewardToken balance on vault"
         );
         assertApproxEqAbs(
             claimedAmounts1[0],
             claimedAmounts2[0],
-            1e9,
+            1e15,
             "unexpected rewards amount 1-2"
         ); // not exact because of rewardTokenounded interests
         assertApproxEqAbs(
             claimedAmounts2[0],
             claimedAmounts3[0],
-            1e8,
+            1e15,
             "unexpected rewards amount 2-3"
         ); // not exact because of rewardTokenounded interests
     }
