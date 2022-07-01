@@ -36,6 +36,13 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
+    // Use non controllable oracle.
+    // Code is in this repo: https://github.com/sohkai/uniswap-v3-spot-twap-oracle.
+    address public constant ORACLE = 0x813A5C304b8E37fA98F43A33DCCf60fA5cDb8739;
+    uint256 public constant TWAP_PERIOD = 1800;
+    SupplyHarvestVault.SwapConfig public swapConfig =
+        SupplyHarvestVault.SwapConfig(3000, 500, 50, 100);
+
     function onSetUp() public override {
         initVaultContracts();
         setVaultContractsLabels();
@@ -58,10 +65,9 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
-            3000,
-            0,
-            50,
-            100,
+            ORACLE,
+            TWAP_PERIOD,
+            swapConfig,
             cComp
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
@@ -81,10 +87,9 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
-            3000,
-            500,
-            50,
-            100,
+            ORACLE,
+            TWAP_PERIOD,
+            swapConfig,
             cComp
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
@@ -105,10 +110,9 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
             0,
-            3000,
-            500,
-            50,
-            100,
+            ORACLE,
+            TWAP_PERIOD,
+            swapConfig,
             cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));

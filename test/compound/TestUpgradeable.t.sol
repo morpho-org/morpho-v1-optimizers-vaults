@@ -62,10 +62,9 @@ contract TestUpgradeable is TestSetupVaults {
             "MorphoCompoundETH",
             "mcETH",
             0,
-            3000,
-            0,
-            10,
-            100,
+            ORACLE,
+            TWAP_PERIOD,
+            swapConfig,
             address(cComp)
         );
     }
