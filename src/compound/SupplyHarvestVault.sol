@@ -173,48 +173,46 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         external
         returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
+        address assetMem = asset();
         address poolTokenMem = poolToken;
+        address compMem = address(comp);
+        SwapConfig memory swapConfigMem = swapConfig;
 
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolTokenMem;
         rewardsAmount = morpho.claimRewards(poolTokens, false);
 
-        rewardsAmount = _swap(rewardsAmount, _maxSlippage);
+        uint256 amountOutMinimum = IPriceOracle(oracle)
+        .assetToAsset(compMem, rewardsAmount, assetMem, twapPeriod)
+        .percentMul(
+            MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, swapConfigMem.maxHarvestingSlippage)
+        );
 
-        uint256 harvestingFee = swapConfig.harvestingFee;
-        if (harvestingFee > 0) {
-            rewardsFee = (rewardsAmount * harvestingFee) / MAX_BASIS_POINTS;
+        rewardsAmount = SWAP_ROUTER.exactInput(
+            ISwapRouter.ExactInputParams({
+                path: isEth
+                    ? abi.encodePacked(compMem, swapConfigMem.compSwapFee, wEth)
+                    : abi.encodePacked(
+                        compMem,
+                        swapConfigMem.compSwapFee,
+                        wEth,
+                        swapConfigMem.assetSwapFee,
+                        assetMem
+                    ),
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: rewardsAmount,
+                amountOutMinimum: amountOutMinimum
+            })
+        );
+
+        if (swapConfigMem.harvestingFee > 0) {
+            rewardsFee = (rewardsAmount * swapConfigMem.harvestingFee) / MAX_BASIS_POINTS;
             rewardsAmount -= rewardsFee;
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
 
-        if (rewardsFee > 0) ERC20(asset()).safeTransfer(msg.sender, rewardsFee);
-    }
-
-    function _swap(uint256 _amountIn, uint256 _maxSlippage) internal returns (uint256 amountOut_) {
-        uint256 amountOutMinimum = IPriceOracle(oracle)
-        .assetToAsset(address(comp), _amountIn, asset(), twapPeriod)
-        .percentMul(
-            MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, swapConfig.maxHarvestingSlippage)
-        );
-
-        amountOut_ = SWAP_ROUTER.exactInput(
-            ISwapRouter.ExactInputParams({
-                path: isEth
-                    ? abi.encodePacked(address(comp), swapConfig.compSwapFee, wEth)
-                    : abi.encodePacked(
-                        address(comp),
-                        swapConfig.compSwapFee,
-                        wEth,
-                        swapConfig.assetSwapFee,
-                        asset()
-                    ),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: _amountIn,
-                amountOutMinimum: amountOutMinimum
-            })
-        );
+        if (rewardsFee > 0) ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
     }
 }
