@@ -70,8 +70,8 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         assertEq(
-            0,
             usdcSupplyHarvestVault.balanceOf(address(vaultSupplier1)),
+            0,
             "mcUSDC balance not zero"
         );
         assertEq(balanceOnPool, 0, "onPool amount not zero");

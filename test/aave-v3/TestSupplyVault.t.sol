@@ -7,7 +7,7 @@ contract TestSupplyVault is TestSetupVaults {
     using WadRayMath for uint256;
 
     function testShouldDepositAmount() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
@@ -28,7 +28,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldWithdrawAllAmount() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
         uint256 expectedOnPool = amount.rayDiv(poolSupplyIndex);
@@ -76,7 +76,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldWithdrawAllShares() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares); // cannot withdraw amount because of Compound rounding errors
@@ -92,7 +92,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldNotWithdrawWhenNotDeposited() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
@@ -101,7 +101,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldNotWithdrawOnBehalfIfNotAllowed() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
@@ -110,7 +110,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldWithdrawOnBehalfIfAllowed() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
@@ -124,7 +124,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldNotWithdrawGreaterAmount() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
@@ -133,7 +133,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldNotRedeemMoreShares() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
