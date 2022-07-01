@@ -74,8 +74,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     address public wEth; // The address of WETH token.
     address public cComp; // The address of cCOMP token.
     address public oracle; // The oracle used to get ASSET/COMP price.
-    uint256 public twapPeriod;
-    SwapConfig public swapConfig;
+    uint256 public twapPeriod; // The TWAP period used for the oracle.
+    SwapConfig public swapConfig; // The configuration of the swap on Uniswap V3.
 
     /// UPGRADE ///
 
@@ -212,7 +212,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         );
 
         if (swapConfigMem.harvestingFee > 0) {
-            rewardsFee = (rewardsAmount * swapConfigMem.harvestingFee) / MAX_BASIS_POINTS;
+            rewardsFee = rewardsAmount.percentMul(swapConfigMem.harvestingFee);
             rewardsAmount -= rewardsFee;
         }
 

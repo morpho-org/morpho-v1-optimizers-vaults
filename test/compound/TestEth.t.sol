@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./setup/TestSetupVaults.sol";
 
 contract TestEth is TestSetupVaults {
+    using PercentageMath for uint256;
     using CompoundMath for uint256;
 
     function testShouldDepositEthOnVault() public {
@@ -63,8 +64,9 @@ contract TestEth is TestSetupVaults {
         (uint256 rewardsAmount, uint256 rewardsFee) = wethSupplyHarvestVault.harvest(
             wethSupplyHarvestVault.maxHarvestingSlippage()
         );
-        uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
-            wethSupplyHarvestVault.harvestingFee()) / wethSupplyHarvestVault.MAX_BASIS_POINTS();
+        uint256 expectedRewardsFee = (rewardsAmount + rewardsFee).percentMul(
+            wethSupplyHarvestVault.harvestingFee()
+        );
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             cEth,
