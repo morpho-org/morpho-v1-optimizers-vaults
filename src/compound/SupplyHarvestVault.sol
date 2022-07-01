@@ -168,24 +168,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         emit MaxHarvestingSlippageSet(_newMaxHarvestingSlippage);
     }
 
-    /// GETTERS ///
-
-    function compSwapFee() external view returns (uint24) {
-        return swapConfig.compSwapFee;
-    }
-
-    function assetSwapFee() external view returns (uint24) {
-        return swapConfig.assetSwapFee;
-    }
-
-    function harvestingFee() external view returns (uint16) {
-        return swapConfig.harvestingFee;
-    }
-
-    function maxHarvestingSlippage() external view returns (uint16) {
-        return swapConfig.maxHarvestingSlippage;
-    }
-
     /// EXTERNAL ///
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
@@ -237,5 +219,23 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
 
         if (rewardsFee > 0) ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
+    }
+
+    /// GETTERS ///
+
+    function compSwapFee() external view returns (uint24) {
+        return swapConfig.compSwapFee;
+    }
+
+    function assetSwapFee() external view returns (uint24) {
+        return swapConfig.assetSwapFee;
+    }
+
+    function harvestingFee() external view returns (uint16) {
+        return swapConfig.harvestingFee;
+    }
+
+    function maxHarvestingSlippage() external view returns (uint16) {
+        return swapConfig.maxHarvestingSlippage;
     }
 }
