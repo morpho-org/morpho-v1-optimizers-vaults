@@ -61,15 +61,15 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier1.withdrawVault(usdcSupplyVault, expectedOnPool.mul(poolSupplyIndex));
 
         (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
-            address(cUsdc),
+            cUsdc,
             address(usdcSupplyVault)
         );
 
         assertApproxEqAbs(
-            usdcSupplyVault.balanceOf(address(vaultSupplier1)),
             0,
+            usdcSupplyVault.balanceOf(address(vaultSupplier1)),
             10,
-            "mcUSDT balance not zero"
+            "mcUSDC balance not zero"
         );
         assertEq(balanceOnPool, 0, "onPool amount not zero");
         assertEq(balanceInP2P, 0, "inP2P amount not zero");
