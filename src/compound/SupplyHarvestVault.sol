@@ -19,6 +19,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
+    /// @notice Emitted when the oracle is set.
+    /// @param newOracle The new oracle address.
+    event OracleSet(address newOracle);
+
+    /// @notice Emitted when the TWAP period is set.
+    /// @param newTwapPeriod The new TWAP period used for the oracle.
+    event TwapPeriodSet(uint256 newTwapPeriod);
+
     /// @notice Emitted when the fee for swapping comp for WETH is set.
     /// @param newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
     event CompSwapFeeSet(uint24 newCompSwapFee);
@@ -36,6 +44,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     event MaxHarvestingSlippageSet(uint16 newMaxHarvestingSlippage);
 
     /// ERRORS ///
+
+    /// @notice Thrown when the TWAP period is too short.
+    error TwapPeriodTooShort();
 
     /// @notice Thrown when the input is above the maximum basis points value (100%).
     error ExceedsMaxBasisPoints();
@@ -105,9 +116,21 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// GOVERNANCE ///
 
-    function setOracle(address _oracle) external onlyOwner {}
+    /// @notice Sets the oracle.
+    /// @param _newOracle The new oracle set.
+    function setOracle(address _newOracle) external onlyOwner {
+        oracle = _newOracle;
+        emit OracleSet(_newOracle);
+    }
 
-    function setTwapPeriod(uint256 _twapPeriod) external onlyOwner {}
+    /// @notice Sets the TWAP period used for the oracle.
+    /// @param _newTwapPeriod The new TWAP period set.
+    function setTwapPeriod(uint256 _newTwapPeriod) external onlyOwner {
+        if (_newTwapPeriod < 5 minutes) revert TwapPeriodTooShort();
+
+        twapPeriod = _newTwapPeriod;
+        emit TwapPeriodSet(_newTwapPeriod);
+    }
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
     /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
