@@ -59,8 +59,18 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// INTERNAL ///
 
-    function _beforeInteraction(address _user) internal override {
+    function _mint(address _receiver, uint256 _shares) internal override {
+        _accrueUnclaimedRewards(_receiver);
+        super._mint(_receiver, _shares);
+    }
+
+    function _beforeWithdraw(
+        address _user,
+        uint256 _amount,
+        uint256 _shares
+    ) internal override {
         _accrueUnclaimedRewards(_user);
+        super._beforeWithdraw(_user, _amount, _shares);
     }
 
     function _accrueUnclaimedRewards(address _user) internal {
