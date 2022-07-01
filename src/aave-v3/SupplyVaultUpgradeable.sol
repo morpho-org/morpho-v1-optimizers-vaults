@@ -5,7 +5,6 @@ import "@aave/core-v3/contracts/interfaces/IAToken.sol";
 import "@aave/core-v3/contracts/interfaces/IPool.sol";
 import "@contracts/aave-v3/interfaces/IMorpho.sol";
 
-import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
 import {ERC20, SafeTransferLib} from "@solmate/utils/SafeTransferLib.sol";
 import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
 import "@contracts/aave-v3/libraries/Types.sol";
