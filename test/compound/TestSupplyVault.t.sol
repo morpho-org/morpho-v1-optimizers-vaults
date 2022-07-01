@@ -166,15 +166,15 @@ contract TestSupplyVault is TestSetupVaults {
 
     function testShouldClaimTwiceRewardsWhenDepositedForSameAmountAndTwiceDuration() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = cDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = cDai;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 100);
 
         uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -183,7 +183,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.roll(block.number + 100);
 
         expectedTotalRewardsAmount += lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -202,15 +202,15 @@ contract TestSupplyVault is TestSetupVaults {
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration1() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = cDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = cDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 100);
 
         uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -220,7 +220,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.roll(block.number + 100);
 
         expectedTotalRewardsAmount += lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -230,7 +230,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.roll(block.number + 100);
 
         expectedTotalRewardsAmount += lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -249,15 +249,15 @@ contract TestSupplyVault is TestSetupVaults {
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration2() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = cDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = cDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 100);
 
         uint256 expectedTotalRewardsAmount = lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -267,7 +267,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.roll(block.number + 100);
 
         expectedTotalRewardsAmount += lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -278,7 +278,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.roll(block.number + 100);
 
         expectedTotalRewardsAmount += lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 
@@ -288,7 +288,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.roll(block.number + 100);
 
         expectedTotalRewardsAmount += lens.getUserUnclaimedRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault)
         );
 

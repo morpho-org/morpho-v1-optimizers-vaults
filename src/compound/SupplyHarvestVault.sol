@@ -58,8 +58,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// UPGRADE ///
 
     /// @notice Initializes the vault.
-    /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
+    /// @param _morpho The address of the main Morpho contract.
+    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
@@ -68,8 +68,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param _harvestingFee The fee taken by the claimer when harvesting the vault (in bps).
     /// @param _maxHarvestingSlippage The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
     function initialize(
-        address _morphoAddress,
-        address _poolTokenAddress,
+        address _morpho,
+        address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
@@ -80,8 +80,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address _cComp
     ) external initializer {
         (isEth, wEth) = __SupplyVaultUpgradeable_init(
-            _morphoAddress,
-            _poolTokenAddress,
+            _morpho,
+            _poolToken,
             _name,
             _symbol,
             _initialDeposit
@@ -145,16 +145,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         external
         returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
-        address poolTokenAddress = address(poolToken);
+        address poolTokenMem = poolToken;
         address assetAddress = asset();
 
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = poolTokenAddress;
-        rewardsAmount = morpho.claimRewards(poolTokenAddresses, false);
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = poolTokenMem;
+        rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
         uint256 amountOutMinimum = (rewardsAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
-            oracle.getUnderlyingPrice(poolTokenAddress)
+            oracle.getUnderlyingPrice(poolTokenMem)
         ) * (MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))) /
             MAX_BASIS_POINTS;
 
@@ -182,7 +182,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardsAmount -= rewardsFee;
         }
 
-        morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+        morpho.supply(poolTokenMem, address(this), rewardsAmount);
 
         if (rewardsFee > 0) ERC20(assetAddress).safeTransfer(msg.sender, rewardsFee);
     }

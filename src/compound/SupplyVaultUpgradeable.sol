@@ -22,29 +22,29 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
-    ICToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     IComptroller public comptroller;
     ERC20 public comp;
 
     /// UPGRADE ///
 
     /// @dev Initializes the vault.
-    /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
+    /// @param _morpho The address of the main Morpho contract.
+    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function __SupplyVaultUpgradeable_init(
-        address _morphoAddress,
-        address _poolTokenAddress,
+        address _morpho,
+        address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing returns (bool isEth, address wEth) {
         ERC20 underlyingToken;
         (isEth, wEth, underlyingToken) = __SupplyVaultUpgradeable_init_unchained(
-            _morphoAddress,
-            _poolTokenAddress
+            _morpho,
+            _poolToken
         );
 
         __Ownable_init();
@@ -53,12 +53,9 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     }
 
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
-    /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
-    function __SupplyVaultUpgradeable_init_unchained(
-        address _morphoAddress,
-        address _poolTokenAddress
-    )
+    /// @param _morpho The address of the main Morpho contract.
+    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
+    function __SupplyVaultUpgradeable_init_unchained(address _morpho, address _poolToken)
         internal
         onlyInitializing
         returns (
@@ -67,30 +64,30 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
             ERC20 underlyingToken
         )
     {
-        morpho = IMorpho(_morphoAddress);
-        poolToken = ICToken(_poolTokenAddress);
+        morpho = IMorpho(_morpho);
+        poolToken = _poolToken;
         comptroller = morpho.comptroller();
         comp = ERC20(comptroller.getCompAddress());
 
-        isEth = _poolTokenAddress == morpho.cEth();
+        isEth = _poolToken == morpho.cEth();
         wEth = morpho.wEth();
 
         underlyingToken = ERC20(isEth ? wEth : ICToken(poolToken).underlying());
-        underlyingToken.safeApprove(_morphoAddress, type(uint256).max);
+        underlyingToken.safeApprove(_morpho, type(uint256).max);
     }
 
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
-        address poolTokenAddress = address(poolToken);
+        address poolTokenMem = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            poolTokenAddress,
+            poolTokenMem,
             address(this)
         );
 
         return
-            supplyBalance.onPool.mul(poolToken.exchangeRateStored()) +
-            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenAddress));
+            supplyBalance.onPool.mul(ICToken(poolToken).exchangeRateStored()) +
+            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenMem));
     }
 
     /// INTERNAL ///
@@ -102,7 +99,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         uint256 _shares
     ) internal virtual override {
         super._deposit(_caller, _receiver, _assets, _shares);
-        morpho.supply(address(poolToken), address(this), _assets);
+        morpho.supply(poolToken, address(this), _assets);
     }
 
     function _withdraw(
@@ -112,7 +109,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         uint256 _assets,
         uint256 _shares
     ) internal virtual override {
-        morpho.withdraw(address(poolToken), _assets);
+        morpho.withdraw(poolToken, _assets);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 }
