@@ -252,4 +252,58 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         vm.expectRevert("Too little received");
         daiSupplyHarvestVault.harvest(100);
     }
+
+    function testOnlyOwnerShouldSetOracle() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setOracle(address(1));
+
+        daiSupplyHarvestVault.setOracle(address(1));
+        assertEq(daiSupplyHarvestVault.oracle(), address(1));
+    }
+
+    function testOnlyOwnerShouldSetTwapPeriod() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setTwapPeriod(1 hours);
+
+        daiSupplyHarvestVault.setTwapPeriod(1 hours);
+        assertEq(daiSupplyHarvestVault.twapPeriod(), 1 hours);
+    }
+
+    function testOnlyOwnerShouldSetCompSwapFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setCompSwapFee(1);
+
+        daiSupplyHarvestVault.setCompSwapFee(1);
+        assertEq(daiSupplyHarvestVault.compSwapFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetAssetSwapFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setAssetSwapFee(1);
+
+        daiSupplyHarvestVault.setAssetSwapFee(1);
+        assertEq(daiSupplyHarvestVault.assetSwapFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetHarvestingFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setHarvestingFee(1);
+
+        daiSupplyHarvestVault.setHarvestingFee(1);
+        assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetMaxHarvestingSlippage() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
+
+        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
+        assertEq(daiSupplyHarvestVault.maxHarvestingSlippage(), 1);
+    }
 }
