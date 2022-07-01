@@ -9,10 +9,10 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 /// @title ERC4626Upgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626 Tokenized Vault abstract upgradeable implementation, heavily inspired by Solmate's non-upgradeable implementation (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol)
+/// @notice ERC4626 Tokenized Vault abstract upgradeable implementation, heavily inspired by Solmate's non-upgradeable implementation (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol).
 abstract contract ERC4626Upgradeable is ERC20Upgradeable {
-    using SafeTransferLib for ERC20;
     using FixedPointMathLib for uint256;
+    using SafeTransferLib for ERC20;
 
     /// EVENTS ///
 
@@ -48,6 +48,11 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
     /// STORAGE ///
 
     ERC20 public asset; // The underlying asset used to supply through Morpho.
+
+    /// @dev This empty reserved space is put in place to allow future versions to add new
+    /// variables without shifting down storage in the inheritance chain.
+    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 
     /// CONSTRUCTOR ///
 
@@ -99,8 +104,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         // Need to transfer before minting or ERC777s could reenter.
         asset.safeTransferFrom(msg.sender, address(this), _amount);
 
-        _beforeInteraction(_receiver);
-
         _mint(_receiver, shares);
 
         emit Deposit(msg.sender, _receiver, _amount, shares);
@@ -117,8 +120,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
         // Need to transfer before minting or ERC777s could reenter.
         asset.safeTransferFrom(msg.sender, address(this), amount);
-
-        _beforeInteraction(_receiver);
 
         _mint(_receiver, _shares);
 
@@ -141,7 +142,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
         if (msg.sender != _owner) _spendAllowance(_owner, msg.sender, shares);
 
-        _beforeInteraction(_receiver);
         _beforeWithdraw(_owner, _amount, shares);
 
         _burn(_owner, shares);
@@ -166,7 +166,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         // Check for rounding error since we round down in previewRedeem.
         if ((amount = previewRedeem(_shares)) == 0) revert AmountIsZero();
 
-        _beforeInteraction(_receiver);
         _beforeWithdraw(_owner, amount, _shares);
 
         _burn(_owner, _shares);
@@ -230,8 +229,6 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
 
     /// INTERNAL ///
 
-    function _beforeInteraction(address _owner) internal virtual {}
-
     function _beforeWithdraw(
         address _owner,
         uint256 _amount,
@@ -243,11 +240,4 @@ abstract contract ERC4626Upgradeable is ERC20Upgradeable {
         uint256 _amount,
         uint256 _shares
     ) internal virtual {}
-
-    /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
-    uint256[49] private __gap;
 }

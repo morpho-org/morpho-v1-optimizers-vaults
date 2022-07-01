@@ -11,23 +11,26 @@ import "../helpers/VaultUser.sol";
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
 
-    TransparentUpgradeableProxy internal wethSupplyVaultProxy;
-    TransparentUpgradeableProxy internal wethSupplyHarvestVaultProxy;
+    TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
+    TransparentUpgradeableProxy internal wrappedNativeTokenSupplyHarvestVaultProxy;
 
     SupplyVault internal supplyVaultImplV1;
     SupplyHarvestVault internal supplyHarvestVaultImplV1;
 
-    SupplyVault internal wethSupplyVault;
+    SupplyVault internal wrappedNativeTokenSupplyVault;
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
-    SupplyHarvestVault internal wethSupplyHarvestVault;
+    SupplyHarvestVault internal wrappedNativeTokenSupplyHarvestVault;
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
 
-    ERC20 maWeth;
+    address internal aWrappedNativeToken;
+    address internal wrappedNativeToken;
+
+    ERC20 maWrappedNativeToken;
     ERC20 maDai;
     ERC20 maUsdc;
-    ERC20 mahWeth;
+    ERC20 mahWrappedNativeToken;
     ERC20 mahDai;
     ERC20 mahUsdc;
 
@@ -43,28 +46,35 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        createMarket(aWeth);
+        if (block.chainid == Chains.AVALANCHE_MAINNET) {
+            aWrappedNativeToken = avWavax;
+            wrappedNativeToken = wavax;
+        }
+
+        createMarket(aWrappedNativeToken);
 
         supplyVaultImplV1 = new SupplyVault();
         supplyHarvestVaultImplV1 = new SupplyHarvestVault();
 
-        wethSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
+        wrappedNativeTokenSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
             address(supplyHarvestVaultImplV1),
             address(proxyAdmin),
             ""
         );
-        wethSupplyHarvestVault = SupplyHarvestVault(address(wethSupplyHarvestVaultProxy));
-        wethSupplyHarvestVault.initialize(
+        wrappedNativeTokenSupplyHarvestVault = SupplyHarvestVault(
+            address(wrappedNativeTokenSupplyHarvestVaultProxy)
+        );
+        wrappedNativeTokenSupplyHarvestVault.initialize(
             address(morpho),
-            aWeth,
-            "MorphoAaveHarvestWETH",
-            "mahWETH",
+            aWrappedNativeToken,
+            "MorphoAaveHarvestWNATIVE",
+            "mahWNATIVE",
             0,
             50,
             100,
-            rewardToken
+            wrappedNativeToken
         );
-        mahWeth = ERC20(address(wethSupplyHarvestVault));
+        mahWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyHarvestVault));
 
         daiSupplyHarvestVault = SupplyHarvestVault(
             address(
@@ -83,7 +93,7 @@ contract TestSetupVaults is TestSetup {
             0,
             50,
             100,
-            rewardToken
+            wrappedNativeToken
         );
         mahDai = ERC20(address(daiSupplyHarvestVault));
 
@@ -107,18 +117,24 @@ contract TestSetupVaults is TestSetup {
             initialUsdcDeposit,
             50,
             100,
-            rewardToken
+            wrappedNativeToken
         );
         mahUsdc = ERC20(address(usdcSupplyHarvestVault));
 
-        wethSupplyVaultProxy = new TransparentUpgradeableProxy(
+        wrappedNativeTokenSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
             address(proxyAdmin),
             ""
         );
-        wethSupplyVault = SupplyVault(address(wethSupplyVaultProxy));
-        wethSupplyVault.initialize(address(morpho), address(aWeth), "MorphoAaveWETH", "maWETH", 0);
-        maWeth = ERC20(address(wethSupplyVault));
+        wrappedNativeTokenSupplyVault = SupplyVault(address(wrappedNativeTokenSupplyVaultProxy));
+        wrappedNativeTokenSupplyVault.initialize(
+            address(morpho),
+            address(aWrappedNativeToken),
+            "MorphoAaveWNATIVE",
+            "maWNATIVE",
+            0
+        );
+        maWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyVault));
 
         daiSupplyVault = SupplyVault(
             address(
@@ -142,6 +158,8 @@ contract TestSetupVaults is TestSetup {
             suppliers[i] = new VaultUser(morpho);
             fillUserBalances(suppliers[i]);
 
+            deal(wrappedNativeToken, address(suppliers[i]), 10000000 ether);
+
             vm.label(
                 address(suppliers[i]),
                 string(abi.encodePacked("VaultSupplier", Strings.toString(i + 1)))
@@ -159,7 +177,7 @@ contract TestSetupVaults is TestSetup {
 
     function setVaultContractsLabels() internal {
         vm.label(address(supplyHarvestVaultImplV1), "SupplyHarvestVaultImplV1");
-        vm.label(address(wethSupplyHarvestVault), "SupplyHarvestVault (WETH)");
+        vm.label(address(wrappedNativeTokenSupplyHarvestVault), "SupplyHarvestVault (wNATIVE)");
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
     }

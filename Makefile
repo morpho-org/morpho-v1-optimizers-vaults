@@ -61,15 +61,15 @@ test-html:
 
 contract-% c-%:
 	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv/$*.t.sol --match-contract $*
+	@forge test -vvv --match-contract $*
 
 ansi-c-%:
 	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv/$*.t.sol --match-contract $* > trace.ansi
+	@forge test -vvv --match-contract $* > trace.ansi
 
 html-c-%:
 	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv/$*.t.sol --match-contract $* | aha --black > trace.html
+	@forge test -vvv --match-contract $* | aha --black > trace.html
 
 single-% s-%:
 	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
@@ -77,11 +77,11 @@ single-% s-%:
 
 ansi-s-%:
 	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvvvv --match-test $* > trace.ansi
+	@forge test -vvv --match-test $* > trace.ansi
 
 html-s-%:
 	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvvvv --match-test $* | aha --black > trace.html
+	@forge test -vvv --match-test $* | aha --black > trace.html
 
 config:
 	@forge config
