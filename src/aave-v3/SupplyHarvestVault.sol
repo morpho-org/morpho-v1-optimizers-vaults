@@ -143,8 +143,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             uint256[] memory rewardsFees
         )
     {
-        address underlyingAddress = asset();
         address poolTokenAddress = address(poolToken);
+        address assetAddress = asset();
 
         {
             address[] memory poolTokens = new address[](1);
@@ -165,13 +165,13 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
                 uint256 amountOutMinimum = rewardsAmount
                 .rayMul(oracle.getAssetPrice(address(rewardToken)))
-                .rayDiv(oracle.getAssetPrice(underlyingAddress))
+                .rayDiv(oracle.getAssetPrice(assetAddress))
                 .percentMul(MAX_BASIS_POINTS - Math.min(_maxSlippage, maxHarvestingSlippage));
 
                 rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
                 rewardsAmount = SWAP_ROUTER.exactInput(
                     ISwapRouter.ExactInputParams({
-                        path: underlyingAddress == wrappedNativeToken
+                        path: assetAddress == wrappedNativeToken
                             ? abi.encodePacked(
                                 address(rewardToken),
                                 rewardsSwapFee[address(rewardToken)],
@@ -182,7 +182,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                                 rewardsSwapFee[address(rewardToken)],
                                 wrappedNativeToken,
                                 assetSwapFee[address(rewardToken)],
-                                underlyingAddress
+                                assetAddress
                             ),
                         recipient: address(this),
                         deadline: block.timestamp,
@@ -200,7 +200,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 rewardsAmounts[i] = rewardsAmount;
 
                 morpho.supply(poolTokenAddress, address(this), rewardsAmount);
-                ERC20(asset()).safeTransfer(msg.sender, rewardsFees[i]);
+                ERC20(assetAddress).safeTransfer(msg.sender, rewardsFees[i]);
             }
 
             unchecked {

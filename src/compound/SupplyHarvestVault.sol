@@ -146,6 +146,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
         address poolTokenAddress = address(poolToken);
+        address assetAddress = asset();
 
         address[] memory poolTokenAddresses = new address[](1);
         poolTokenAddresses[0] = poolTokenAddress;
@@ -161,7 +162,13 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             ISwapRouter.ExactInputParams({
                 path: isEth
                     ? abi.encodePacked(address(comp), compSwapFee, wEth)
-                    : abi.encodePacked(address(comp), compSwapFee, wEth, assetSwapFee, asset()),
+                    : abi.encodePacked(
+                        address(comp),
+                        compSwapFee,
+                        wEth,
+                        assetSwapFee,
+                        assetAddress
+                    ),
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: rewardsAmount,
@@ -177,6 +184,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
         morpho.supply(poolTokenAddress, address(this), rewardsAmount);
 
-        if (rewardsFee > 0) ERC20(asset()).safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) ERC20(assetAddress).safeTransfer(msg.sender, rewardsFee);
     }
 }
