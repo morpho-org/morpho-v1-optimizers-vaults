@@ -60,16 +60,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// UPGRADE ///
 
     /// @notice Initializes the vault.
-    /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
+    /// @param _morpho The address of the main Morpho contract.
+    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     /// @param _harvestingFee The fee taken by the claimer when harvesting the vault (in bps).
     /// @param _maxHarvestingSlippage The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
     function initialize(
-        address _morphoAddress,
-        address _poolTokenAddress,
+        address _morpho,
+        address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
@@ -77,13 +77,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _wrappedNativeToken
     ) external initializer {
-        __SupplyVaultUpgradeable_init(
-            _morphoAddress,
-            _poolTokenAddress,
-            _name,
-            _symbol,
-            _initialDeposit
-        );
+        __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;
