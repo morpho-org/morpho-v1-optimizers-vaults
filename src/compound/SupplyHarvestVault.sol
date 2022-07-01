@@ -145,16 +145,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         external
         returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
-        address poolTokenAddress = poolToken;
+        address poolTokenMem = poolToken;
         address assetAddress = asset();
 
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = poolTokenAddress;
-        rewardsAmount = morpho.claimRewards(poolTokenAddresses, false);
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = poolTokenMem;
+        rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
         uint256 amountOutMinimum = (rewardsAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
-            oracle.getUnderlyingPrice(poolTokenAddress)
+            oracle.getUnderlyingPrice(poolTokenMem)
         ) * (MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))) /
             MAX_BASIS_POINTS;
 
@@ -182,7 +182,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             rewardsAmount -= rewardsFee;
         }
 
-        morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+        morpho.supply(poolTokenMem, address(this), rewardsAmount);
 
         if (rewardsFee > 0) ERC20(assetAddress).safeTransfer(msg.sender, rewardsFee);
     }

@@ -145,12 +145,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             uint256[] memory rewardsFees
         )
     {
-        address poolTokenAddress = poolToken;
+        address poolTokenMem = poolToken;
         address assetAddress = asset();
 
         {
             address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolTokenAddress;
+            poolTokens[0] = poolTokenMem;
             (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
@@ -201,7 +201,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
                 rewardsAmounts[i] = rewardsAmount;
 
-                morpho.supply(poolTokenAddress, address(this), rewardsAmount);
+                morpho.supply(poolTokenMem, address(this), rewardsAmount);
                 ERC20(assetAddress).safeTransfer(msg.sender, rewardsFees[i]);
             }
 

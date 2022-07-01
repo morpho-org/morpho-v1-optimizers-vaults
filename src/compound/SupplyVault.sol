@@ -89,9 +89,9 @@ contract SupplyVault is SupplyVaultUpgradeable {
     function _accrueUnclaimedRewards(address _user) internal {
         uint256 supply = totalSupply();
         if (supply > 0) {
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = poolToken;
-            rewardsIndex += morpho.claimRewards(poolTokenAddresses, false).divWadDown(supply);
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = poolToken;
+            rewardsIndex += morpho.claimRewards(poolTokens, false).divWadDown(supply);
         }
 
         uint256 rewardsIndexDiff = rewardsIndex - userRewards[_user].index;
