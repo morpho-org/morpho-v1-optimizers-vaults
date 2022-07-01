@@ -90,7 +90,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 supply = totalSupply();
         if (supply > 0) {
             address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = address(poolToken);
+            poolTokenAddresses[0] = poolToken;
             rewardsIndex += morpho.claimRewards(poolTokenAddresses, false).divWadDown(supply);
         }
 

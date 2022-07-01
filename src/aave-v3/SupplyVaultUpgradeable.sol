@@ -30,7 +30,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
-    IAToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     IRewardsController public rewardsController;
     IPool public pool;
 
@@ -67,11 +67,11 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         address _poolTokenAddress
     ) internal onlyInitializing returns (ERC20 underlyingToken) {
         morpho = IMorpho(_morphoAddress);
-        poolToken = IAToken(_poolTokenAddress);
+        poolToken = _poolTokenAddress;
         rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
-        underlyingToken = ERC20(poolToken.UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(_morphoAddress, type(uint256).max);
     }
 
@@ -87,7 +87,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
-        address poolTokenAddress = address(poolToken);
+        address poolTokenAddress = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
             poolTokenAddress,
             address(this)

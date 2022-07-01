@@ -145,7 +145,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         external
         returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
-        address poolTokenAddress = address(poolToken);
+        address poolTokenAddress = poolToken;
         address assetAddress = asset();
 
         address[] memory poolTokenAddresses = new address[](1);

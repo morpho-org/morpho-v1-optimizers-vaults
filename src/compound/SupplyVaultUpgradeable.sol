@@ -22,7 +22,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
-    ICToken public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     IComptroller public comptroller;
     ERC20 public comp;
 
@@ -68,7 +68,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         )
     {
         morpho = IMorpho(_morphoAddress);
-        poolToken = ICToken(_poolTokenAddress);
+        poolToken = _poolTokenAddress;
         comptroller = morpho.comptroller();
         comp = ERC20(comptroller.getCompAddress());
 
@@ -82,14 +82,14 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
-        address poolTokenAddress = address(poolToken);
+        address poolTokenAddress = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
             poolTokenAddress,
             address(this)
         );
 
         return
-            supplyBalance.onPool.mul(poolToken.exchangeRateStored()) +
+            supplyBalance.onPool.mul(ICToken(poolToken).exchangeRateStored()) +
             supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenAddress));
     }
 
@@ -102,7 +102,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         uint256 _shares
     ) internal virtual override {
         super._deposit(_caller, _receiver, _assets, _shares);
-        morpho.supply(address(poolToken), address(this), _assets);
+        morpho.supply(poolToken, address(this), _assets);
     }
 
     function _withdraw(
@@ -112,7 +112,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         uint256 _assets,
         uint256 _shares
     ) internal virtual override {
-        morpho.withdraw(address(poolToken), _assets);
+        morpho.withdraw(poolToken, _assets);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 }

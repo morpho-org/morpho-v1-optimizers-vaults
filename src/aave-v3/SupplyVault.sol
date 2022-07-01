@@ -87,7 +87,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     {
         _accrueUnclaimedRewards(_user);
 
-        rewardTokens = rewardsController.getRewardsByAsset(address(poolToken));
+        rewardTokens = rewardsController.getRewardsByAsset(poolToken);
 
         uint256 nbRewardTokens = rewardTokens.length;
         claimedAmounts = new uint256[](nbRewardTokens);
@@ -123,7 +123,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         uint256 supply = totalSupply();
         if (supply > 0) {
             address[] memory poolTokens = new address[](1);
-            poolTokens[0] = address(poolToken);
+            poolTokens[0] = poolToken;
 
             uint256[] memory claimableAmounts;
             (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
@@ -164,7 +164,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         if (supply == 0) return 0;
 
         address[] memory poolTokens = new address[](1);
-        poolTokens[0] = address(poolToken);
+        poolTokens[0] = poolToken;
 
         uint256 claimableRewards = rewardsManager.getUserRewards(
             poolTokens,
@@ -211,7 +211,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         if (supply == 0) return;
 
         address[] memory poolTokens = new address[](1);
-        poolTokens[0] = address(poolToken);
+        poolTokens[0] = poolToken;
 
         (address[] memory rewardTokens, uint256[] memory claimedAmounts) = morpho.claimRewards(
             poolTokens,
