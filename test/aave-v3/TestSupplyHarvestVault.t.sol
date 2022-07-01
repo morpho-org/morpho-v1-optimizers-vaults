@@ -161,7 +161,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.warp(block.number + 10 days);
 
         morpho.updateIndexes(aDai);
         (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(

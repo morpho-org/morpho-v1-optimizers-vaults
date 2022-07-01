@@ -218,7 +218,7 @@ contract TestSupplyVault is TestSetupVaults {
         assertApproxEqAbs(
             claimedAmounts1[0],
             2 * claimedAmounts2[0],
-            1e9,
+            1e15,
             "unexpected rewards amount"
         ); // not exact because of rewardTokenounded interests
     }
