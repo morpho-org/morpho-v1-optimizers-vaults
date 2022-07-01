@@ -253,6 +253,8 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         daiSupplyHarvestVault.harvest(100);
     }
 
+    /// GOVERNANCE ///
+
     function testOnlyOwnerShouldSetOracle() public {
         vm.prank(address(0));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -305,5 +307,36 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
         assertEq(daiSupplyHarvestVault.maxHarvestingSlippage(), 1);
+    }
+
+    /// SETTERS ///
+
+    function testShouldNotSetTooShortTwapPeriod() public {
+        vm.expectRevert(SupplyHarvestVault.TwapPeriodTooShort.selector);
+        daiSupplyHarvestVault.setTwapPeriod(5 minutes - 1);
+    }
+
+    function testShouldNotSetCompSwapFeeTooLarge() public {
+        uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector);
+        daiSupplyHarvestVault.setCompSwapFee(newVal);
+    }
+
+    function testShouldNotSetAssetSwapFeeTooLarge() public {
+        uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector);
+        daiSupplyHarvestVault.setAssetSwapFee(newVal);
+    }
+
+    function testShouldNotSetHarvestingFeeTooLarge() public {
+        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        daiSupplyHarvestVault.setHarvestingFee(newVal);
+    }
+
+    function testShouldNotSetMaxHarvestingSlippageTooLarge() public {
+        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        daiSupplyHarvestVault.setMaxHarvestingSlippage(newVal);
     }
 }
