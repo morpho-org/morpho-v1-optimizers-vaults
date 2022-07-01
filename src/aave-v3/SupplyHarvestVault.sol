@@ -9,7 +9,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Rewardsound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
@@ -75,7 +75,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _wrappedNativeToken
     ) external initializer {
-        __SupplyVaultupgradeable_init(
+        __SupplyVaultUpgradeable_init(
             _morphoAddress,
             _poolTokenAddress,
             _name,
@@ -143,7 +143,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             uint256[] memory rewardsFees
         )
     {
-        address underlyingAddress = address(asset);
+        address underlyingAddress = asset();
         address poolTokenAddress = address(poolToken);
 
         {
@@ -200,7 +200,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 rewardsAmounts[i] = rewardsAmount;
 
                 morpho.supply(poolTokenAddress, address(this), rewardsAmount);
-                asset.safeTransfer(msg.sender, rewardsFees[i]);
+                ERC20(asset()).safeTransfer(msg.sender, rewardsFees[i]);
             }
 
             unchecked {

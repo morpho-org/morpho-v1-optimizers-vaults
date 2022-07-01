@@ -6,9 +6,10 @@ import "@aave/core-v3/contracts/interfaces/IPool.sol";
 import "@contracts/aave-v3/interfaces/IMorpho.sol";
 
 import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import {ERC20, SafeTransferLib} from "@solmate/utils/SafeTransferLib.sol";
 import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
-import "@contracts/aave-v3/libraries/Math.sol";
 import "@contracts/aave-v3/libraries/Types.sol";
+import "@contracts/aave-v3/libraries/Math.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../ERC4626UpgradeableSafe.sol";
@@ -42,14 +43,17 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    function __SupplyVault_init(
+    function __SupplyVaultUpgradeable_init(
         address _morphoAddress,
         address _poolTokenAddress,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        ERC20 underlyingToken = __SupplyVault_init_unchained(_morphoAddress, _poolTokenAddress);
+        ERC20 underlyingToken = __SupplyVaultUpgradeable_init_unchained(
+            _morphoAddress,
+            _poolTokenAddress
+        );
 
         __Ownable_init();
         __ERC20_init(_name, _symbol);
@@ -59,11 +63,10 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
     /// @param _morphoAddress The address of the main Morpho contract.
     /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
-    function __SupplyVault_init_unchained(address _morphoAddress, address _poolTokenAddress)
-        internal
-        onlyInitializing
-        returns (ERC20 underlyingToken)
-    {
+    function __SupplyVaultUpgradeable_init_unchained(
+        address _morphoAddress,
+        address _poolTokenAddress
+    ) internal onlyInitializing returns (ERC20 underlyingToken) {
         morpho = IMorpho(_morphoAddress);
         poolToken = IAToken(_poolTokenAddress);
         rewardsController = morpho.rewardsController();
@@ -92,7 +95,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         );
 
         return
-            supplyBalance.onPool.rayMul(pool.getReserveNormalizedIncome(address(asset))) +
+            supplyBalance.onPool.rayMul(pool.getReserveNormalizedIncome(asset())) +
             supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenAddress));
     }
 
@@ -104,8 +107,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         uint256 _assets,
         uint256 _shares
     ) internal virtual override {
-        morpho.supply(address(poolToken), address(this), _assets);
         super._deposit(_caller, _receiver, _assets, _shares);
+        morpho.supply(address(poolToken), address(this), _assets);
     }
 
     function _withdraw(

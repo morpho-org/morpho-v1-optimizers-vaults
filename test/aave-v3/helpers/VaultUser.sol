@@ -5,7 +5,7 @@ import "@vaults/ERC4626UpgradeableSafe.sol";
 import "@tests/aave-v3/helpers/User.sol";
 
 contract VaultUser is User {
-    using SafeTransferLib for IERC20Upgradeable;
+    using SafeTransferLib for ERC20;
 
     constructor(Morpho _morpho) User(_morpho) {}
 
@@ -13,7 +13,7 @@ contract VaultUser is User {
         external
         returns (uint256)
     {
-        tokenizedVault.asset().safeApprove(address(tokenizedVault), _amount);
+        ERC20(tokenizedVault.asset()).safeApprove(address(tokenizedVault), _amount);
         return tokenizedVault.deposit(_amount, address(this));
     }
 
@@ -21,7 +21,7 @@ contract VaultUser is User {
         external
         returns (uint256)
     {
-        tokenizedVault.asset().safeApprove(
+        ERC20(tokenizedVault.asset()).safeApprove(
             address(tokenizedVault),
             tokenizedVault.previewMint(_shares)
         );

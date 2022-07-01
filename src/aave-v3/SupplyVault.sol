@@ -64,7 +64,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVaultupgradeable_init(
+        __SupplyVaultUpgradeable_init(
             _morphoAddress,
             _poolTokenAddress,
             _name,
@@ -185,18 +185,25 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// INTERNAL ///
 
-    function _mint(address _receiver, uint256 _shares) internal override {
+    function _deposit(
+        address _caller,
+        address _receiver,
+        uint256 _assets,
+        uint256 _shares
+    ) internal virtual override {
         _accrueUnclaimedRewards(_receiver);
-        super._mint(_receiver, _shares);
+        super._deposit(_caller, _receiver, _assets, _shares);
     }
 
-    function _beforeWithdraw(
-        address _user,
-        uint256 _amount,
+    function _withdraw(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _assets,
         uint256 _shares
-    ) internal override {
-        _accrueUnclaimedRewards(_user);
-        super._beforeWithdraw(_user, _amount, _shares);
+    ) internal virtual override {
+        _accrueUnclaimedRewards(_receiver);
+        super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
     function _accrueUnclaimedRewards(address _user) internal {
