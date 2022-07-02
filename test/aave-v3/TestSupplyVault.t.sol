@@ -7,7 +7,7 @@ contract TestSupplyVault is TestSetupVaults {
     using WadRayMath for uint256;
 
     function testShouldDepositAmount() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
@@ -28,7 +28,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldWithdrawAllAmount() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
         uint256 expectedOnPool = amount.rayDiv(poolSupplyIndex);
@@ -76,7 +76,7 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldWithdrawAllShares() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares); // cannot withdraw amount because of Compound rounding errors
@@ -92,35 +92,30 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldNotWithdrawWhenNotDeposited() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier2.redeemVault(daiSupplyVault, shares);
     }
 
     function testShouldNotWithdrawOnBehalfIfNotAllowed() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyVault, shares, address(vaultSupplier2));
     }
 
     function testShouldWithdrawOnBehalfIfAllowed() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vaultSupplier1.approve(address(maDai), address(vaultSupplier2), shares);
         vaultSupplier2.redeemVault(daiSupplyVault, shares, address(vaultSupplier1));
-    }
-
-    function testShouldNotDepositZeroAmount() public {
-        vm.expectRevert(abi.encodeWithSignature("ShareIsZero()"));
-        vaultSupplier1.depositVault(daiSupplyVault, 0);
     }
 
     function testShouldNotMintZeroShare() public {
@@ -129,20 +124,20 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testShouldNotWithdrawGreaterAmount() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: withdraw more than max");
         vaultSupplier1.withdrawVault(daiSupplyVault, amount * 2);
     }
 
     function testShouldNotRedeemMoreShares() public {
-        uint256 amount = 10000 ether;
+        uint256 amount = 10_000 ether;
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyVault, shares + 1);
     }
 
@@ -176,15 +171,15 @@ contract TestSupplyVault is TestSetupVaults {
 
     function testShouldClaimTwiceRewardsWhenDepositedForSameAmountAndTwiceDuration() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = aDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -194,7 +189,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -223,15 +218,15 @@ contract TestSupplyVault is TestSetupVaults {
         assertApproxEqAbs(
             claimedAmounts1[0],
             2 * claimedAmounts2[0],
-            1e9,
+            1e15,
             "unexpected rewards amount"
         ); // not exact because of rewardTokenounded interests
     }
 
     function testShouldClaimSameRewardsWhenDepositedAtSameTime() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = aDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
         uint256 shares2 = vaultSupplier2.depositVault(daiSupplyVault, amount);
@@ -239,7 +234,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -250,7 +245,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -289,15 +284,15 @@ contract TestSupplyVault is TestSetupVaults {
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration1() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = aDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -308,7 +303,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -319,7 +314,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -355,15 +350,15 @@ contract TestSupplyVault is TestSetupVaults {
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration2() public {
         uint256 amount = 10_000 ether;
-        address[] memory poolTokenAddresses = new address[](1);
-        poolTokenAddresses[0] = aDai;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
 
         uint256 shares1 = vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.warp(block.timestamp + 10 days);
 
         uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -374,7 +369,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -386,7 +381,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
@@ -397,7 +392,7 @@ contract TestSupplyVault is TestSetupVaults {
         vm.warp(block.timestamp + 10 days);
 
         expectedTotalRewardsAmount += rewardsManager.getUserRewards(
-            poolTokenAddresses,
+            poolTokens,
             address(daiSupplyVault),
             rewardToken
         );
