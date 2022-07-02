@@ -8,7 +8,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which tracks rewards from Compound's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
@@ -26,19 +26,19 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// UPGRADE ///
 
     /// @notice Initializes the vault.
-    /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
+    /// @param _morpho The address of the main Morpho contract.
+    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function initialize(
-        address _morphoAddress,
-        address _poolTokenAddress,
+        address _morpho,
+        address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+        __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
     }
 
     /// EXTERNAL ///
@@ -59,26 +59,33 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// INTERNAL ///
 
-    function _mint(address _receiver, uint256 _shares) internal override {
+    function _deposit(
+        address _caller,
+        address _receiver,
+        uint256 _assets,
+        uint256 _shares
+    ) internal virtual override {
         _accrueUnclaimedRewards(_receiver);
-        super._mint(_receiver, _shares);
+        super._deposit(_caller, _receiver, _assets, _shares);
     }
 
-    function _beforeWithdraw(
-        address _user,
-        uint256 _amount,
+    function _withdraw(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _assets,
         uint256 _shares
-    ) internal override {
-        _accrueUnclaimedRewards(_user);
-        super._beforeWithdraw(_user, _amount, _shares);
+    ) internal virtual override {
+        _accrueUnclaimedRewards(_receiver);
+        super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
     function _accrueUnclaimedRewards(address _user) internal {
         uint256 supply = totalSupply();
         if (supply > 0) {
-            address[] memory poolTokenAddresses = new address[](1);
-            poolTokenAddresses[0] = address(poolToken);
-            rewardsIndex += morpho.claimRewards(poolTokenAddresses, false).divWadDown(supply);
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = poolToken;
+            rewardsIndex += morpho.claimRewards(poolTokens, false).divWadDown(supply);
         }
 
         uint256 rewardsIndexDiff = rewardsIndex - userRewards[_user].index;
