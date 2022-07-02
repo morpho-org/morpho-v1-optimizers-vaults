@@ -224,7 +224,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
-    function testShouldNotAllowOracleDumpManipulation() public {
+    function testShouldNotAllowOracleCompDaiDump() public {
         uint256 amount = 10_000 ether;
 
         vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
@@ -251,6 +251,35 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         vm.expectRevert("Too little received");
         daiSupplyHarvestVault.harvest(100);
+    }
+
+    function testShouldNotAllowOracleCompUsdcDump() public {
+        uint256 amount = 10_000e6;
+
+        vaultSupplier1.depositVault(usdcSupplyHarvestVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        uint256 flashloanAmount = 1_000 ether;
+        ISwapRouter swapRouter = usdcSupplyHarvestVault.SWAP_ROUTER();
+
+        deal(comp, address(this), flashloanAmount);
+        ERC20(comp).approve(address(swapRouter), flashloanAmount);
+        swapRouter.exactInputSingle(
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: comp,
+                tokenOut: wEth,
+                fee: usdcSupplyHarvestVault.compSwapFee(),
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: flashloanAmount,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            })
+        );
+
+        vm.expectRevert("Too little received");
+        usdcSupplyHarvestVault.harvest(1000);
     }
 
     /// GOVERNANCE ///

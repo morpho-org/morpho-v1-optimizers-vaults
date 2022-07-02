@@ -63,8 +63,7 @@ contract TestUpgradeable is TestSetupVaults {
             "mcETH",
             0,
             ORACLE,
-            TWAP_PERIOD,
-            swapConfig,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 50, 100),
             address(cComp)
         );
     }

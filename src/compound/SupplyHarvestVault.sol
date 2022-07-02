@@ -15,7 +15,6 @@ import "./SupplyVaultUpgradeable.sol";
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
-    using CompoundMath for uint256;
 
     /// EVENTS ///
 
@@ -56,7 +55,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// STRUCTS ///
 
-    struct SwapConfig {
+    struct HarvestConfig {
+        uint176 twapPeriod; // The TWAP period used by the oracle.
         uint24 compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
         uint24 assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
         uint16 harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
@@ -74,8 +74,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     address public wEth; // The address of WETH token.
     address public cComp; // The address of cCOMP token.
     address public oracle; // The oracle used to get ASSET/COMP price.
-    uint256 public twapPeriod; // The TWAP period used for the oracle.
-    SwapConfig public swapConfig; // The configuration of the swap on Uniswap V3.
+    HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
     /// UPGRADE ///
 
@@ -85,7 +84,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    /// @param _swapConfig The swap config to set.
+    /// @param _harvestConfig The swap config to set.
     function initialize(
         address _morpho,
         address _poolToken,
@@ -93,8 +92,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit,
         address _oracle,
-        uint256 _twapPeriod,
-        SwapConfig memory _swapConfig,
+        HarvestConfig calldata _harvestConfig,
         address _cComp
     ) external initializer {
         (isEth, wEth) = __SupplyVaultUpgradeable_init(
@@ -106,8 +104,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         );
 
         oracle = _oracle;
-        twapPeriod = _twapPeriod;
-        swapConfig = _swapConfig;
+        harvestConfig = _harvestConfig;
 
         cComp = _cComp;
 
@@ -125,10 +122,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// @notice Sets the TWAP period used for the oracle.
     /// @param _newTwapPeriod The new TWAP period set.
-    function setTwapPeriod(uint256 _newTwapPeriod) external onlyOwner {
+    function setTwapPeriod(uint176 _newTwapPeriod) external onlyOwner {
         if (_newTwapPeriod < 5 minutes) revert TwapPeriodTooShort();
 
-        twapPeriod = _newTwapPeriod;
+        harvestConfig.twapPeriod = _newTwapPeriod;
         emit TwapPeriodSet(_newTwapPeriod);
     }
 
@@ -137,7 +134,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setCompSwapFee(uint24 _newCompSwapFee) external onlyOwner {
         if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        swapConfig.compSwapFee = _newCompSwapFee;
+        harvestConfig.compSwapFee = _newCompSwapFee;
         emit CompSwapFeeSet(_newCompSwapFee);
     }
 
@@ -146,7 +143,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setAssetSwapFee(uint24 _newAssetSwapFee) external onlyOwner {
         if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        swapConfig.assetSwapFee = _newAssetSwapFee;
+        harvestConfig.assetSwapFee = _newAssetSwapFee;
         emit AssetSwapFeeSet(_newAssetSwapFee);
     }
 
@@ -155,7 +152,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
         if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
-        swapConfig.harvestingFee = _newHarvestingFee;
+        harvestConfig.harvestingFee = _newHarvestingFee;
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
@@ -164,7 +161,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setMaxHarvestingSlippage(uint16 _newMaxHarvestingSlippage) external onlyOwner {
         if (_newMaxHarvestingSlippage > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
-        swapConfig.maxHarvestingSlippage = _newMaxHarvestingSlippage;
+        harvestConfig.maxHarvestingSlippage = _newMaxHarvestingSlippage;
         emit MaxHarvestingSlippageSet(_newMaxHarvestingSlippage);
     }
 
@@ -181,27 +178,28 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address assetMem = asset();
         address poolTokenMem = poolToken;
         address compMem = address(comp);
-        SwapConfig memory swapConfigMem = swapConfig;
+        HarvestConfig memory harvestConfigMem = harvestConfig;
 
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolTokenMem;
         rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         uint256 amountOutMinimum = IPriceOracle(oracle)
-        .assetToAsset(compMem, rewardsAmount, assetMem, twapPeriod)
+        .assetToAsset(compMem, rewardsAmount, assetMem, harvestConfigMem.twapPeriod)
         .percentMul(
-            MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, swapConfigMem.maxHarvestingSlippage)
+            MAX_BASIS_POINTS -
+                CompoundMath.min(_maxSlippage, harvestConfigMem.maxHarvestingSlippage)
         );
 
         rewardsAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
-                    ? abi.encodePacked(compMem, swapConfigMem.compSwapFee, wEth)
+                    ? abi.encodePacked(compMem, harvestConfigMem.compSwapFee, wEth)
                     : abi.encodePacked(
                         compMem,
-                        swapConfigMem.compSwapFee,
+                        harvestConfigMem.compSwapFee,
                         wEth,
-                        swapConfigMem.assetSwapFee,
+                        harvestConfigMem.assetSwapFee,
                         assetMem
                     ),
                 recipient: address(this),
@@ -211,8 +209,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             })
         );
 
-        if (swapConfigMem.harvestingFee > 0) {
-            rewardsFee = rewardsAmount.percentMul(swapConfigMem.harvestingFee);
+        if (harvestConfigMem.harvestingFee > 0) {
+            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
             rewardsAmount -= rewardsFee;
         }
 
@@ -223,19 +221,23 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// GETTERS ///
 
+    function twapPeriod() external view returns (uint176) {
+        return harvestConfig.twapPeriod;
+    }
+
     function compSwapFee() external view returns (uint24) {
-        return swapConfig.compSwapFee;
+        return harvestConfig.compSwapFee;
     }
 
     function assetSwapFee() external view returns (uint24) {
-        return swapConfig.assetSwapFee;
+        return harvestConfig.assetSwapFee;
     }
 
     function harvestingFee() external view returns (uint16) {
-        return swapConfig.harvestingFee;
+        return harvestConfig.harvestingFee;
     }
 
     function maxHarvestingSlippage() external view returns (uint16) {
-        return swapConfig.maxHarvestingSlippage;
+        return harvestConfig.maxHarvestingSlippage;
     }
 }

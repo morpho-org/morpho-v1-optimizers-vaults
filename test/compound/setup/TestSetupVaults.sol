@@ -38,12 +38,10 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
-    // Use non controllable oracle.
+    // Using non controllable oracle.
     // Code is in this repo: https://github.com/sohkai/uniswap-v3-spot-twap-oracle.
     address public constant ORACLE = 0x813A5C304b8E37fA98F43A33DCCf60fA5cDb8739;
-    uint256 public constant TWAP_PERIOD = 1800;
-    SupplyHarvestVault.SwapConfig public swapConfig =
-        SupplyHarvestVault.SwapConfig(3000, 500, 50, 100);
+    uint176 public constant TWAP_PERIOD = 1800;
 
     function onSetUp() public override {
         initVaultContracts();
@@ -68,8 +66,7 @@ contract TestSetupVaults is TestSetup {
             "mchWETH",
             0,
             ORACLE,
-            TWAP_PERIOD,
-            swapConfig,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 50, 100),
             cComp
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
@@ -90,8 +87,7 @@ contract TestSetupVaults is TestSetup {
             "mchDAI",
             0,
             ORACLE,
-            TWAP_PERIOD,
-            swapConfig,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 100, 200),
             cComp
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
@@ -113,8 +109,7 @@ contract TestSetupVaults is TestSetup {
             "mchUSDC",
             0,
             ORACLE,
-            TWAP_PERIOD,
-            swapConfig,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 3000, 50, 100),
             cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
