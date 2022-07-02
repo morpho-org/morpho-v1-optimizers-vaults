@@ -224,7 +224,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
-    function testShouldNotAllowOracleDumpManipulation() public {
+    function testShouldNotAllowOracleCompDaiDump() public {
         uint256 amount = 10_000 ether;
 
         vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
@@ -251,5 +251,121 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         vm.expectRevert("Too little received");
         daiSupplyHarvestVault.harvest(100);
+    }
+
+    function testShouldNotAllowOracleCompUsdcDump() public {
+        uint256 amount = 10_000e6;
+
+        vaultSupplier1.depositVault(usdcSupplyHarvestVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        uint256 flashloanAmount = 1_000 ether;
+        ISwapRouter swapRouter = usdcSupplyHarvestVault.SWAP_ROUTER();
+
+        deal(comp, address(this), flashloanAmount);
+        ERC20(comp).approve(address(swapRouter), flashloanAmount);
+        swapRouter.exactInputSingle(
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: comp,
+                tokenOut: wEth,
+                fee: usdcSupplyHarvestVault.compSwapFee(),
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: flashloanAmount,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            })
+        );
+
+        vm.expectRevert("Too little received");
+        usdcSupplyHarvestVault.harvest(1000);
+    }
+
+    /// GOVERNANCE ///
+
+    function testOnlyOwnerShouldSetOracle() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setOracle(address(1));
+
+        daiSupplyHarvestVault.setOracle(address(1));
+        assertEq(daiSupplyHarvestVault.oracle(), address(1));
+    }
+
+    function testOnlyOwnerShouldSetTwapPeriod() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setTwapPeriod(1 hours);
+
+        daiSupplyHarvestVault.setTwapPeriod(1 hours);
+        assertEq(daiSupplyHarvestVault.twapPeriod(), 1 hours);
+    }
+
+    function testOnlyOwnerShouldSetCompSwapFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setCompSwapFee(1);
+
+        daiSupplyHarvestVault.setCompSwapFee(1);
+        assertEq(daiSupplyHarvestVault.compSwapFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetAssetSwapFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setAssetSwapFee(1);
+
+        daiSupplyHarvestVault.setAssetSwapFee(1);
+        assertEq(daiSupplyHarvestVault.assetSwapFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetHarvestingFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setHarvestingFee(1);
+
+        daiSupplyHarvestVault.setHarvestingFee(1);
+        assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetMaxHarvestingSlippage() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
+
+        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
+        assertEq(daiSupplyHarvestVault.maxHarvestingSlippage(), 1);
+    }
+
+    /// SETTERS ///
+
+    function testShouldNotSetTooShortTwapPeriod() public {
+        vm.expectRevert(SupplyHarvestVault.TwapPeriodTooShort.selector);
+        daiSupplyHarvestVault.setTwapPeriod(5 minutes - 1);
+    }
+
+    function testShouldNotSetCompSwapFeeTooLarge() public {
+        uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector);
+        daiSupplyHarvestVault.setCompSwapFee(newVal);
+    }
+
+    function testShouldNotSetAssetSwapFeeTooLarge() public {
+        uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector);
+        daiSupplyHarvestVault.setAssetSwapFee(newVal);
+    }
+
+    function testShouldNotSetHarvestingFeeTooLarge() public {
+        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        daiSupplyHarvestVault.setHarvestingFee(newVal);
+    }
+
+    function testShouldNotSetMaxHarvestingSlippageTooLarge() public {
+        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        daiSupplyHarvestVault.setMaxHarvestingSlippage(newVal);
     }
 }

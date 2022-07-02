@@ -45,8 +45,6 @@ install:
 	@foundryup
 	@git submodule update --init --recursive
 
-	cd lib/morpho-contracts && git checkout dev && cd ../..
-
 test:
 	@echo Running all ${PROTOCOL} tests on ${NETWORK}
 	@forge test -vv
