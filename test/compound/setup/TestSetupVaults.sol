@@ -89,7 +89,6 @@ contract TestSetupVaults is TestSetup {
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
 
-        uint256 initialUsdcDeposit = 1000e6;
         usdcSupplyHarvestVault = SupplyHarvestVault(
             address(
                 new TransparentUpgradeableProxy(
@@ -99,14 +98,13 @@ contract TestSetupVaults is TestSetup {
                 )
             )
         );
-        deal(usdc, address(this), initialUsdcDeposit);
-        ERC20(usdc).safeApprove(address(usdcSupplyHarvestVault), initialUsdcDeposit);
+
         usdcSupplyHarvestVault.initialize(
             address(morpho),
             cUsdc,
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
-            initialUsdcDeposit,
+            0,
             3000,
             500,
             50,

@@ -111,7 +111,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier2.redeemVault(daiSupplyHarvestVault, shares);
     }
 
@@ -120,7 +120,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyHarvestVault, shares, address(vaultSupplier2));
     }
 
@@ -133,11 +133,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         vaultSupplier2.redeemVault(daiSupplyHarvestVault, shares, address(vaultSupplier1));
     }
 
-    function testShouldNotDepositZeroAmount() public {
-        vm.expectRevert(abi.encodeWithSignature("ShareIsZero()"));
-        vaultSupplier1.depositVault(daiSupplyHarvestVault, 0);
-    }
-
     function testShouldNotMintZeroShare() public {
         vm.expectRevert(abi.encodeWithSignature("AmountIsZero()"));
         vaultSupplier1.mintVault(daiSupplyHarvestVault, 0);
@@ -148,7 +143,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: withdraw more than max");
         vaultSupplier1.withdrawVault(daiSupplyHarvestVault, amount * 2);
     }
 
@@ -157,7 +152,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyHarvestVault, shares + 1);
     }
 
@@ -166,7 +161,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.warp(block.number + 10 days);
 
         morpho.updateIndexes(aDai);
         (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
@@ -268,7 +263,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         swapRouter.exactInputSingle(
             ISwapRouter.ExactInputSingleParams({
                 tokenIn: rewardToken,
-                tokenOut: wEth,
+                tokenOut: wrappedNativeToken,
                 fee: daiSupplyHarvestVault.rewardsSwapFee(rewardToken),
                 recipient: address(this),
                 deadline: block.timestamp,

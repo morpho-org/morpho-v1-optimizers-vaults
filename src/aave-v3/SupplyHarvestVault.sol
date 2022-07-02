@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@aave/core-v3/contracts/interfaces/IPriceOracleGetter.sol";
 
+import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+
 import "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
-/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Rewardsound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
+/// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
@@ -58,16 +60,16 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// UPGRADE ///
 
     /// @notice Initializes the vault.
-    /// @param _morphoAddress The address of the main Morpho contract.
-    /// @param _poolTokenAddress The address of the pool token corresponding to the market to supply through this vault.
+    /// @param _morpho The address of the main Morpho contract.
+    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     /// @param _harvestingFee The fee taken by the claimer when harvesting the vault (in bps).
     /// @param _maxHarvestingSlippage The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
     function initialize(
-        address _morphoAddress,
-        address _poolTokenAddress,
+        address _morpho,
+        address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
@@ -75,7 +77,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _maxHarvestingSlippage,
         address _wrappedNativeToken
     ) external initializer {
-        __SupplyVault_init(_morphoAddress, _poolTokenAddress, _name, _symbol, _initialDeposit);
+        __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
         maxHarvestingSlippage = _maxHarvestingSlippage;
@@ -137,60 +139,65 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             uint256[] memory rewardsFees
         )
     {
-        address underlyingAddress = address(asset);
-        address poolTokenAddress = address(poolToken);
+        address poolTokenMem = poolToken;
+        address assetAddress = asset();
 
         {
             address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolTokenAddress;
+            poolTokens[0] = poolTokenMem;
             (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
         IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
 
         uint256 nbRewardTokens = rewardTokens.length;
+        rewardsFees = new uint256[](nbRewardTokens);
+
         for (uint256 i; i < nbRewardTokens; ) {
-            ERC20 rewardToken = ERC20(rewardTokens[i]);
             uint256 rewardsAmount = rewardsAmounts[i];
 
-            uint256 amountOutMinimum = rewardsAmount
-            .rayMul(oracle.getAssetPrice(address(rewardToken)))
-            .rayDiv(oracle.getAssetPrice(underlyingAddress))
-            .percentMul(MAX_BASIS_POINTS - Math.min(_maxSlippage, maxHarvestingSlippage));
+            if (rewardsAmount > 0) {
+                ERC20 rewardToken = ERC20(rewardTokens[i]);
 
-            rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
-            rewardsAmount = SWAP_ROUTER.exactInput(
-                ISwapRouter.ExactInputParams({
-                    path: underlyingAddress == wrappedNativeToken
-                        ? abi.encodePacked(
-                            address(rewardToken),
-                            rewardsSwapFee[address(rewardToken)],
-                            wrappedNativeToken
-                        )
-                        : abi.encodePacked(
-                            address(rewardToken),
-                            rewardsSwapFee[address(rewardToken)],
-                            wrappedNativeToken,
-                            assetSwapFee[address(rewardToken)],
-                            underlyingAddress
-                        ),
-                    recipient: address(this),
-                    deadline: block.timestamp,
-                    amountIn: rewardsAmount,
-                    amountOutMinimum: amountOutMinimum
-                })
-            );
+                uint256 amountOutMinimum = rewardsAmount
+                .rayMul(oracle.getAssetPrice(address(rewardToken)))
+                .rayDiv(oracle.getAssetPrice(assetAddress))
+                .percentMul(MAX_BASIS_POINTS - Math.min(_maxSlippage, maxHarvestingSlippage));
 
-            uint16 _harvestingFee = harvestingFee;
-            if (_harvestingFee > 0) {
-                rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
-                rewardsAmount -= rewardsFees[i];
+                rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
+                rewardsAmount = SWAP_ROUTER.exactInput(
+                    ISwapRouter.ExactInputParams({
+                        path: assetAddress == wrappedNativeToken
+                            ? abi.encodePacked(
+                                address(rewardToken),
+                                rewardsSwapFee[address(rewardToken)],
+                                wrappedNativeToken
+                            )
+                            : abi.encodePacked(
+                                address(rewardToken),
+                                rewardsSwapFee[address(rewardToken)],
+                                wrappedNativeToken,
+                                assetSwapFee[address(rewardToken)],
+                                assetAddress
+                            ),
+                        recipient: address(this),
+                        deadline: block.timestamp,
+                        amountIn: rewardsAmount,
+                        amountOutMinimum: amountOutMinimum
+                    })
+                );
+
+                uint16 _harvestingFee = harvestingFee;
+                if (_harvestingFee > 0) {
+                    rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
+                    rewardsAmount -= rewardsFees[i];
+                }
+
+                rewardsAmounts[i] = rewardsAmount;
+
+                morpho.supply(poolTokenMem, address(this), rewardsAmount);
+                ERC20(assetAddress).safeTransfer(msg.sender, rewardsFees[i]);
             }
-
-            rewardsAmounts[i] = rewardsAmount;
-
-            morpho.supply(poolTokenAddress, address(this), rewardsAmount);
-            asset.safeTransfer(msg.sender, rewardsFees[i]);
 
             unchecked {
                 ++i;
