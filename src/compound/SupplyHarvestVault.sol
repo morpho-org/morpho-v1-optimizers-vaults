@@ -153,6 +153,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         poolTokens[0] = poolTokenMem;
         rewardsAmount = morpho.claimRewards(poolTokens, false);
 
+        // Note: Uniswap are considered to have enough liquidity depth.
+        // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
         rewardsAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
