@@ -3,8 +3,10 @@ pragma solidity ^0.8.0;
 
 import "@tests/compound/setup/TestSetup.sol";
 
-import "@vaults/compound/SupplyVault.sol";
 import "@vaults/compound/SupplyHarvestVault.sol";
+import "@vaults/compound/SupplyVault.sol";
+
+import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
 
 import "../helpers/VaultUser.sol";
 
@@ -36,6 +38,11 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
+    // Using non controllable oracle.
+    // Code is in this repo: https://github.com/sohkai/uniswap-v3-spot-twap-oracle.
+    address public constant ORACLE = 0x813A5C304b8E37fA98F43A33DCCf60fA5cDb8739;
+    uint176 public constant TWAP_PERIOD = 1800;
+
     function onSetUp() public override {
         initVaultContracts();
         setVaultContractsLabels();
@@ -58,10 +65,8 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
-            3000,
-            0,
-            50,
-            100,
+            ORACLE,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 50, 100),
             cComp
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
@@ -81,10 +86,8 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
-            3000,
-            500,
-            50,
-            100,
+            ORACLE,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 100, 200),
             cComp
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
@@ -105,10 +108,8 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
             0,
-            3000,
-            500,
-            50,
-            100,
+            ORACLE,
+            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 3000, 50, 100),
             cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));

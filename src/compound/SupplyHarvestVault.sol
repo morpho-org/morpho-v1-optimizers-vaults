@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "../interfaces/IPriceOracle.sol";
+
+import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
@@ -11,9 +14,17 @@ import "./SupplyVaultUpgradeable.sol";
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyHarvestVault is SupplyVaultUpgradeable {
     using SafeTransferLib for ERC20;
-    using CompoundMath for uint256;
+    using PercentageMath for uint256;
 
     /// EVENTS ///
+
+    /// @notice Emitted when the oracle is set.
+    /// @param newOracle The new oracle address.
+    event OracleSet(address newOracle);
+
+    /// @notice Emitted when the TWAP period is set.
+    /// @param newTwapPeriod The new TWAP period used for the oracle.
+    event TwapPeriodSet(uint256 newTwapPeriod);
 
     /// @notice Emitted when the fee for swapping comp for WETH is set.
     /// @param newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
@@ -33,11 +44,24 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// ERRORS ///
 
+    /// @notice Thrown when the TWAP period is too short.
+    error TwapPeriodTooShort();
+
     /// @notice Thrown when the input is above the maximum basis points value (100%).
     error ExceedsMaxBasisPoints();
 
     /// @notice Thrown when the input is above the maximum UniswapV3 pool fee value (100%).
     error ExceedsMaxUniswapV3Fee();
+
+    /// STRUCTS ///
+
+    struct HarvestConfig {
+        uint176 twapPeriod; // The TWAP period used by the oracle.
+        uint24 compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
+        uint24 assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
+        uint16 harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
+        uint16 maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
+    }
 
     /// STORAGE ///
 
@@ -49,11 +73,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     bool public isEth; // Whether the underlying asset is WETH.
     address public wEth; // The address of WETH token.
     address public cComp; // The address of cCOMP token.
-
-    uint24 public compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
-    uint24 public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
-    uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
-    uint16 public maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
+    address public oracle; // The oracle used to get ASSET/COMP price.
+    HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
     /// UPGRADE ///
 
@@ -63,20 +84,15 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    /// @param _compSwapFee The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
-    /// @param _assetSwapFee The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
-    /// @param _harvestingFee The fee taken by the claimer when harvesting the vault (in bps).
-    /// @param _maxHarvestingSlippage The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
+    /// @param _harvestConfig The swap config to set.
     function initialize(
         address _morpho,
         address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
-        uint24 _compSwapFee,
-        uint24 _assetSwapFee,
-        uint16 _harvestingFee,
-        uint16 _maxHarvestingSlippage,
+        address _oracle,
+        HarvestConfig calldata _harvestConfig,
         address _cComp
     ) external initializer {
         (isEth, wEth) = __SupplyVaultUpgradeable_init(
@@ -87,10 +103,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             _initialDeposit
         );
 
-        compSwapFee = _compSwapFee;
-        assetSwapFee = _assetSwapFee;
-        harvestingFee = _harvestingFee;
-        maxHarvestingSlippage = _maxHarvestingSlippage;
+        oracle = _oracle;
+        harvestConfig = _harvestConfig;
 
         cComp = _cComp;
 
@@ -99,12 +113,28 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// GOVERNANCE ///
 
+    /// @notice Sets the oracle.
+    /// @param _newOracle The new oracle set.
+    function setOracle(address _newOracle) external onlyOwner {
+        oracle = _newOracle;
+        emit OracleSet(_newOracle);
+    }
+
+    /// @notice Sets the TWAP period used for the oracle.
+    /// @param _newTwapPeriod The new TWAP period set.
+    function setTwapPeriod(uint176 _newTwapPeriod) external onlyOwner {
+        if (_newTwapPeriod < 5 minutes) revert TwapPeriodTooShort();
+
+        harvestConfig.twapPeriod = _newTwapPeriod;
+        emit TwapPeriodSet(_newTwapPeriod);
+    }
+
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
     /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
     function setCompSwapFee(uint24 _newCompSwapFee) external onlyOwner {
         if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        compSwapFee = _newCompSwapFee;
+        harvestConfig.compSwapFee = _newCompSwapFee;
         emit CompSwapFeeSet(_newCompSwapFee);
     }
 
@@ -113,7 +143,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setAssetSwapFee(uint24 _newAssetSwapFee) external onlyOwner {
         if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        assetSwapFee = _newAssetSwapFee;
+        harvestConfig.assetSwapFee = _newAssetSwapFee;
         emit AssetSwapFeeSet(_newAssetSwapFee);
     }
 
@@ -122,7 +152,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
         if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
-        harvestingFee = _newHarvestingFee;
+        harvestConfig.harvestingFee = _newHarvestingFee;
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
@@ -131,7 +161,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     function setMaxHarvestingSlippage(uint16 _newMaxHarvestingSlippage) external onlyOwner {
         if (_newMaxHarvestingSlippage > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
-        maxHarvestingSlippage = _newMaxHarvestingSlippage;
+        harvestConfig.maxHarvestingSlippage = _newMaxHarvestingSlippage;
         emit MaxHarvestingSlippageSet(_newMaxHarvestingSlippage);
     }
 
@@ -145,29 +175,32 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         external
         returns (uint256 rewardsAmount, uint256 rewardsFee)
     {
+        address assetMem = asset();
         address poolTokenMem = poolToken;
-        address assetAddress = asset();
+        address compMem = address(comp);
+        HarvestConfig memory harvestConfigMem = harvestConfig;
 
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolTokenMem;
         rewardsAmount = morpho.claimRewards(poolTokens, false);
 
-        ICompoundOracle oracle = ICompoundOracle(comptroller.oracle());
-        uint256 amountOutMinimum = (rewardsAmount.mul(oracle.getUnderlyingPrice(cComp)).div(
-            oracle.getUnderlyingPrice(poolTokenMem)
-        ) * (MAX_BASIS_POINTS - CompoundMath.min(_maxSlippage, maxHarvestingSlippage))) /
-            MAX_BASIS_POINTS;
+        uint256 amountOutMinimum = IPriceOracle(oracle)
+        .assetToAsset(compMem, rewardsAmount, assetMem, harvestConfigMem.twapPeriod)
+        .percentMul(
+            MAX_BASIS_POINTS -
+                CompoundMath.min(_maxSlippage, harvestConfigMem.maxHarvestingSlippage)
+        );
 
         rewardsAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
-                    ? abi.encodePacked(address(comp), compSwapFee, wEth)
+                    ? abi.encodePacked(compMem, harvestConfigMem.compSwapFee, wEth)
                     : abi.encodePacked(
-                        address(comp),
-                        compSwapFee,
+                        compMem,
+                        harvestConfigMem.compSwapFee,
                         wEth,
-                        assetSwapFee,
-                        assetAddress
+                        harvestConfigMem.assetSwapFee,
+                        assetMem
                     ),
                 recipient: address(this),
                 deadline: block.timestamp,
@@ -176,14 +209,35 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             })
         );
 
-        uint16 _harvestingFee = harvestingFee;
-        if (_harvestingFee > 0) {
-            rewardsFee = (rewardsAmount * _harvestingFee) / MAX_BASIS_POINTS;
+        if (harvestConfigMem.harvestingFee > 0) {
+            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
             rewardsAmount -= rewardsFee;
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
 
-        if (rewardsFee > 0) ERC20(assetAddress).safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
+    }
+
+    /// GETTERS ///
+
+    function twapPeriod() external view returns (uint176) {
+        return harvestConfig.twapPeriod;
+    }
+
+    function compSwapFee() external view returns (uint24) {
+        return harvestConfig.compSwapFee;
+    }
+
+    function assetSwapFee() external view returns (uint24) {
+        return harvestConfig.assetSwapFee;
+    }
+
+    function harvestingFee() external view returns (uint16) {
+        return harvestConfig.harvestingFee;
+    }
+
+    function maxHarvestingSlippage() external view returns (uint16) {
+        return harvestConfig.maxHarvestingSlippage;
     }
 }
