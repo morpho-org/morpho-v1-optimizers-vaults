@@ -62,8 +62,7 @@ contract TestUpgradeable is TestSetupVaults {
             "MorphoCompoundETH",
             "mcETH",
             0,
-            ORACLE,
-            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 50, 100),
+            SupplyHarvestVault.HarvestConfig(3000, 500, 50, 100),
             address(cComp)
         );
     }

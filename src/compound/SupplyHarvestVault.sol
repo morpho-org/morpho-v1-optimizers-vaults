@@ -18,14 +18,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
-    /// @notice Emitted when the oracle is set.
-    /// @param newOracle The new oracle address.
-    event OracleSet(address newOracle);
-
-    /// @notice Emitted when the TWAP period is set.
-    /// @param newTwapPeriod The new TWAP period used for the oracle.
-    event TwapPeriodSet(uint256 newTwapPeriod);
-
     /// @notice Emitted when the fee for swapping comp for WETH is set.
     /// @param newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
     event CompSwapFeeSet(uint24 newCompSwapFee);
@@ -44,9 +36,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// ERRORS ///
 
-    /// @notice Thrown when the TWAP period is too short.
-    error TwapPeriodTooShort();
-
     /// @notice Thrown when the input is above the maximum basis points value (100%).
     error ExceedsMaxBasisPoints();
 
@@ -56,7 +45,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// STRUCTS ///
 
     struct HarvestConfig {
-        uint176 twapPeriod; // The TWAP period used by the oracle.
         uint24 compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
         uint24 assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
         uint16 harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
@@ -73,7 +61,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     bool public isEth; // Whether the underlying asset is WETH.
     address public wEth; // The address of WETH token.
     address public cComp; // The address of cCOMP token.
-    address public oracle; // The oracle used to get ASSET/COMP price.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
     /// UPGRADE ///
@@ -91,7 +78,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
-        address _oracle,
         HarvestConfig calldata _harvestConfig,
         address _cComp
     ) external initializer {
@@ -103,7 +89,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             _initialDeposit
         );
 
-        oracle = _oracle;
         harvestConfig = _harvestConfig;
 
         cComp = _cComp;
@@ -112,22 +97,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     }
 
     /// GOVERNANCE ///
-
-    /// @notice Sets the oracle.
-    /// @param _newOracle The new oracle set.
-    function setOracle(address _newOracle) external onlyOwner {
-        oracle = _newOracle;
-        emit OracleSet(_newOracle);
-    }
-
-    /// @notice Sets the TWAP period used for the oracle.
-    /// @param _newTwapPeriod The new TWAP period set.
-    function setTwapPeriod(uint176 _newTwapPeriod) external onlyOwner {
-        if (_newTwapPeriod < 5 minutes) revert TwapPeriodTooShort();
-
-        harvestConfig.twapPeriod = _newTwapPeriod;
-        emit TwapPeriodSet(_newTwapPeriod);
-    }
 
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
     /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
@@ -184,13 +153,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         poolTokens[0] = poolTokenMem;
         rewardsAmount = morpho.claimRewards(poolTokens, false);
 
-        uint256 amountOutMinimum = IPriceOracle(oracle)
-        .assetToAsset(compMem, rewardsAmount, assetMem, harvestConfigMem.twapPeriod)
-        .percentMul(
-            MAX_BASIS_POINTS -
-                CompoundMath.min(_maxSlippage, harvestConfigMem.maxHarvestingSlippage)
-        );
-
         rewardsAmount = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: isEth
@@ -205,7 +167,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: rewardsAmount,
-                amountOutMinimum: amountOutMinimum
+                amountOutMinimum: 0
             })
         );
 
@@ -220,10 +182,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     }
 
     /// GETTERS ///
-
-    function twapPeriod() external view returns (uint176) {
-        return harvestConfig.twapPeriod;
-    }
 
     function compSwapFee() external view returns (uint24) {
         return harvestConfig.compSwapFee;
