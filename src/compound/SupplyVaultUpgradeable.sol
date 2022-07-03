@@ -22,8 +22,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
+    IComptroller public comptroller; // The Comptroller contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    IComptroller public comptroller;
     ERC20 public comp;
 
     /// UPGRADE ///
@@ -72,22 +72,24 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         isEth = _poolToken == morpho.cEth();
         wEth = morpho.wEth();
 
-        underlyingToken = ERC20(isEth ? wEth : ICToken(poolToken).underlying());
+        underlyingToken = ERC20(isEth ? wEth : ICToken(_poolToken).underlying());
         underlyingToken.safeApprove(_morpho, type(uint256).max);
     }
 
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
+        IMorpho morphoMem = morpho;
         address poolTokenMem = poolToken;
-        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
+
+        Types.SupplyBalance memory supplyBalance = morphoMem.supplyBalanceInOf(
             poolTokenMem,
             address(this)
         );
 
         return
-            supplyBalance.onPool.mul(ICToken(poolToken).exchangeRateStored()) +
-            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenMem));
+            supplyBalance.onPool.mul(ICToken(poolTokenMem).exchangeRateStored()) +
+            supplyBalance.inP2P.mul(morphoMem.p2pSupplyIndex(poolTokenMem));
     }
 
     /// INTERNAL ///
