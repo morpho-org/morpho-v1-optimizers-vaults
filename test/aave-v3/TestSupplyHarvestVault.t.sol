@@ -161,7 +161,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.warp(block.number + 10 days);
+        vm.warp(block.timestamp + 10 days);
 
         morpho.updateIndexes(aDai);
         (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
@@ -173,7 +173,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             address[] memory rewardTokens,
             uint256[] memory rewardsAmounts,
             uint256[] memory rewardsFees
-        ) = daiSupplyHarvestVault.harvest(daiSupplyHarvestVault.maxHarvestingSlippage());
+        ) = daiSupplyHarvestVault.harvest();
 
         assertEq(rewardTokens.length, 1);
         assertEq(rewardTokens[0], rewardToken);
@@ -199,7 +199,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             0,
             "rewardToken amount is not zero"
         );
-        assertEq(rewardsFees[0], expectedRewardsFee, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 2, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFees[0], "unexpected fee collected");
     }
 
@@ -208,7 +208,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         uint256 shares = vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
 
-        vm.roll(block.number + 1_000);
+        vm.warp(block.timestamp + 10 days);
 
         morpho.updateIndexes(aDai);
         (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
@@ -221,7 +221,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             address[] memory rewardTokens,
             uint256[] memory rewardsAmounts,
             uint256[] memory rewardsFees
-        ) = daiSupplyHarvestVault.harvest(daiSupplyHarvestVault.maxHarvestingSlippage());
+        ) = daiSupplyHarvestVault.harvest();
 
         assertEq(rewardTokens.length, 1);
         assertEq(rewardTokens[0], rewardToken);
@@ -244,36 +244,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             balanceBefore + balanceOnPoolBefore + rewardsAmounts[0],
             "unexpected dai balance"
         );
-        assertEq(rewardsFees[0], expectedRewardsFee, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 2, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFees[0], "unexpected fee collected");
-    }
-
-    function testShouldNotAllowOracleDumpManipulation() public {
-        uint256 amount = 10_000 ether;
-
-        vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
-
-        vm.roll(block.number + 1_000);
-
-        uint256 flashloanAmount = 1_000 ether;
-        ISwapRouter swapRouter = daiSupplyHarvestVault.SWAP_ROUTER();
-
-        deal(rewardToken, address(this), flashloanAmount);
-        ERC20(rewardToken).approve(address(swapRouter), flashloanAmount);
-        swapRouter.exactInputSingle(
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: rewardToken,
-                tokenOut: wrappedNativeToken,
-                fee: daiSupplyHarvestVault.rewardsSwapFee(rewardToken),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: flashloanAmount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            })
-        );
-
-        vm.expectRevert("Too little received");
-        daiSupplyHarvestVault.harvest(100);
     }
 }

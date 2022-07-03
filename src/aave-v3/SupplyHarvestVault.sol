@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "../interfaces/ISwapper.sol";
 
 import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
 
@@ -31,8 +32,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     uint16 public constant MAX_BASIS_POINTS = 10_000; // 100% in basis points.
 
+    address public wrappedNativeToken; // The wrapped native token of the chain this vault is deployed on.
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
-    address public swapper; // Swapper contract to swap reward tokens for undelrying asset.
+    ISwapper public swapper; // Swapper contract to swap reward tokens for undelrying asset.
 
     /// UPGRADE ///
 
@@ -50,12 +52,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit,
         uint16 _harvestingFee,
+        address _wrappedNativeToken,
         address _swapper
     ) external initializer {
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
-        swapper = _swapper;
+        wrappedNativeToken = _wrappedNativeToken;
+        swapper = ISwapper(_swapper);
     }
 
     /// GOVERNANCE ///
@@ -74,11 +78,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// EXTERNAL ///
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
-    /// @param _maxSlippage The maximum slippage allowed for the swap (in bps).
     /// @return rewardTokens The addresses of reward tokens claimed.
     /// @return rewardsAmounts The amount of rewards claimed for each reward token (in underlying).
     /// @return rewardsFees The amount of fees taken by the claimer for each reward token (in underlying).
-    function harvest(uint16 _maxSlippage)
+    function harvest()
         external
         returns (
             address[] memory rewardTokens,
@@ -95,10 +98,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
-        IPriceOracleGetter oracle = IPriceOracleGetter(morpho.addressesProvider().getPriceOracle());
-
         uint256 nbRewardTokens = rewardTokens.length;
         rewardsFees = new uint256[](nbRewardTokens);
+        uint256 toSupply;
 
         for (uint256 i; i < nbRewardTokens; ) {
             uint256 rewardsAmount = rewardsAmounts[i];
@@ -106,29 +108,32 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             if (rewardsAmount > 0) {
                 ERC20 rewardToken = ERC20(rewardTokens[i]);
 
-                rewardToken.safeApprove(address(SWAP_ROUTER), rewardsAmount);
-                rewardsAmount = swapper.executeSwap(
-                    address(rewardToken),
-                    _amountIn,
-                    _tokenOut,
-                    _recipient
-                );
+                if (assetAddress != wrappedNativeToken) {
+                    rewardToken.safeTransfer(address(swapper), rewardsAmount);
+                    rewardsAmount = swapper.executeSwap(
+                        address(rewardToken),
+                        rewardsAmount,
+                        assetAddress,
+                        address(this)
+                    );
 
-                uint16 _harvestingFee = harvestingFee;
-                if (_harvestingFee > 0) {
-                    rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
-                    rewardsAmount -= rewardsFees[i];
+                    uint16 _harvestingFee = harvestingFee;
+                    if (_harvestingFee > 0) {
+                        rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
+                        rewardsAmount -= rewardsFees[i];
+                    }
+                    ERC20(assetAddress).safeTransfer(msg.sender, rewardsFees[i]);
                 }
 
                 rewardsAmounts[i] = rewardsAmount;
-
-                morpho.supply(poolTokenMem, address(this), rewardsAmount);
-                ERC20(assetAddress).safeTransfer(msg.sender, rewardsFees[i]);
+                toSupply += rewardsAmount;
             }
 
             unchecked {
                 ++i;
             }
         }
+
+        morpho.supply(poolTokenMem, address(this), toSupply);
     }
 }

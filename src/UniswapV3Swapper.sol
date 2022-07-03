@@ -2,12 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "./interfaces/ISwapper.sol";
 
 import "@solmate/utils/SafeTransferLib.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract UniswapV3Swapper is Ownable {
+contract UniswapV3Swapper is ISwapper, Ownable {
     using SafeTransferLib for ERC20;
 
     /// EVENTS ///

@@ -5,6 +5,8 @@ import "@tests/aave-v3/setup/TestSetup.sol";
 
 import "@vaults/aave-v3/SupplyVault.sol";
 import "@vaults/aave-v3/SupplyHarvestVault.sol";
+import "@vaults/UniswapV2Swapper.sol";
+import "@vaults/UniswapV3Swapper.sol";
 
 import "../helpers/VaultUser.sol";
 
@@ -24,6 +26,7 @@ contract TestSetupVaults is TestSetup {
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
 
+    ISwapper internal swapper;
     address internal aWrappedNativeToken;
     address internal wrappedNativeToken;
 
@@ -49,6 +52,9 @@ contract TestSetupVaults is TestSetup {
         if (block.chainid == Chains.AVALANCHE_MAINNET) {
             aWrappedNativeToken = avWavax;
             wrappedNativeToken = wavax;
+            swapper = new UniswapV2Swapper(0x60aE616a2155Ee3d9A68541Ba4544862310933d4, wavax);
+            vm.label(0x60aE616a2155Ee3d9A68541Ba4544862310933d4, "Uniswap V2");
+            vm.label(address(swapper), "Swapper");
         }
 
         createMarket(aWrappedNativeToken);
@@ -71,8 +77,8 @@ contract TestSetupVaults is TestSetup {
             "mahWNATIVE",
             0,
             50,
-            100,
-            wrappedNativeToken
+            wrappedNativeToken,
+            address(swapper)
         );
         mahWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyHarvestVault));
 
@@ -92,8 +98,8 @@ contract TestSetupVaults is TestSetup {
             "mahDAI",
             0,
             50,
-            100,
-            wrappedNativeToken
+            wrappedNativeToken,
+            address(swapper)
         );
         mahDai = ERC20(address(daiSupplyHarvestVault));
 
@@ -114,8 +120,8 @@ contract TestSetupVaults is TestSetup {
             "mahUSDC",
             0,
             50,
-            100,
-            wrappedNativeToken
+            wrappedNativeToken,
+            address(swapper)
         );
         mahUsdc = ERC20(address(usdcSupplyHarvestVault));
 

@@ -2,10 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import "./interfaces/ISwapper.sol";
+
+import "forge-std/console.sol";
 
 import "@solmate/utils/SafeTransferLib.sol";
 
-contract UniswapV2Swapper {
+contract UniswapV2Swapper is ISwapper {
     using SafeTransferLib for ERC20;
 
     /// STORAGE ///
@@ -30,6 +33,8 @@ contract UniswapV2Swapper {
     ) external returns (uint256) {
         address[] memory path;
 
+        console.log("0", _tokenIn == wrappedNativeToken);
+        console.log("_tokenOut", _tokenOut);
         if (_tokenIn == wrappedNativeToken) {
             path = new address[](2);
             path[0] = wrappedNativeToken;
@@ -40,8 +45,11 @@ contract UniswapV2Swapper {
             path[1] = wrappedNativeToken;
             path[2] = _tokenOut;
         }
+        console.log("1");
 
+        ERC20(wrappedNativeToken).safeApprove(address(swapRouter), _amountIn);
         ERC20(_tokenIn).safeApprove(address(swapRouter), _amountIn);
+        console.log("2");
         uint256[] memory amountsOut = swapRouter.swapExactTokensForTokens(
             _amountIn,
             0,
@@ -49,6 +57,7 @@ contract UniswapV2Swapper {
             _recipient,
             block.timestamp
         );
+        console.log("3");
 
         return _tokenIn == wrappedNativeToken ? amountsOut[1] : amountsOut[2];
     }
