@@ -151,7 +151,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolTokenMem;
-        rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         // Note: Uniswap are considered to have enough liquidity depth.
         // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
@@ -168,7 +167,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                     ),
                 recipient: address(this),
                 deadline: block.timestamp,
-                amountIn: rewardsAmount,
+                amountIn: morpho.claimRewards(poolTokens, false),
                 amountOutMinimum: 0
             })
         );
