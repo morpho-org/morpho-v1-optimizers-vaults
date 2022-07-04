@@ -85,8 +85,8 @@ contract UniswapV3Swapper is ISwapper, Ownable {
         return
             SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
-                    path: _tokenIn == wrappedNativeToken
-                        ? abi.encodePacked(_tokenIn, rewardsSwapFee[_tokenIn], wrappedNativeToken)
+                    path: (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken)
+                        ? abi.encodePacked(_tokenIn, rewardsSwapFee[_tokenIn], _tokenOut)
                         : abi.encodePacked(
                             _tokenIn,
                             rewardsSwapFee[_tokenIn],

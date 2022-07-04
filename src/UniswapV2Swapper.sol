@@ -39,9 +39,9 @@ contract UniswapV2Swapper is ISwapper {
     ) external returns (uint256) {
         address[] memory path;
 
-        if (_tokenIn == wrappedNativeToken) {
+        if (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken) {
             path = new address[](2);
-            path[0] = wrappedNativeToken;
+            path[0] = _tokenIn;
             path[1] = _tokenOut;
         } else {
             path = new address[](3);
