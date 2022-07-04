@@ -99,7 +99,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         )
     {
         address poolTokenMem = poolToken;
-        address assetAddress = asset();
+        address assetMem = asset();
 
         {
             address[] memory poolTokens = new address[](1);
@@ -119,21 +119,21 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
                 // Note: Uniswap pools are considered to have enough liquidity depth.
                 // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
-                if (assetAddress != address(rewardToken)) {
+                if (assetMem != address(rewardToken)) {
                     rewardToken.safeTransfer(address(swapper), rewardsAmount);
                     rewardsAmount = swapper.executeSwap(
                         address(rewardToken),
                         rewardsAmount,
-                        assetAddress,
+                        assetMem,
                         address(this)
                     );
 
-                    uint16 _harvestingFee = harvestingFee;
-                    if (_harvestingFee > 0) {
-                        rewardsFees[i] = rewardsAmount.percentMul(harvestingFee);
+                    uint16 harvestingFeeMem = harvestingFee;
+                    if (harvestingFeeMem > 0) {
+                        rewardsFees[i] = rewardsAmount.percentMul(harvestingFeeMem);
                         rewardsAmount -= rewardsFees[i];
+                        ERC20(assetMem).safeTransfer(msg.sender, rewardsFees[i]);
                     }
-                    ERC20(assetAddress).safeTransfer(msg.sender, rewardsFees[i]);
                 }
 
                 rewardsAmounts[i] = rewardsAmount;
