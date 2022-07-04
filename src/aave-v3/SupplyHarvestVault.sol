@@ -23,6 +23,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param newHarvestingFee The new harvesting fee.
     event HarvestingFeeSet(uint16 newHarvestingFee);
 
+    /// @notice Emitted when the swapper is set.
+    /// @param newSapper The new swapper contract.
+    event SwapperSet(address newSwapper);
+
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum basis points value (100%).
@@ -34,7 +38,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     address public wrappedNativeToken; // The wrapped native token of the chain this vault is deployed on.
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
-    ISwapper public swapper; // Swapper contract to swap reward tokens for undelrying asset.
+    ISwapper public swapper; // Swapper contract to swap reward tokens for underlying asset.
 
     /// UPGRADE ///
 
@@ -73,7 +77,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
-    function setSwapper(address _swapper) external onlyOwner {}
+    function setSwapper(address _swapper) external onlyOwner {
+        swapper = ISwapper(_swapper);
+        emit SwapperSet(_swapper);
+    }
 
     /// EXTERNAL ///
 
