@@ -224,6 +224,43 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
+    function testShouldClaimAndRedeemRewardsWithoutSwapWithRewardsTokenSameAsUnderlyingAsset()
+        public
+    {
+        uint256 amount = 10_000 ether;
+
+        uint256 shares = vaultSupplier1.depositVault(compSupplyHarvestVault, amount);
+
+        vm.roll(block.number + 1_000);
+
+        morpho.updateP2PIndexes(cComp);
+        (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
+            cComp,
+            address(compSupplyHarvestVault)
+        );
+        uint256 balanceBefore = vaultSupplier1.balanceOf(comp);
+
+        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest(
+            daiSupplyHarvestVault.maxHarvestingSlippage()
+        );
+
+        vaultSupplier1.redeemVault(compSupplyHarvestVault, shares);
+        uint256 balanceAfter = vaultSupplier1.balanceOf(comp);
+
+        assertEq(
+            ERC20(comp).balanceOf(address(compSupplyHarvestVault)),
+            0,
+            "non zero comp balance on vault"
+        );
+        assertGt(
+            balanceAfter,
+            balanceBefore + balanceOnPoolBefore + rewardsAmount,
+            "unexpected comp balance"
+        );
+        assertEq(rewardsFee, 0, "unexpected rewards fee amount");
+        assertEq(ERC20(comp).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+    }
+
     /// GOVERNANCE ///
 
     function testOnlyOwnerShouldSetCompSwapFee() public {

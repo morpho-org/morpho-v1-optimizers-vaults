@@ -151,30 +151,32 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolTokenMem;
 
-        // Note: Uniswap are considered to have enough liquidity depth.
+        // Note: Uniswap pools are considered to have enough liquidity depth.
         // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
-        rewardsAmount = SWAP_ROUTER.exactInput(
-            ISwapRouter.ExactInputParams({
-                path: isEth
-                    ? abi.encodePacked(compMem, harvestConfigMem.compSwapFee, wEth)
-                    : abi.encodePacked(
-                        compMem,
-                        harvestConfigMem.compSwapFee,
-                        wEth,
-                        harvestConfigMem.assetSwapFee,
-                        assetMem
-                    ),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: morpho.claimRewards(poolTokens, false),
-                amountOutMinimum: 0
-            })
-        );
+        if (compMem != assetMem) {
+            rewardsAmount = SWAP_ROUTER.exactInput(
+                ISwapRouter.ExactInputParams({
+                    path: isEth
+                        ? abi.encodePacked(compMem, harvestConfigMem.compSwapFee, wEth)
+                        : abi.encodePacked(
+                            compMem,
+                            harvestConfigMem.compSwapFee,
+                            wEth,
+                            harvestConfigMem.assetSwapFee,
+                            assetMem
+                        ),
+                    recipient: address(this),
+                    deadline: block.timestamp,
+                    amountIn: morpho.claimRewards(poolTokens, false),
+                    amountOutMinimum: 0
+                })
+            );
 
-        if (harvestConfigMem.harvestingFee > 0) {
-            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
-            rewardsAmount -= rewardsFee;
-        }
+            if (harvestConfigMem.harvestingFee > 0) {
+                rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
+                rewardsAmount -= rewardsFee;
+            }
+        } else rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
 

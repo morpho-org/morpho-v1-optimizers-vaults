@@ -25,6 +25,7 @@ contract TestSetupVaults is TestSetup {
     SupplyHarvestVault internal wethSupplyHarvestVault;
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
+    SupplyHarvestVault internal compSupplyHarvestVault;
 
     ERC20 mcWeth;
     ERC20 mcDai;
@@ -32,6 +33,7 @@ contract TestSetupVaults is TestSetup {
     ERC20 mchWeth;
     ERC20 mchDai;
     ERC20 mchUsdc;
+    ERC20 mchComp;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;
@@ -94,7 +96,6 @@ contract TestSetupVaults is TestSetup {
                 )
             )
         );
-
         usdcSupplyHarvestVault.initialize(
             address(morpho),
             cUsdc,
@@ -105,6 +106,27 @@ contract TestSetupVaults is TestSetup {
             cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
+
+        createMarket(cComp);
+        compSupplyHarvestVault = SupplyHarvestVault(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(supplyHarvestVaultImplV1),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
+        compSupplyHarvestVault.initialize(
+            address(morpho),
+            cComp,
+            "MorphoCompoundHarvestCOMP",
+            "mchCOMP",
+            0,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100, 200),
+            cComp
+        );
+        mchComp = ERC20(address(compSupplyHarvestVault));
 
         wethSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
@@ -142,6 +164,7 @@ contract TestSetupVaults is TestSetup {
         for (uint256 i = 0; i < 3; i++) {
             suppliers[i] = new VaultUser(morpho);
             fillUserBalances(suppliers[i]);
+            deal(comp, address(suppliers[i]), INITIAL_BALANCE * WAD);
 
             vm.label(
                 address(suppliers[i]),
@@ -163,5 +186,6 @@ contract TestSetupVaults is TestSetup {
         vm.label(address(wethSupplyHarvestVault), "SupplyHarvestVault (WETH)");
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
+        vm.label(address(compSupplyHarvestVault), "SupplyHarvestVault (COMP)");
     }
 }
