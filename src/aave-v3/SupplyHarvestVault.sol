@@ -36,7 +36,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     uint16 public constant MAX_BASIS_POINTS = 10_000; // 100% in basis points.
 
-    address public wrappedNativeToken; // The wrapped native token of the chain this vault is deployed on.
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     ISwapper public swapper; // Swapper contract to swap reward tokens for underlying asset.
 
@@ -56,13 +55,11 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit,
         uint16 _harvestingFee,
-        address _wrappedNativeToken,
         address _swapper
     ) external initializer {
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
-        wrappedNativeToken = _wrappedNativeToken;
         swapper = ISwapper(_swapper);
     }
 

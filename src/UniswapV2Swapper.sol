@@ -37,21 +37,23 @@ contract UniswapV2Swapper is ISwapper {
         address _tokenOut,
         address _recipient
     ) external returns (uint256) {
-        address[] memory path;
+        IUniswapV2Router02 swapRouterMem = swapRouter;
+        address wrappedNativeTokenMem = wrappedNativeToken;
 
-        if (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken) {
+        address[] memory path;
+        if (_tokenIn == wrappedNativeTokenMem || _tokenOut == wrappedNativeTokenMem) {
             path = new address[](2);
             path[0] = _tokenIn;
             path[1] = _tokenOut;
         } else {
             path = new address[](3);
             path[0] = _tokenIn;
-            path[1] = wrappedNativeToken;
+            path[1] = wrappedNativeTokenMem;
             path[2] = _tokenOut;
         }
 
-        ERC20(_tokenIn).safeApprove(address(swapRouter), _amountIn);
-        uint256[] memory amountsOut = swapRouter.swapExactTokensForTokens(
+        ERC20(_tokenIn).safeApprove(address(swapRouterMem), _amountIn);
+        uint256[] memory amountsOut = swapRouterMem.swapExactTokensForTokens(
             _amountIn,
             0,
             path,
@@ -59,6 +61,6 @@ contract UniswapV2Swapper is ISwapper {
             block.timestamp
         );
 
-        return _tokenIn == wrappedNativeToken ? amountsOut[1] : amountsOut[2];
+        return amountsOut[amountsOut.length - 1];
     }
 }

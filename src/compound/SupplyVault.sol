@@ -88,10 +88,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
             rewardsIndex += morpho.claimRewards(poolTokens, false).divWadDown(supply);
         }
 
-        uint256 rewardsIndexDiff = rewardsIndex - userRewards[_user].index;
+        uint256 rewardsIndexMem = rewardsIndex;
+        uint256 rewardsIndexDiff = rewardsIndexMem - userRewards[_user].index;
         if (rewardsIndexDiff > 0) {
             userRewards[_user].unclaimed += uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
-            userRewards[_user].index = uint128(rewardsIndex);
+            userRewards[_user].index = uint128(rewardsIndexMem);
         }
     }
 }

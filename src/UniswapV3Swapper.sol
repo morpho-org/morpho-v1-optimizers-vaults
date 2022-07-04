@@ -80,17 +80,19 @@ contract UniswapV3Swapper is ISwapper, Ownable {
         address _tokenOut,
         address _recipient
     ) external returns (uint256) {
+        address wrappedNativeTokenMem = wrappedNativeToken;
+
         ERC20(_tokenIn).safeApprove(address(SWAP_ROUTER), _amountIn);
 
         return
             SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
-                    path: (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken)
+                    path: (_tokenIn == wrappedNativeTokenMem || _tokenOut == wrappedNativeTokenMem)
                         ? abi.encodePacked(_tokenIn, rewardsSwapFee[_tokenIn], _tokenOut)
                         : abi.encodePacked(
                             _tokenIn,
                             rewardsSwapFee[_tokenIn],
-                            wrappedNativeToken,
+                            wrappedNativeTokenMem,
                             assetSwapFee[_tokenIn],
                             _tokenOut
                         ),
