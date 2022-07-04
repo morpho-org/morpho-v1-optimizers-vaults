@@ -24,7 +24,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     event HarvestingFeeSet(uint16 newHarvestingFee);
 
     /// @notice Emitted when the swapper is set.
-    /// @param newSapper The new swapper contract.
+    /// @param newSwapper The new swapper contract.
     event SwapperSet(address newSwapper);
 
     /// ERRORS ///
@@ -77,6 +77,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
+    /// @notice Sets the swapper contract to swap reward tokens for underlying asset.
+    /// @param _swapper The new swapper to set.
     function setSwapper(address _swapper) external onlyOwner {
         swapper = ISwapper(_swapper);
         emit SwapperSet(_swapper);
@@ -117,7 +119,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
                 // Note: Uniswap pools are considered to have enough liquidity depth.
                 // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
-                if (assetAddress != rewardToken) {
+                if (assetAddress != address(rewardToken)) {
                     rewardToken.safeTransfer(address(swapper), rewardsAmount);
                     rewardsAmount = swapper.executeSwap(
                         address(rewardToken),
