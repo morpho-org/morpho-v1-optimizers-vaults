@@ -108,7 +108,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             if (rewardsAmount > 0) {
                 ERC20 rewardToken = ERC20(rewardTokens[i]);
 
-                if (assetAddress != wrappedNativeToken) {
+                // Note: Uniswap pools are considered to have enough liquidity depth.
+                // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
+                if (assetAddress != rewardToken) {
                     rewardToken.safeTransfer(address(swapper), rewardsAmount);
                     rewardsAmount = swapper.executeSwap(
                         address(rewardToken),
