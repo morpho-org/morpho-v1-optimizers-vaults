@@ -62,7 +62,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 50, 100),
+            SupplyHarvestVault.HarvestConfig(3000, 500, 50),
             cComp
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
@@ -82,7 +82,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100, 200),
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100),
             cComp
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
@@ -102,7 +102,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 3000, 50, 100),
+            SupplyHarvestVault.HarvestConfig(3000, 3000, 50),
             cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
@@ -123,7 +123,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestCOMP",
             "mchCOMP",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100, 200),
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100),
             cComp
         );
         mchComp = ERC20(address(compSupplyHarvestVault));

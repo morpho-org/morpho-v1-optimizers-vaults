@@ -47,7 +47,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint24 compSwapFee; // The fee taken by the UniswapV3Pool for swapping COMP rewards for WETH (in UniswapV3 fee unit).
         uint24 assetSwapFee; // The fee taken by the UniswapV3Pool for swapping WETH for the underlying asset (in UniswapV3 fee unit).
         uint16 harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
-        uint16 maxHarvestingSlippage; // The maximum slippage allowed when swapping rewards for the underlying asset (in bps).
     }
 
     /// STORAGE ///
@@ -124,25 +123,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
-    /// @notice Sets the maximum slippage allowed when swapping rewards for the underlying token.
-    /// @param _newMaxHarvestingSlippage The new maximum slippage allowed when swapping rewards for the underlying token (in bps).
-    function setMaxHarvestingSlippage(uint16 _newMaxHarvestingSlippage) external onlyOwner {
-        if (_newMaxHarvestingSlippage > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
-
-        harvestConfig.maxHarvestingSlippage = _newMaxHarvestingSlippage;
-        emit MaxHarvestingSlippageSet(_newMaxHarvestingSlippage);
-    }
-
     /// EXTERNAL ///
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
-    /// @param _maxSlippage The maximum slippage allowed for the swap (in bps).
     /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
     /// @return rewardsFee The amount of fees taken by the claimer (in underlying).
-    function harvest(uint16 _maxSlippage)
-        external
-        returns (uint256 rewardsAmount, uint256 rewardsFee)
-    {
+    function harvest() external returns (uint256 rewardsAmount, uint256 rewardsFee) {
         address assetMem = asset();
         address poolTokenMem = poolToken;
         address compMem = address(comp);
@@ -195,9 +181,5 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     function harvestingFee() external view returns (uint16) {
         return harvestConfig.harvestingFee;
-    }
-
-    function maxHarvestingSlippage() external view returns (uint16) {
-        return harvestConfig.maxHarvestingSlippage;
     }
 }

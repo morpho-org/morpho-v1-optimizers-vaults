@@ -161,9 +161,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             address(daiSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest(
-            daiSupplyHarvestVault.maxHarvestingSlippage()
-        );
+        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
         uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
             daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
 
@@ -201,9 +199,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
         uint256 balanceBefore = vaultSupplier1.balanceOf(dai);
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest(
-            daiSupplyHarvestVault.maxHarvestingSlippage()
-        );
+        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
         uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
             daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
 
@@ -240,9 +236,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
         uint256 balanceBefore = vaultSupplier1.balanceOf(comp);
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest(
-            daiSupplyHarvestVault.maxHarvestingSlippage()
-        );
+        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest();
 
         vaultSupplier1.redeemVault(compSupplyHarvestVault, shares);
         uint256 balanceAfter = vaultSupplier1.balanceOf(comp);
@@ -290,15 +284,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
     }
 
-    function testOnlyOwnerShouldSetMaxHarvestingSlippage() public {
-        vm.prank(address(0));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
-
-        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
-        assertEq(daiSupplyHarvestVault.maxHarvestingSlippage(), 1);
-    }
-
     /// SETTERS ///
 
     function testShouldNotSetCompSwapFeeTooLarge() public {
@@ -317,11 +302,5 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
         vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
         daiSupplyHarvestVault.setHarvestingFee(newVal);
-    }
-
-    function testShouldNotSetMaxHarvestingSlippageTooLarge() public {
-        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
-        daiSupplyHarvestVault.setMaxHarvestingSlippage(newVal);
     }
 }

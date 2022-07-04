@@ -247,4 +247,32 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 2, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFees[0], "unexpected fee collected");
     }
+
+    /// GOVERNANCE ///
+
+    function testOnlyOwnerShouldSetHarvestingFee() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setHarvestingFee(1);
+
+        daiSupplyHarvestVault.setHarvestingFee(1);
+        assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
+    }
+
+    function testOnlyOwnerShouldSetSwapper() public {
+        vm.prank(address(0));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.setSwapper(address(1));
+
+        daiSupplyHarvestVault.setSwapper(address(1));
+        assertEq(address(daiSupplyHarvestVault.swapper()), address(1));
+    }
+
+    /// SETTERS ///
+
+    function testShouldNotSetHarvestingFeeTooLarge() public {
+        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
+        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        daiSupplyHarvestVault.setHarvestingFee(newVal);
+    }
 }
