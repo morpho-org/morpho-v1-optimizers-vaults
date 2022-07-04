@@ -77,7 +77,6 @@ contract TestSetupVaults is TestSetup {
             "mahWNATIVE",
             0,
             50,
-            wrappedNativeToken,
             address(swapper)
         );
         mahWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyHarvestVault));
@@ -98,7 +97,6 @@ contract TestSetupVaults is TestSetup {
             "mahDAI",
             0,
             50,
-            wrappedNativeToken,
             address(swapper)
         );
         mahDai = ERC20(address(daiSupplyHarvestVault));
@@ -120,7 +118,6 @@ contract TestSetupVaults is TestSetup {
             "mahUSDC",
             0,
             50,
-            wrappedNativeToken,
             address(swapper)
         );
         mahUsdc = ERC20(address(usdcSupplyHarvestVault));

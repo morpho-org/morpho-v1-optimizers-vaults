@@ -72,7 +72,6 @@ contract TestUpgradeable is TestSetupVaults {
             "mahWETH",
             0,
             10,
-            wrappedNativeToken,
             rewardToken
         );
     }
