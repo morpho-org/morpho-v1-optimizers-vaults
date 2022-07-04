@@ -8,6 +8,10 @@ import "@solmate/utils/SafeTransferLib.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @title UniswapV3Swapper.
+/// @author Morpho Labs.
+/// @custom:contact security@morpho.xyz
+/// @notice Swapper contract for Uniswap V3 DEXes.
 contract UniswapV3Swapper is ISwapper, Ownable {
     using SafeTransferLib for ERC20;
 
@@ -39,6 +43,8 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     /// CONSTRUCTOR ///
 
+    /// @notice Constructs contract.
+    /// @param _wrappedNativeToken The wrapped native token of the given network.
     constructor(address _wrappedNativeToken) {
         wrappedNativeToken = _wrappedNativeToken;
     }
@@ -67,6 +73,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     /// EXTERNAL ///
 
+    /// @inheritdoc ISwapper
     function executeSwap(
         address _tokenIn,
         uint256 _amountIn,
