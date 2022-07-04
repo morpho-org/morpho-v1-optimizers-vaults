@@ -138,7 +138,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         poolTokens[0] = poolTokenMem;
 
         // Note: Uniswap pools are considered to have enough liquidity depth.
-        // The amount swapped is considered low enough to avoid relying on a TWAP oracle.
+        // The amount swapped is considered low enough to avoid relying on any oracle.
         if (compMem != assetMem) {
             rewardsAmount = SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
