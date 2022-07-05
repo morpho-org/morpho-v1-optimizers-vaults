@@ -36,7 +36,7 @@ contract UniswapV2Swapper is ISwapper {
         uint256 _amountIn,
         address _tokenOut,
         address _recipient
-    ) external returns (uint256) {
+    ) external returns (uint256 amountOut) {
         address[] memory path;
         if (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken) {
             path = new address[](2);
@@ -58,6 +58,8 @@ contract UniswapV2Swapper is ISwapper {
             block.timestamp
         );
 
-        return amountsOut[amountsOut.length - 1];
+        amountOut = amountsOut[amountsOut.length - 1];
+
+        emit Swapped(_tokenIn, _amountIn, _tokenOut, amountOut, _recipient);
     }
 }

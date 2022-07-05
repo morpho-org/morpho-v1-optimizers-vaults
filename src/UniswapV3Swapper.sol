@@ -15,8 +15,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract UniswapV3Swapper is ISwapper, Ownable {
     using SafeTransferLib for ERC20;
 
-    /// EVENTS ///
-
     /// @notice Emitted when the fee for swapping rewards for wrapped native token is set.
     /// @param newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
     event RewardsSwapFeeSet(address rewardToken, uint24 newRewardsSwapFee);
@@ -79,26 +77,27 @@ contract UniswapV3Swapper is ISwapper, Ownable {
         uint256 _amountIn,
         address _tokenOut,
         address _recipient
-    ) external returns (uint256) {
+    ) external returns (uint256 amountOut) {
         ERC20(_tokenIn).safeApprove(address(SWAP_ROUTER), _amountIn);
 
-        return
-            SWAP_ROUTER.exactInput(
-                ISwapRouter.ExactInputParams({
-                    path: (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken)
-                        ? abi.encodePacked(_tokenIn, rewardsSwapFee[_tokenIn], _tokenOut)
-                        : abi.encodePacked(
-                            _tokenIn,
-                            rewardsSwapFee[_tokenIn],
-                            wrappedNativeToken,
-                            assetSwapFee[_tokenIn],
-                            _tokenOut
-                        ),
-                    recipient: _recipient,
-                    deadline: block.timestamp,
-                    amountIn: _amountIn,
-                    amountOutMinimum: 0
-                })
-            );
+        amountOut = SWAP_ROUTER.exactInput(
+            ISwapRouter.ExactInputParams({
+                path: (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken)
+                    ? abi.encodePacked(_tokenIn, rewardsSwapFee[_tokenIn], _tokenOut)
+                    : abi.encodePacked(
+                        _tokenIn,
+                        rewardsSwapFee[_tokenIn],
+                        wrappedNativeToken,
+                        assetSwapFee[_tokenIn],
+                        _tokenOut
+                    ),
+                recipient: _recipient,
+                deadline: block.timestamp,
+                amountIn: _amountIn,
+                amountOutMinimum: 0
+            })
+        );
+
+        emit Swapped(_tokenIn, _amountIn, _tokenOut, amountOut, _recipient);
     }
 }
