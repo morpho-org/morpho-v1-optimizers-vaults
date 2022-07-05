@@ -115,7 +115,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     }
 
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
-    /// @param _newHarvestingFee The new harvesting fee (in bps).
+    /// @param _newHarvestingFee The new harvesting fee to set (in bps).
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
         if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
@@ -137,9 +137,9 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolTokenMem;
 
-        // Note: Uniswap pools are considered to have enough liquidity depth.
+        // Note: Uniswap pairs are considered to have enough market depth.
         // The amount swapped is considered low enough to avoid relying on any oracle.
-        if (compMem != assetMem) {
+        if (assetMem != compMem) {
             rewardsAmount = SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
                     path: isEth

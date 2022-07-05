@@ -39,7 +39,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     address public immutable wrappedNativeToken;
 
     mapping(address => uint24) public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for wrapped native token (in UniswapV3 fee unit).
-    mapping(address => uint24) public assetSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for wrapped native token (in UniswapV3 fee unit).
+    mapping(address => uint24) public assetSwapFee; // The fee taken by the UniswapV3Pool for asset token for wrapped native token (in UniswapV3 fee unit).
 
     /// CONSTRUCTOR ///
 

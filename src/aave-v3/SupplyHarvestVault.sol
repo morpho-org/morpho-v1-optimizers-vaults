@@ -66,7 +66,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// GOVERNANCE ///
 
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
-    /// @param _newHarvestingFee The new harvesting fee (in bps).
+    /// @param _newHarvestingFee The new harvesting fee to set (in bps).
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
         if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
@@ -114,7 +114,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             if (rewardsAmount > 0) {
                 ERC20 rewardToken = ERC20(rewardTokens[i]);
 
-                // Note: Uniswap pools are considered to have enough liquidity depth.
+                // Note: Uniswap pairs are considered to have enough market depth.
                 // The amount swapped is considered low enough to avoid relying on any oracle.
                 if (assetMem != address(rewardToken)) {
                     rewardToken.safeTransfer(address(swapper), rewardsAmount);
