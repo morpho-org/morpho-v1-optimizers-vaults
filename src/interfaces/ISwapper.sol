@@ -15,11 +15,11 @@ interface ISwapper {
     /// @param amountOut The amount of token received.
     /// @param recipient The recipient of the tokens.
     event Swapped(
-        address tokenIn,
+        address indexed tokenIn,
         uint256 amountIn,
-        address tokenOut,
+        address indexed tokenOut,
         uint256 amountOut,
-        address recipient
+        address indexed recipient
     );
 
     /// FUNCTIONS ///
