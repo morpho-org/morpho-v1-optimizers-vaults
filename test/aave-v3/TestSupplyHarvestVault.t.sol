@@ -180,8 +180,9 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(rewardsAmounts.length, 1);
         assertEq(rewardsFees.length, 1);
 
-        uint256 expectedRewardsFee = ((rewardsAmounts[0] + rewardsFees[0]) *
-            daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
+        uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
+        uint256 expectedRewardsFee = (rewardsAmounts[0] * harvestingFee) /
+            (daiSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             aDai,
@@ -199,7 +200,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             0,
             "rewardToken amount is not zero"
         );
-        assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 2, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 1, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFees[0], "unexpected fee collected");
     }
 
@@ -228,8 +229,9 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(rewardsAmounts.length, 1);
         assertEq(rewardsFees.length, 1);
 
-        uint256 expectedRewardsFee = ((rewardsAmounts[0] + rewardsFees[0]) *
-            daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
+        uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
+        uint256 expectedRewardsFee = (rewardsAmounts[0] * harvestingFee) /
+            (daiSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
         vaultSupplier1.redeemVault(daiSupplyHarvestVault, shares);
         uint256 balanceAfter = vaultSupplier1.balanceOf(dai);
@@ -244,7 +246,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             balanceBefore + balanceOnPoolBefore + rewardsAmounts[0],
             "unexpected dai balance"
         );
-        assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 2, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFees[0], expectedRewardsFee, 1, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFees[0], "unexpected fee collected");
     }
 
