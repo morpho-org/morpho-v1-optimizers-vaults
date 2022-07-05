@@ -140,16 +140,18 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                     );
                 }
 
+                uint256 rewardsFee;
                 if (harvestingFeeMem > 0) {
-                    rewardsFees[i] = rewardsAmount.percentMul(harvestingFeeMem);
-                    rewardsAmount -= rewardsFees[i];
-                    ERC20(assetMem).safeTransfer(msg.sender, rewardsFees[i]);
+                    rewardsFee = rewardsAmount.percentMul(harvestingFeeMem);
+                    rewardsFees[i] = rewardsFee;
+                    rewardsAmount -= rewardsFee;
+                    ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
                 }
 
                 rewardsAmounts[i] = rewardsAmount;
                 toSupply += rewardsAmount;
 
-                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardsFees[i]);
+                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardsFee);
             }
 
             unchecked {
