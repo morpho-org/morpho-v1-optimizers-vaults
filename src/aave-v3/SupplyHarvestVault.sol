@@ -23,12 +23,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @param harvester The address of the harvester receiving the fee.
     /// @param rewardToken The address of the reward token swapped.
     /// @param rewardsAmount The amount of rewards in underlying asset which is supplied to Morpho.
-    /// @param feeAmount The amount of underlying asset sent to the harvester.
-    event Harvest(
+    /// @param rewardsFee The amount of underlying asset sent to the harvester.
+    event Harvested(
         address indexed harvester,
         address indexed rewardToken,
         uint256 rewardsAmount,
-        uint256 feeAmount
+        uint256 rewardsFee
     );
 
     /// @notice Emitted when the fee for harvesting is set.
@@ -149,7 +149,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 rewardsAmounts[i] = rewardsAmount;
                 toSupply += rewardsAmount;
 
-                emit Harvest(msg.sender, address(rewardToken), rewardsAmount, rewardsFees[i]);
+                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardsFees[i]);
             }
 
             unchecked {
