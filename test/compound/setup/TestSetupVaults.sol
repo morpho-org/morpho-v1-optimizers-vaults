@@ -25,6 +25,7 @@ contract TestSetupVaults is TestSetup {
     SupplyHarvestVault internal wethSupplyHarvestVault;
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
+    SupplyHarvestVault internal compSupplyHarvestVault;
 
     ERC20 mcWeth;
     ERC20 mcDai;
@@ -32,16 +33,12 @@ contract TestSetupVaults is TestSetup {
     ERC20 mchWeth;
     ERC20 mchDai;
     ERC20 mchUsdc;
+    ERC20 mchComp;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
-
-    // Using non controllable oracle.
-    // Code is in this repo: https://github.com/sohkai/uniswap-v3-spot-twap-oracle.
-    address public constant ORACLE = 0x813A5C304b8E37fA98F43A33DCCf60fA5cDb8739;
-    uint176 public constant TWAP_PERIOD = 1800;
 
     function onSetUp() public override {
         initVaultContracts();
@@ -65,8 +62,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
-            ORACLE,
-            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 50, 100),
+            SupplyHarvestVault.HarvestConfig(3000, 500, 50),
             cComp
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
@@ -86,8 +82,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
-            ORACLE,
-            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 500, 100, 200),
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100),
             cComp
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
@@ -101,18 +96,37 @@ contract TestSetupVaults is TestSetup {
                 )
             )
         );
-
         usdcSupplyHarvestVault.initialize(
             address(morpho),
             cUsdc,
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
             0,
-            ORACLE,
-            SupplyHarvestVault.HarvestConfig(TWAP_PERIOD, 3000, 3000, 50, 100),
+            SupplyHarvestVault.HarvestConfig(3000, 3000, 50),
             cComp
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
+
+        createMarket(cComp);
+        compSupplyHarvestVault = SupplyHarvestVault(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(supplyHarvestVaultImplV1),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
+        compSupplyHarvestVault.initialize(
+            address(morpho),
+            cComp,
+            "MorphoCompoundHarvestCOMP",
+            "mchCOMP",
+            0,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100),
+            cComp
+        );
+        mchComp = ERC20(address(compSupplyHarvestVault));
 
         wethSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
@@ -150,6 +164,7 @@ contract TestSetupVaults is TestSetup {
         for (uint256 i = 0; i < 3; i++) {
             suppliers[i] = new VaultUser(morpho);
             fillUserBalances(suppliers[i]);
+            deal(comp, address(suppliers[i]), INITIAL_BALANCE * WAD);
 
             vm.label(
                 address(suppliers[i]),
@@ -171,5 +186,6 @@ contract TestSetupVaults is TestSetup {
         vm.label(address(wethSupplyHarvestVault), "SupplyHarvestVault (WETH)");
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
+        vm.label(address(compSupplyHarvestVault), "SupplyHarvestVault (COMP)");
     }
 }

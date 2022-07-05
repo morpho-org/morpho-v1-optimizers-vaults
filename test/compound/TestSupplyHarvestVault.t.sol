@@ -161,11 +161,11 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             address(daiSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest(
-            daiSupplyHarvestVault.maxHarvestingSlippage()
-        );
-        uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
-            daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
+        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
+
+        uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
+        uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
+            (daiSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             cDai,
@@ -183,7 +183,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             0,
             "comp amount is not zero"
         );
-        assertEq(rewardsFee, expectedRewardsFee, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
@@ -201,11 +201,11 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
         uint256 balanceBefore = vaultSupplier1.balanceOf(dai);
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest(
-            daiSupplyHarvestVault.maxHarvestingSlippage()
-        );
-        uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
-            daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
+        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
+
+        uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
+        uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
+            (daiSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
         vaultSupplier1.redeemVault(daiSupplyHarvestVault, shares);
         uint256 balanceAfter = vaultSupplier1.balanceOf(dai);
@@ -220,87 +220,11 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             balanceBefore + balanceOnPoolBefore + rewardsAmount,
             "unexpected dai balance"
         );
-        assertEq(rewardsFee, expectedRewardsFee, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
-    function testShouldNotAllowOracleCompDaiDump() public {
-        uint256 amount = 10_000 ether;
-
-        vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
-
-        vm.roll(block.number + 1_000);
-
-        uint256 flashloanAmount = 1_000 ether;
-        ISwapRouter swapRouter = daiSupplyHarvestVault.SWAP_ROUTER();
-
-        deal(comp, address(this), flashloanAmount);
-        ERC20(comp).approve(address(swapRouter), flashloanAmount);
-        swapRouter.exactInputSingle(
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: comp,
-                tokenOut: wEth,
-                fee: daiSupplyHarvestVault.compSwapFee(),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: flashloanAmount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            })
-        );
-
-        vm.expectRevert("Too little received");
-        daiSupplyHarvestVault.harvest(100);
-    }
-
-    function testShouldNotAllowOracleCompUsdcDump() public {
-        uint256 amount = 10_000e6;
-
-        vaultSupplier1.depositVault(usdcSupplyHarvestVault, amount);
-
-        vm.roll(block.number + 1_000);
-
-        uint256 flashloanAmount = 1_000 ether;
-        ISwapRouter swapRouter = usdcSupplyHarvestVault.SWAP_ROUTER();
-
-        deal(comp, address(this), flashloanAmount);
-        ERC20(comp).approve(address(swapRouter), flashloanAmount);
-        swapRouter.exactInputSingle(
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: comp,
-                tokenOut: wEth,
-                fee: usdcSupplyHarvestVault.compSwapFee(),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: flashloanAmount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            })
-        );
-
-        vm.expectRevert("Too little received");
-        usdcSupplyHarvestVault.harvest(1000);
-    }
-
     /// GOVERNANCE ///
-
-    function testOnlyOwnerShouldSetOracle() public {
-        vm.prank(address(0));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyHarvestVault.setOracle(address(1));
-
-        daiSupplyHarvestVault.setOracle(address(1));
-        assertEq(daiSupplyHarvestVault.oracle(), address(1));
-    }
-
-    function testOnlyOwnerShouldSetTwapPeriod() public {
-        vm.prank(address(0));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyHarvestVault.setTwapPeriod(1 hours);
-
-        daiSupplyHarvestVault.setTwapPeriod(1 hours);
-        assertEq(daiSupplyHarvestVault.twapPeriod(), 1 hours);
-    }
 
     function testOnlyOwnerShouldSetCompSwapFee() public {
         vm.prank(address(0));
@@ -329,21 +253,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
     }
 
-    function testOnlyOwnerShouldSetMaxHarvestingSlippage() public {
-        vm.prank(address(0));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
-
-        daiSupplyHarvestVault.setMaxHarvestingSlippage(1);
-        assertEq(daiSupplyHarvestVault.maxHarvestingSlippage(), 1);
-    }
-
     /// SETTERS ///
-
-    function testShouldNotSetTooShortTwapPeriod() public {
-        vm.expectRevert(SupplyHarvestVault.TwapPeriodTooShort.selector);
-        daiSupplyHarvestVault.setTwapPeriod(5 minutes - 1);
-    }
 
     function testShouldNotSetCompSwapFeeTooLarge() public {
         uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
@@ -361,11 +271,5 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
         vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
         daiSupplyHarvestVault.setHarvestingFee(newVal);
-    }
-
-    function testShouldNotSetMaxHarvestingSlippageTooLarge() public {
-        uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
-        daiSupplyHarvestVault.setMaxHarvestingSlippage(newVal);
     }
 }
