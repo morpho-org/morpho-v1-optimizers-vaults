@@ -13,6 +13,19 @@ contract SupplyVault is SupplyVaultUpgradeable {
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
 
+    /// EVENTS ///
+
+    /// @notice Emitted when a user accrues its rewards.
+    /// @param user The address of the user.
+    /// @param index The new index of the user (also the global at the moment of the update).
+    /// @param unclaimed The new unclaimed amount of the user.
+    event Accrued(address indexed user, uint256 index, uint256 unclaimed);
+
+    /// @notice Emitted when a user claims its rewards.
+    /// @param user The address of the user.
+    /// @param claimed The amount of rewards claimed.
+    event Claimed(address indexed user, uint256 claimed);
+
     /// STORAGE ///
 
     struct UserRewards {
@@ -55,6 +68,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
             comp.safeTransfer(_user, rewardsAmount);
         }
+
+        emit Claimed(_user, rewardsAmount);
     }
 
     /// INTERNAL ///
@@ -82,16 +97,27 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     function _accrueUnclaimedRewards(address _user) internal {
         uint256 supply = totalSupply();
+        uint256 rewardsIndexMem = rewardsIndex;
+
         if (supply > 0) {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
-            rewardsIndex += morpho.claimRewards(poolTokens, false).divWadDown(supply);
+            rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
         }
 
-        uint256 rewardsIndexDiff = rewardsIndex - userRewards[_user].index;
+        rewardsIndex = rewardsIndexMem;
+        uint256 rewardsIndexDiff = rewardsIndexMem - userRewards[_user].index;
+        uint256 unclaimed;
+
         if (rewardsIndexDiff > 0) {
-            userRewards[_user].unclaimed += uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
-            userRewards[_user].index = uint128(rewardsIndex);
+            unclaimed =
+                userRewards[_user].unclaimed +
+                uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
+            userRewards[_user].unclaimed = uint128(unclaimed);
         }
+
+        userRewards[_user].index = uint128(rewardsIndexMem);
+
+        emit Accrued(_user, rewardsIndexMem, unclaimed);
     }
 }

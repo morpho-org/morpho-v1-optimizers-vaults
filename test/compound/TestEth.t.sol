@@ -61,9 +61,7 @@ contract TestEth is TestSetupVaults {
             address(wethSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = wethSupplyHarvestVault.harvest(
-            wethSupplyHarvestVault.maxHarvestingSlippage()
-        );
+        (uint256 rewardsAmount, uint256 rewardsFee) = wethSupplyHarvestVault.harvest();
         uint256 expectedRewardsFee = (rewardsAmount + rewardsFee).percentMul(
             wethSupplyHarvestVault.harvestingFee()
         );

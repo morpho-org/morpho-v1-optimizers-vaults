@@ -1,18 +1,9 @@
-name: Solidity tests on Morpho Compound
+name: Foundry tests
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "lib/**"
-      - "contracts/*"
-      - "contracts/compound/**"
-      - "test/compound/**"
-      - "*.lock"
-      - "Makefile"
-      - "remappings.txt"
-      - ".github/workflows/ci-foundry-compound.yml"
   pull_request:
     paths:
       - "lib/**"
@@ -21,13 +12,14 @@ on:
       - "test/compound/**"
       - "*.lock"
       - "Makefile"
+      - "foundry.toml"
       - "remappings.txt"
       - ".github/workflows/ci-foundry-compound.yml"
 
 jobs:
-  morpho-compound:
+  morpho-compound-eth-mainnet:
     if: "! github.event.pull_request.draft"
-    name: Morpho-Compound
+    name: Morpho-Compound [eth-mainnet]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -53,7 +45,21 @@ jobs:
         with:
           version: nightly
 
+      - name: Foundry fork cache
+        uses: actions/cache@v3
+        with:
+          path: "~/.foundry/cache"
+          key: foundry-${{ hashFiles('**/Makefile', '**/foundry.toml') }} # where fork block numbers & RPC are stored
+
+      - name: Foundry out cache
+        uses: actions/cache@v3
+        with:
+          path: "**/out"
+          key: foundry-out-compound # always keep compiled contracts from base branch
+
       - name: Run tests
-        run: make test PROTOCOL=compound NETWORK=eth-mainnet
+        run: make test
         env:
+          PROTOCOL: compound
+          NETWORK: eth-mainnet
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}

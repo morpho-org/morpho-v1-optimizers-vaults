@@ -36,7 +36,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param user The address of the user that rewards are accrued on behalf of.
     /// @param rewardsIndex The index of the asset distribution on behalf of the user.
     /// @param accruedRewards The amount of rewards accrued.
-    event RewardsAccrued(
+    event Accrued(
         address indexed rewardToken,
         address indexed user,
         uint128 rewardsIndex,
@@ -47,7 +47,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param rewardToken The address of the reward token.
     /// @param user The address of the user that rewards are claimed on behalf of.
     /// @param claimedRewards The amount of rewards claimed.
-    event RewardsClaimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
+    event Claimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
 
     /// UPGRADE ///
 
@@ -96,7 +96,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
                 ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
-                emit RewardsClaimed(rewardToken, _user, unclaimedAmount);
+                emit Claimed(rewardToken, _user, unclaimedAmount);
             }
 
             unchecked {
@@ -201,9 +201,6 @@ contract SupplyVault is SupplyVaultUpgradeable {
     }
 
     function _accrueUnclaimedRewards(address _user) internal {
-        uint256 supply = totalSupply();
-        if (supply == 0) return;
-
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolToken;
 
@@ -211,17 +208,17 @@ contract SupplyVault is SupplyVaultUpgradeable {
             poolTokens,
             false
         );
+
+        uint256 supply = totalSupply();
         uint256 nbRewardTokens = rewardTokens.length;
         for (uint256 i; i < nbRewardTokens; ) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
 
-            uint128 newRewardsIndex = rewardsIndex[rewardToken];
-            if (claimedAmount > 0) {
-                newRewardsIndex += uint128(claimedAmount.mulDivDown(SCALE, supply));
-                rewardsIndex[rewardToken] = newRewardsIndex;
-            }
+            if (supply > 0 && claimedAmount > 0)
+                rewardsIndex[rewardToken] += uint128(claimedAmount.mulDivDown(SCALE, supply));
 
+            uint128 newRewardsIndex = rewardsIndex[rewardToken];
             uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
             if (rewardsIndexDiff > 0) {
                 uint128 accruedRewards = uint128(
@@ -230,7 +227,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
                 userRewards[rewardToken][_user].unclaimed += accruedRewards;
                 userRewards[rewardToken][_user].index = newRewardsIndex;
 
-                emit RewardsAccrued(rewardToken, _user, newRewardsIndex, accruedRewards);
+                emit Accrued(rewardToken, _user, newRewardsIndex, accruedRewards);
             }
 
             unchecked {
