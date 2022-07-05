@@ -65,28 +65,29 @@ contract UniswapV3Swapper is ISwapper, Ownable {
         uint256 _amountIn,
         address _tokenOut,
         address _recipient
-    ) external returns (uint256) {
+    ) external returns (uint256 amountOut) {
         ERC20(_tokenIn).safeApprove(address(SWAP_ROUTER), _amountIn);
 
-        return
-            SWAP_ROUTER.exactInput(
-                ISwapRouter.ExactInputParams({
-                    path: _tokenIn == wrappedNativeToken
-                        ? abi.encodePacked(wrappedNativeToken, swapFee[_tokenOut], _tokenOut)
-                        : _tokenOut == wrappedNativeToken
-                        ? abi.encodePacked(_tokenIn, swapFee[_tokenIn], wrappedNativeToken)
-                        : abi.encodePacked(
-                            _tokenIn,
-                            swapFee[_tokenIn],
-                            wrappedNativeToken,
-                            swapFee[_tokenOut],
-                            _tokenOut
-                        ),
-                    recipient: _recipient,
-                    deadline: block.timestamp,
-                    amountIn: _amountIn,
-                    amountOutMinimum: 0
-                })
-            );
+        amountOut = SWAP_ROUTER.exactInput(
+            ISwapRouter.ExactInputParams({
+                path: _tokenIn == wrappedNativeToken
+                    ? abi.encodePacked(wrappedNativeToken, swapFee[_tokenOut], _tokenOut)
+                    : _tokenOut == wrappedNativeToken
+                    ? abi.encodePacked(_tokenIn, swapFee[_tokenIn], wrappedNativeToken)
+                    : abi.encodePacked(
+                        _tokenIn,
+                        swapFee[_tokenIn],
+                        wrappedNativeToken,
+                        swapFee[_tokenOut],
+                        _tokenOut
+                    ),
+                recipient: _recipient,
+                deadline: block.timestamp,
+                amountIn: _amountIn,
+                amountOutMinimum: 0
+            })
+        );
+
+        emit Swapped(_tokenIn, _amountIn, _tokenOut, amountOut, _recipient);
     }
 }

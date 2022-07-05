@@ -19,6 +19,18 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// EVENTS ///
 
+    /// @notice Emitted when an harvest is done.
+    /// @param harvester The address of the harvester receiving the fee.
+    /// @param rewardToken The address of the reward token swapped.
+    /// @param rewardsAmount The amount of rewards in underlying asset which is supplied to Morpho.
+    /// @param rewardsFee The amount of underlying asset sent to the harvester.
+    event Harvested(
+        address indexed harvester,
+        address indexed rewardToken,
+        uint256 rewardsAmount,
+        uint256 rewardsFee
+    );
+
     /// @notice Emitted when the fee for harvesting is set.
     /// @param newHarvestingFee The new harvesting fee.
     event HarvestingFeeSet(uint16 newHarvestingFee);
@@ -107,7 +119,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         ISwapper swapperMem = swapper;
         uint16 harvestingFeeMem = harvestingFee;
         uint256 nbRewardTokens = rewardTokens.length;
-
         uint256 toSupply;
         rewardsFees = new uint256[](nbRewardTokens);
 
@@ -129,14 +140,18 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                     );
                 }
 
+                uint256 rewardsFee;
                 if (harvestingFeeMem > 0) {
-                    rewardsFees[i] = rewardsAmount.percentMul(harvestingFeeMem);
-                    rewardsAmount -= rewardsFees[i];
-                    ERC20(assetMem).safeTransfer(msg.sender, rewardsFees[i]);
+                    rewardsFee = rewardsAmount.percentMul(harvestingFeeMem);
+                    rewardsFees[i] = rewardsFee;
+                    rewardsAmount -= rewardsFee;
+                    ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
                 }
 
                 rewardsAmounts[i] = rewardsAmount;
                 toSupply += rewardsAmount;
+
+                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardsFee);
             }
 
             unchecked {
