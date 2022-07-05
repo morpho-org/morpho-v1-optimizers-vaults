@@ -9,17 +9,17 @@ interface ISwapper {
     /// EVENTS ///
 
     /// @notice Emitted when executing a swap.
-    /// @param _tokenIn The token swapped.
-    /// @param _amountIn The amount of token swapped.
-    /// @param _tokenOut The token received.
-    /// @param _amountOut The amount of token received.
-    /// @param _recipient The recipient of the tokens.
+    /// @param tokenIn The token swapped.
+    /// @param amountIn The amount of token swapped.
+    /// @param tokenOut The token received.
+    /// @param amountOut The amount of token received.
+    /// @param recipient The recipient of the tokens.
     event Swapped(
-        address _tokenIn,
-        uint256 _amountIn,
-        address _tokenOut,
-        uint256 _amountOut,
-        address _recipient
+        address tokenIn,
+        uint256 amountIn,
+        address tokenOut,
+        uint256 amountOut,
+        address recipient
     );
 
     /// FUNCTIONS ///
