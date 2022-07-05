@@ -162,8 +162,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
-        uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
-            daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
+
+        uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
+        uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
+            (daiSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             cDai,
@@ -181,7 +183,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             0,
             "comp amount is not zero"
         );
-        assertEq(rewardsFee, expectedRewardsFee, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
@@ -200,8 +202,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         uint256 balanceBefore = vaultSupplier1.balanceOf(dai);
 
         (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
-        uint256 expectedRewardsFee = ((rewardsAmount + rewardsFee) *
-            daiSupplyHarvestVault.harvestingFee()) / daiSupplyHarvestVault.MAX_BASIS_POINTS();
+
+        uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
+        uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
+            (daiSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
         vaultSupplier1.redeemVault(daiSupplyHarvestVault, shares);
         uint256 balanceAfter = vaultSupplier1.balanceOf(dai);
@@ -216,43 +220,8 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             balanceBefore + balanceOnPoolBefore + rewardsAmount,
             "unexpected dai balance"
         );
-        assertEq(rewardsFee, expectedRewardsFee, "unexpected rewards fee amount");
+        assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee amount");
         assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
-    }
-
-    function testShouldClaimAndRedeemRewardsWithoutSwapWithRewardsTokenSameAsUnderlyingAsset()
-        public
-    {
-        uint256 amount = 10_000 ether;
-
-        uint256 shares = vaultSupplier1.depositVault(compSupplyHarvestVault, amount);
-
-        vm.roll(block.number + 1_000);
-
-        morpho.updateP2PIndexes(cComp);
-        (, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
-            cComp,
-            address(compSupplyHarvestVault)
-        );
-        uint256 balanceBefore = vaultSupplier1.balanceOf(comp);
-
-        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest();
-
-        vaultSupplier1.redeemVault(compSupplyHarvestVault, shares);
-        uint256 balanceAfter = vaultSupplier1.balanceOf(comp);
-
-        assertEq(
-            ERC20(comp).balanceOf(address(compSupplyHarvestVault)),
-            0,
-            "non zero comp balance on vault"
-        );
-        assertGt(
-            balanceAfter,
-            balanceBefore + balanceOnPoolBefore + rewardsAmount,
-            "unexpected comp balance"
-        );
-        assertEq(rewardsFee, 0, "unexpected rewards fee amount");
-        assertEq(ERC20(comp).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
     }
 
     /// GOVERNANCE ///

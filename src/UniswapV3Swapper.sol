@@ -15,13 +15,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract UniswapV3Swapper is ISwapper, Ownable {
     using SafeTransferLib for ERC20;
 
-    /// @notice Emitted when the fee for swapping rewards for wrapped native token is set.
-    /// @param newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
-    event RewardsSwapFeeSet(address rewardToken, uint24 newRewardsSwapFee);
+    /// EVENTS ///
 
-    /// @notice Emitted when the fee for swapping wrapped native token for the underlying asset is set.
-    /// @param newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    event AssetSwapFeeSet(address rewardToken, uint24 newAssetSwapFee);
+    /// @notice Emitted when the fee for swapping an asset for wrapped native token (and vice-versa) is set.
+    /// @param asset The address of the asset.
+    /// @param newSwapFee The new swap fee (in UniswapV3 fee unit).
+    event SwapFeeSet(address asset, uint24 newSwapFee);
 
     /// ERRORS ///
 
@@ -36,8 +35,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     address public immutable wrappedNativeToken;
 
-    mapping(address => uint24) public rewardsSwapFee; // The fee taken by the UniswapV3Pool for swapping rewards for wrapped native token (in UniswapV3 fee unit).
-    mapping(address => uint24) public assetSwapFee; // The fee taken by the UniswapV3Pool for asset token for wrapped native token (in UniswapV3 fee unit).
+    mapping(address => uint24) public swapFee; // The fee taken by the selected UniswapV3Pool for the pair asset / wrapped native token (in UniswapV3 fee unit).
 
     /// CONSTRUCTOR ///
 
@@ -49,24 +47,14 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     /// GOVERNANCE ///
 
-    /// @notice Sets the fee taken by the UniswapV3Pool for swapping token rewards for wrapped native token.
-    /// @param _rewardToken The address of the reward token.
-    /// @param _newRewardsSwapFee The new rewards swap fee (in UniswapV3 fee unit).
-    function setRewardsSwapFee(address _rewardToken, uint24 _newRewardsSwapFee) external onlyOwner {
-        if (_newRewardsSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+    /// @notice Sets the fee taken by the selected UniswapV3Pool for the pair asset / wrapped native token.
+    /// @param _asset The address of the asset.
+    /// @param _newSwapFee The new swap fee (in UniswapV3 fee unit).
+    function setSwapFee(address _asset, uint24 _newSwapFee) external onlyOwner {
+        if (_newSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        rewardsSwapFee[_rewardToken] = _newRewardsSwapFee;
-        emit RewardsSwapFeeSet(_rewardToken, _newRewardsSwapFee);
-    }
-
-    /// @notice Sets the fee taken by the UniswapV3Pool for swapping wrapped native token for the underlying asset.
-    /// @param _rewardToken The address of the reward token.
-    /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
-    function setAssetSwapFee(address _rewardToken, uint24 _newAssetSwapFee) external onlyOwner {
-        if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
-
-        assetSwapFee[_rewardToken] = _newAssetSwapFee;
-        emit AssetSwapFeeSet(_rewardToken, _newAssetSwapFee);
+        swapFee[_asset] = _newSwapFee;
+        emit SwapFeeSet(_asset, _newSwapFee);
     }
 
     /// EXTERNAL ///
@@ -82,13 +70,15 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
         amountOut = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
-                path: (_tokenIn == wrappedNativeToken || _tokenOut == wrappedNativeToken)
-                    ? abi.encodePacked(_tokenIn, rewardsSwapFee[_tokenIn], _tokenOut)
+                path: _tokenIn == wrappedNativeToken
+                    ? abi.encodePacked(wrappedNativeToken, swapFee[_tokenOut], _tokenOut)
+                    : _tokenOut == wrappedNativeToken
+                    ? abi.encodePacked(_tokenIn, swapFee[_tokenIn], wrappedNativeToken)
                     : abi.encodePacked(
                         _tokenIn,
-                        rewardsSwapFee[_tokenIn],
+                        swapFee[_tokenIn],
                         wrappedNativeToken,
-                        assetSwapFee[_tokenIn],
+                        swapFee[_tokenOut],
                         _tokenOut
                     ),
                 recipient: _recipient,

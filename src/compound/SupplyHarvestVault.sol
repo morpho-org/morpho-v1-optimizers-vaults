@@ -163,12 +163,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                     amountOutMinimum: 0
                 })
             );
-
-            if (harvestConfigMem.harvestingFee > 0) {
-                rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
-                rewardsAmount -= rewardsFee;
-            }
         } else rewardsAmount = morpho.claimRewards(poolTokens, false);
+
+        if (harvestConfigMem.harvestingFee > 0) {
+            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
+            rewardsAmount -= rewardsFee;
+        }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
         if (rewardsFee > 0) ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
