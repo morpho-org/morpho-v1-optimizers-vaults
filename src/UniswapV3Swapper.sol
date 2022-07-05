@@ -18,9 +18,9 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// EVENTS ///
 
     /// @notice Emitted when the fee for swapping an asset for wrapped native token (and vice-versa) is set.
-    /// @param rewardToken The address of the reward token.
+    /// @param asset The address of the asset.
     /// @param newSwapFee The new swap fee (in UniswapV3 fee unit).
-    event SwapFeeSet(address rewardToken, uint24 newSwapFee);
+    event SwapFeeSet(address asset, uint24 newSwapFee);
 
     /// ERRORS ///
 
@@ -35,7 +35,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     address public immutable wrappedNativeToken;
 
-    mapping(address => uint24) public swapFee; // The fee taken by the UniswapV3Pool for swapping an asset for wrapped native token (and vice-versa, in UniswapV3 fee unit).
+    mapping(address => uint24) public swapFee; // The fee taken by the selected UniswapV3Pool for the pair asset / wrapped native token (in UniswapV3 fee unit).
 
     /// CONSTRUCTOR ///
 
@@ -47,14 +47,14 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     /// GOVERNANCE ///
 
-    /// @notice Sets the fee taken by the UniswapV3Pool for swapping token rewards for wrapped native token.
-    /// @param _rewardToken The address of the reward token.
-    /// @param _newSwapFee The new rewards swap fee (in UniswapV3 fee unit).
-    function setSwapFee(address _rewardToken, uint24 _newSwapFee) external onlyOwner {
+    /// @notice Sets the fee taken by the selected UniswapV3Pool for the pair asset / wrapped native token.
+    /// @param _asset The address of the asset.
+    /// @param _newSwapFee The new swap fee (in UniswapV3 fee unit).
+    function setSwapFee(address _asset, uint24 _newSwapFee) external onlyOwner {
         if (_newSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
 
-        swapFee[_rewardToken] = _newSwapFee;
-        emit SwapFeeSet(_rewardToken, _newSwapFee);
+        swapFee[_asset] = _newSwapFee;
+        emit SwapFeeSet(_asset, _newSwapFee);
     }
 
     /// EXTERNAL ///
