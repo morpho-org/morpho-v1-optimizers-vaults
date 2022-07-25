@@ -60,9 +60,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param _user The address of the user to claim rewards for.
     /// @return rewardsAmount The amount of rewards claimed.
     function claimRewards(address _user) external returns (uint256 rewardsAmount) {
-        _accrueUnclaimedRewards(_user);
+        rewardsAmount = _accrueUnclaimedRewards(_user);
 
-        rewardsAmount = userRewards[_user].unclaimed;
         if (rewardsAmount > 0) {
             userRewards[_user].unclaimed = 0;
 
@@ -95,7 +94,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
-    function _accrueUnclaimedRewards(address _user) internal {
+    function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
         uint256 supply = totalSupply();
         uint256 rewardsIndexMem = rewardsIndex;
 
@@ -105,18 +104,24 @@ contract SupplyVault is SupplyVaultUpgradeable {
             rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
         }
 
-        rewardsIndex = rewardsIndexMem;
-        uint256 rewardsIndexDiff = rewardsIndexMem - userRewards[_user].index;
-        uint256 unclaimed;
+        UserRewards storage rewards = userRewards[_user];
 
-        if (rewardsIndexDiff > 0) {
-            unclaimed =
-                userRewards[_user].unclaimed +
-                uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
-            userRewards[_user].unclaimed = uint128(unclaimed);
+        rewardsIndex = rewardsIndexMem;
+        uint256 rewardsIndexDiff;
+
+        // Safe because we always have `rewardsIndex` >= `rewards.index`.
+        // Indeed `rewardsIndex` is never decreasing, and `rewards.index` is always set to former values of `rewardsIndex`.
+        unchecked {
+            rewardsIndexDiff = rewardsIndexMem - rewards.index;
         }
 
-        userRewards[_user].index = uint128(rewardsIndexMem);
+        unclaimed = rewards.unclaimed;
+        if (rewardsIndexDiff > 0) {
+            unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff);
+            rewards.unclaimed = uint128(unclaimed);
+        }
+
+        rewards.index = uint128(rewardsIndexMem);
 
         emit Accrued(_user, rewardsIndexMem, unclaimed);
     }
