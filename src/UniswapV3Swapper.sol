@@ -31,7 +31,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
 
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
-    uint24 public constant MAX_UNISWAP_FEE = 1_000_000; // 100% in UniswapV3 fee units.
+    uint24 public constant MAX_UNISWAP_FEE = 100_0000; // 100% in UniswapV3 fee units.
 
     address public immutable wrappedNativeToken;
 

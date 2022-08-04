@@ -46,7 +46,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    uint16 public constant MAX_BASIS_POINTS = 10_000; // 100% in basis points.
+    uint16 public constant MAX_BASIS_POINTS = 100_00; // 100% in basis points.
 
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     ISwapper public swapper; // Swapper contract to swap reward tokens for underlying asset.
