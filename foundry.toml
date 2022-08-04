@@ -10,3 +10,4 @@ sparse_mode = true
 revert_strings = "default"
 names = true
 sizes = true
+fuzz_runs = 1024

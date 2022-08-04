@@ -8,7 +8,6 @@ FOUNDRY_SRC=contracts/${PROTOCOL}/
 FOUNDRY_TEST=test/${PROTOCOL}/
 FOUNDRY_REMAPPINGS=@config/=lib/morpho-contracts/config/${NETWORK}/${PROTOCOL}/
 FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
-FOUNDRY_CONTRACT_PATTERN_INVERSE="GasConsumption"
 
 ifeq (${NETWORK}, eth-mainnet)
   FOUNDRY_CHAIN_ID=1
@@ -32,11 +31,6 @@ ifeq (${NETWORK}, avalanche-mainnet)
   ifeq (${PROTOCOL}, aave-v3)
     FOUNDRY_FORK_BLOCK_NUMBER=15675271
   endif
-else
-endif
-
-ifneq (, $(filter ${NETWORK}, ropsten rinkeby))
-  FOUNDRY_ETH_RPC_URL=https://${NETWORK}.infura.io/v3/${INFURA_PROJECT_ID}
 endif
 
 
@@ -47,39 +41,19 @@ install:
 
 test:
 	@echo Running all ${PROTOCOL} tests on ${NETWORK}
-	@forge test -vv
+	@forge test -vv | tee trace.ansi
 
-test-ansi:
-	@echo Running all ${PROTOCOL} tests on ${NETWORK}
-	@forge test -vv > trace.ansi
-
-test-html:
-	@echo Running all ${PROTOCOL} tests on ${NETWORK}
-	@forge test -vv | aha --black > trace.html
+gas-report:
+	@echo Creating gas report for ${PROTOCOL} on ${NETWORK}
+	@forge test --gas-report
 
 contract-% c-%:
 	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv --match-contract $*
-
-ansi-c-%:
-	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv --match-contract $* > trace.ansi
-
-html-c-%:
-	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv --match-contract $* | aha --black > trace.html
+	@forge test -vvv --match-contract $* | tee trace.ansi
 
 single-% s-%:
 	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv --match-test $*
-
-ansi-s-%:
-	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv --match-test $* > trace.ansi
-
-html-s-%:
-	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
-	@forge test -vvv --match-test $* | aha --black > trace.html
+	@forge test -vvv --match-test $* | tee trace.ansi
 
 config:
 	@forge config
