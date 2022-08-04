@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
-import "@solmate/utils/FixedPointMathLib.sol";
+import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
+
+import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 

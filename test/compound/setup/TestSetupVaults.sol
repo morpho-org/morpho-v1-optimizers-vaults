@@ -6,7 +6,7 @@ import "@tests/compound/setup/TestSetup.sol";
 import "@vaults/compound/SupplyHarvestVault.sol";
 import "@vaults/compound/SupplyVault.sol";
 
-import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
 import "../helpers/VaultUser.sol";
 
