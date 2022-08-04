@@ -5,7 +5,7 @@ import "@contracts/compound/interfaces/compound/ICompound.sol";
 import "@contracts/compound/interfaces/IMorpho.sol";
 
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import "@contracts/compound/libraries/CompoundMath.sol";
+import "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import "@contracts/compound/libraries/Types.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
