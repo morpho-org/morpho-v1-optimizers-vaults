@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
 
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
@@ -12,6 +13,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
+    using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
 
@@ -218,14 +220,16 @@ contract SupplyVault is SupplyVaultUpgradeable {
             uint256 claimedAmount = claimedAmounts[i];
 
             if (supply > 0 && claimedAmount > 0)
-                rewardsIndex[rewardToken] += uint128(claimedAmount.mulDivDown(SCALE, supply));
+                rewardsIndex[rewardToken] += claimedAmount
+                .mulDivDown(SCALE, supply)
+                .safeCastTo128();
 
             uint128 newRewardsIndex = rewardsIndex[rewardToken];
             uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
             if (rewardsIndexDiff > 0) {
-                uint128 accruedRewards = uint128(
-                    balanceOf(_user).mulDivDown(rewardsIndexDiff, SCALE)
-                );
+                uint128 accruedRewards = balanceOf(_user)
+                .mulDivDown(rewardsIndexDiff, SCALE)
+                .safeCastTo128();
                 userRewards[rewardToken][_user].unclaimed += accruedRewards;
                 userRewards[rewardToken][_user].index = newRewardsIndex;
 

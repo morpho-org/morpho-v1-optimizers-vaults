@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
@@ -10,6 +11,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which tracks rewards from Compound's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
+    using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
 
@@ -112,11 +114,11 @@ contract SupplyVault is SupplyVaultUpgradeable {
         if (rewardsIndexDiff > 0) {
             unclaimed =
                 userRewards[_user].unclaimed +
-                uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
-            userRewards[_user].unclaimed = uint128(unclaimed);
+                balanceOf(_user).mulWadDown(rewardsIndexDiff).safeCastTo128();
+            userRewards[_user].unclaimed = unclaimed.safeCastTo128();
         }
 
-        userRewards[_user].index = uint128(rewardsIndexMem);
+        userRewards[_user].index = rewardsIndexMem.safeCastTo128();
 
         emit Accrued(_user, rewardsIndexMem, unclaimed);
     }
