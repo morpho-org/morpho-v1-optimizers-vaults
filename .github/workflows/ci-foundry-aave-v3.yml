@@ -7,16 +7,16 @@ on:
       - dev
   pull_request:
     paths:
-      - "lib/**"
-      - "contracts/*"
-      - "contracts/aave-v3/**"
-      - "test/aave-v3/**"
-      - "*.lock"
-      - "Makefile"
-      - "foundry.toml"
-      - "remappings.txt"
-      - ".github/actions/ci-foundry/*"
-      - ".github/workflows/ci-foundry-aave-v3.yml"
+      - lib/**
+      - src/*
+      - src/aave-v3/**
+      - test/aave-v3/**
+      - yarn.lock
+      - Makefile
+      - foundry.toml
+      - remappings.txt
+      - .github/actions/ci-foundry/*
+      - .github/workflows/ci-foundry-aave-v3.yml
 
 jobs:
   # morpho-aave-v3-polygon-mainnet:

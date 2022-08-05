@@ -7,16 +7,16 @@ on:
       - dev
   pull_request:
     paths:
-      - "lib/**"
-      - "contracts/*"
-      - "contracts/compound/**"
-      - "test/compound/**"
-      - "*.lock"
-      - "Makefile"
-      - "foundry.toml"
-      - "remappings.txt"
-      - ".github/actions/ci-foundry/*"
-      - ".github/workflows/ci-foundry-compound.yml"
+      - lib/**
+      - src/*
+      - src/compound/**
+      - test/compound/**
+      - yarn.lock
+      - Makefile
+      - foundry.toml
+      - remappings.txt
+      - .github/actions/ci-foundry/*
+      - .github/workflows/ci-foundry-compound.yml
 
 jobs:
   morpho-compound-eth-mainnet:
