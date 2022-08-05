@@ -4,7 +4,7 @@
 PROTOCOL?=compound
 NETWORK?=eth-mainnet
 
-FOUNDRY_SRC=contracts/${PROTOCOL}/
+FOUNDRY_SRC=src/${PROTOCOL}/
 FOUNDRY_TEST=test/${PROTOCOL}/
 FOUNDRY_REMAPPINGS=@config/=lib/morpho-contracts/config/${NETWORK}/${PROTOCOL}/
 FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
@@ -44,15 +44,15 @@ test:
 	@forge test -vv | tee trace.ansi
 
 gas-report:
-	@echo Creating gas report for ${PROTOCOL} on ${NETWORK}
+	@echo Creating gas report for ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}
 	@forge test --gas-report
 
 contract-% c-%:
-	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK}
+	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}
 	@forge test -vvv --match-contract $* | tee trace.ansi
 
 single-% s-%:
-	@echo Running single test $* of ${PROTOCOL} on ${NETWORK}
+	@echo Running single test $* of ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}
 	@forge test -vvv --match-test $* | tee trace.ansi
 
 config:
