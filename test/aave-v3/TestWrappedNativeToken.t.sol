@@ -66,13 +66,13 @@ contract TestWrappedNativeToken is TestSetupVaults {
         (
             address[] memory rewardTokens,
             uint256[] memory rewardsAmounts,
-            uint256[] memory rewardsFees
+            uint256 totalSupplied,
+            uint256 totalRewardsFee
         ) = wrappedNativeTokenSupplyHarvestVault.harvest();
 
         assertEq(rewardTokens.length, 1, "unexpected reward tokens length");
         assertEq(rewardTokens[0], rewardToken, "unexpected reward token");
         assertEq(rewardsAmounts.length, 1, "unexpected rewards amounts length");
-        assertEq(rewardsFees.length, 1, "unexpected rewards fees length");
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             aWrappedNativeToken,
@@ -83,7 +83,7 @@ contract TestWrappedNativeToken is TestSetupVaults {
         uint256 expectedRewardsFee = (rewardsAmounts[0] * harvestingFee) /
             (wrappedNativeTokenSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
-        assertGt(rewardsFees[0], 0, "rewards fee is zero");
+        assertGt(totalSupplied, 0, "total supplied is zero");
         assertGt(rewardsAmounts[0], 0, "rewards amount is zero");
         assertEq(
             balanceOnPoolAfter,
@@ -96,10 +96,10 @@ contract TestWrappedNativeToken is TestSetupVaults {
             0,
             "rewardToken amount is not zero"
         );
-        assertEq(rewardsFees[0], expectedRewardsFee, "unexpected rewards fee");
+        assertEq(totalRewardsFee, expectedRewardsFee, "unexpected rewards fee");
         assertEq(
             ERC20(wrappedNativeToken).balanceOf(address(this)),
-            rewardsFees[0],
+            totalRewardsFee,
             "unexpected fee collected"
         );
     }
