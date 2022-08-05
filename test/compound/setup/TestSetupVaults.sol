@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@tests/compound/setup/TestSetup.sol";
 
-import "@vaults/compound/SupplyHarvestVault.sol";
-import "@vaults/compound/SupplyVault.sol";
+import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
+import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 
 import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
