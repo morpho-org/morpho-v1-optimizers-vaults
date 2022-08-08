@@ -166,8 +166,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         } else rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         if (harvestConfigMem.harvestingFee > 0) {
-            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
-            rewardsAmount -= rewardsFee;
+            unchecked {
+                rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
+                rewardsAmount -= rewardsFee;
+            }
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
