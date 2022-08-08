@@ -8,14 +8,13 @@ import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransf
 import "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import "@contracts/compound/libraries/Types.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultUpgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
-abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgradeable {
+abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
 
@@ -52,7 +51,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
             _poolToken
         );
 
-        __Ownable_init();
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
     }
