@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
-import "@aave/core-v3/contracts/interfaces/IAToken.sol";
-import "@aave/core-v3/contracts/interfaces/IPool.sol";
-import "@contracts/aave-v3/interfaces/IMorpho.sol";
+import {IAToken} from "@aave/core-v3/contracts/interfaces/IAToken.sol";
+import {IPool} from "@contracts/aave-v3/interfaces/aave/IPool.sol";
+import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
+import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
 
-import {ERC20, SafeTransferLib} from "@solmate/utils/SafeTransferLib.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
+import "@morpho-labs/morpho-utils/math/Math.sol";
 import "@contracts/aave-v3/libraries/Types.sol";
-import "@contracts/aave-v3/libraries/Math.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultUpgradeable.

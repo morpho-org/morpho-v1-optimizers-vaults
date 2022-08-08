@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "./interfaces/ISwapper.sol";
 
-import "@solmate/utils/SafeTransferLib.sol";
+import "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
 /// @title UniswapV2Swapper.
 /// @author Morpho Labs.
