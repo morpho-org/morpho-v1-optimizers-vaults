@@ -22,12 +22,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     using SafeTransferLib for ERC20;
     using WadRayMath for uint256;
 
-    /// EVENTS ///
-
-    /// @notice Emitted when the address of the `rewardsController` is set.
-    /// @param _rewardsController The new address of the `rewardsController`.
-    event RewardsControllerSet(address indexed _rewardsController);
-
     /// ERRORS ///
 
     /// @notice Thrown when the zero address is passed as input.
@@ -37,7 +31,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
 
     IMorpho public morpho; // The main Morpho contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    IRewardsController public rewardsController;
     IPool public pool;
 
     /// UPGRADE ///
@@ -74,22 +67,10 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
 
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
         underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(_morpho, type(uint256).max);
-    }
-
-    /// GOVERNANCE ///
-
-    /// @notice Sets the `rewardsController`.
-    /// @param _rewardsController The address of the new `rewardsController`.
-    function setRewardsController(address _rewardsController) external onlyOwner {
-        if (_rewardsController == address(0)) revert ZeroAddress();
-
-        rewardsController = IRewardsController(_rewardsController);
-        emit RewardsControllerSet(_rewardsController);
     }
 
     /// PUBLIC ///

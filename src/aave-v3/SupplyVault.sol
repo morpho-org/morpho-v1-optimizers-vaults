@@ -85,7 +85,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
     {
         _accrueUnclaimedRewards(_user);
 
-        rewardTokens = rewardsController.getRewardsByAsset(poolToken);
+        rewardTokens = morpho.rewardsController().getRewardsByAsset(poolToken);
 
         uint256 nbRewardTokens = rewardTokens.length;
         claimedAmounts = new uint256[](nbRewardTokens);
