@@ -27,9 +27,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
-    IComptroller public comptroller; // The Comptroller contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    ERC20 public comp;
+    ERC20 public comp; // The COMP token.
 
     /// UPGRADE ///
 
@@ -73,8 +72,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
 
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        comptroller = morpho.comptroller();
-        comp = ERC20(comptroller.getCompAddress());
+        comp = ERC20(morpho.comptroller().getCompAddress());
 
         isEth = _poolToken == morpho.cEth();
         wEth = morpho.wEth();
