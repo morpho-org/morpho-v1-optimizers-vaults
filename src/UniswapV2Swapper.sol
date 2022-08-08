@@ -13,6 +13,11 @@ import "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 contract UniswapV2Swapper is ISwapper {
     using SafeTransferLib for ERC20;
 
+    /// ERRORS ///
+
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
+
     /// STORAGE ///
 
     IUniswapV2Router02 public immutable swapRouter;
@@ -24,6 +29,8 @@ contract UniswapV2Swapper is ISwapper {
     /// @param _swapRouter The swap router used for swapping assets.
     /// @param _wrappedNativeToken The wrapped native token of the given network.
     constructor(address _swapRouter, address _wrappedNativeToken) {
+        if (_swapRouter == address(0) || _wrappedNativeToken == address(0)) revert ZeroAddress();
+
         swapRouter = IUniswapV2Router02(_swapRouter);
         wrappedNativeToken = _wrappedNativeToken;
     }

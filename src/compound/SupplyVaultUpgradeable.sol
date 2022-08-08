@@ -19,6 +19,11 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
 
+    /// ERRORS ///
+
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
+
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
@@ -64,6 +69,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
             ERC20 underlyingToken
         )
     {
+        if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
+
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
         comptroller = morpho.comptroller();

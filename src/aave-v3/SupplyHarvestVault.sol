@@ -69,6 +69,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _harvestingFee,
         address _swapper
     ) external initializer {
+        if (_swapper == address(0)) revert ZeroAddress();
+
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;

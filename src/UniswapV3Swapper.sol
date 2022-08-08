@@ -27,6 +27,9 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// @notice Thrown when the input is above the maximum UniswapV3 pool fee value (100%).
     error ExceedsMaxUniswapV3Fee();
 
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
+
     /// STORAGE ///
 
     ISwapRouter public constant SWAP_ROUTER =
@@ -42,6 +45,8 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// @notice Constructs contract.
     /// @param _wrappedNativeToken The wrapped native token of the given network.
     constructor(address _wrappedNativeToken) {
+        if (_wrappedNativeToken == address(0)) revert ZeroAddress();
+
         wrappedNativeToken = _wrappedNativeToken;
     }
 

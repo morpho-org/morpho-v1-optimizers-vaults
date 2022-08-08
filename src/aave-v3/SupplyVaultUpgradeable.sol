@@ -28,6 +28,11 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @param _rewardsController The new address of the `rewardsController`.
     event RewardsControllerSet(address indexed _rewardsController);
 
+    /// ERRORS ///
+
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
+
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
@@ -65,6 +70,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         onlyInitializing
         returns (ERC20 underlyingToken)
     {
+        if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
+
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
         rewardsController = morpho.rewardsController();
@@ -79,6 +86,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @notice Sets the `rewardsController`.
     /// @param _rewardsController The address of the new `rewardsController`.
     function setRewardsController(address _rewardsController) external onlyOwner {
+        if (_rewardsController == address(0)) revert ZeroAddress();
+
         rewardsController = IRewardsController(_rewardsController);
         emit RewardsControllerSet(_rewardsController);
     }
