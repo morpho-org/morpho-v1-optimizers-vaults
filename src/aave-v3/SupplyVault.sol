@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
 
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import "./SupplyVaultUpgradeable.sol";
 
@@ -12,6 +13,7 @@ import "./SupplyVaultUpgradeable.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is SupplyVaultUpgradeable {
+    using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
 
@@ -90,11 +92,12 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
         for (uint256 i; i < nbRewardTokens; ) {
             address rewardToken = rewardTokens[i];
-            uint128 unclaimedAmount = userRewards[rewardToken][_user].unclaimed;
+            UserRewards storage rewards = userRewards[rewardToken][_user];
 
+            uint128 unclaimedAmount = rewards.unclaimed;
             if (unclaimedAmount > 0) {
                 claimedAmounts[i] = unclaimedAmount;
-                userRewards[rewardToken][_user].unclaimed = 0;
+                rewards.unclaimed = 0;
 
                 ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
@@ -118,25 +121,27 @@ contract SupplyVault is SupplyVaultUpgradeable {
     {
         uint256 supply = totalSupply();
         if (supply > 0) {
-            address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolToken;
-
             uint256[] memory claimableAmounts;
-            (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
-                poolTokens,
-                address(this)
-            );
 
-            uint256 nbRewardTokens = rewardTokens.length;
-            for (uint256 i; i < nbRewardTokens; ) {
+            {
+                address[] memory poolTokens = new address[](1);
+                poolTokens[0] = poolToken;
+
+                (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
+                    poolTokens,
+                    address(this)
+                );
+            }
+
+            for (uint256 i; i < rewardTokens.length; ) {
                 address rewardToken = rewardTokens[i];
+                UserRewards memory rewards = userRewards[rewardToken][_user];
 
                 unclaimedAmounts[i] =
-                    userRewards[rewardToken][_user].unclaimed +
+                    rewards.unclaimed +
                     balanceOf(_user).mulDivDown(
                         (rewardsIndex[rewardToken] +
-                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) -
-                            userRewards[rewardToken][_user].index,
+                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) - rewards.index,
                         SCALE
                     );
 
@@ -167,14 +172,14 @@ contract SupplyVault is SupplyVaultUpgradeable {
             address(this),
             _rewardToken
         );
-        UserRewards memory _userRewards = userRewards[_rewardToken][_user];
+        UserRewards memory rewards = userRewards[_rewardToken][_user];
 
         return
-            _userRewards.unclaimed +
+            rewards.unclaimed +
             balanceOf(_user).mulDivDown(
                 (rewardsIndex[_rewardToken] +
                     claimableRewards.mulDivDown(SCALE, totalSupply()) -
-                    _userRewards.index),
+                    rewards.index),
                 SCALE
             );
     }
@@ -203,31 +208,36 @@ contract SupplyVault is SupplyVaultUpgradeable {
     }
 
     function _accrueUnclaimedRewards(address _user) internal {
-        address[] memory poolTokens = new address[](1);
-        poolTokens[0] = poolToken;
+        address[] memory rewardTokens;
+        uint256[] memory claimedAmounts;
 
-        (address[] memory rewardTokens, uint256[] memory claimedAmounts) = morpho.claimRewards(
-            poolTokens,
-            false
-        );
+        {
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = poolToken;
+
+            (rewardTokens, claimedAmounts) = morpho.claimRewards(poolTokens, false);
+        }
 
         uint256 supply = totalSupply();
-        uint256 nbRewardTokens = rewardTokens.length;
-        for (uint256 i; i < nbRewardTokens; ) {
+        for (uint256 i; i < rewardTokens.length; ) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
 
             if (supply > 0 && claimedAmount > 0)
-                rewardsIndex[rewardToken] += uint128(claimedAmount.mulDivDown(SCALE, supply));
+                rewardsIndex[rewardToken] += claimedAmount
+                .mulDivDown(SCALE, supply)
+                .safeCastTo128();
 
             uint128 newRewardsIndex = rewardsIndex[rewardToken];
-            uint256 rewardsIndexDiff = newRewardsIndex - userRewards[rewardToken][_user].index;
+            UserRewards storage rewards = userRewards[rewardToken][_user];
+
+            uint256 rewardsIndexDiff = newRewardsIndex - rewards.index;
             if (rewardsIndexDiff > 0) {
-                uint128 accruedRewards = uint128(
-                    balanceOf(_user).mulDivDown(rewardsIndexDiff, SCALE)
-                );
-                userRewards[rewardToken][_user].unclaimed += accruedRewards;
-                userRewards[rewardToken][_user].index = newRewardsIndex;
+                uint128 accruedRewards = balanceOf(_user)
+                .mulDivDown(rewardsIndexDiff, SCALE)
+                .safeCastTo128();
+                rewards.unclaimed += accruedRewards;
+                rewards.index = newRewardsIndex;
 
                 emit Accrued(rewardToken, _user, newRewardsIndex, accruedRewards);
             }
