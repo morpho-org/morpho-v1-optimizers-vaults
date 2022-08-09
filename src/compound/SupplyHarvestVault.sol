@@ -57,8 +57,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    uint16 public constant MAX_BASIS_POINTS = 10_000; // 100% in basis points.
-    uint24 public constant MAX_UNISWAP_FEE = 1_000_000; // 100% in UniswapV3 fee units.
+    uint16 public constant MAX_BASIS_POINTS = 100_00; // 100% in basis points.
+    uint24 public constant MAX_UNISWAP_FEE = 100_0000; // 100% in UniswapV3 fee units.
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
 
