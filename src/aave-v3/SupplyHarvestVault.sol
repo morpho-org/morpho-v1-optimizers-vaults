@@ -70,6 +70,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address _swapper
     ) external initializer {
         if (_swapper == address(0)) revert ZeroAddress();
+        if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
 
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 

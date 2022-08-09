@@ -83,6 +83,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint256 _initialDeposit,
         HarvestConfig calldata _harvestConfig
     ) external initializer {
+        if (
+            _harvestConfig.compSwapFee > MAX_UNISWAP_FEE ||
+            _harvestConfig.assetSwapFee > MAX_UNISWAP_FEE
+        ) revert ExceedsMaxUniswapV3Fee();
+        if (_harvestConfig.harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+
         (isEth, wEth) = __SupplyVaultUpgradeable_init(
             _morpho,
             _poolToken,
