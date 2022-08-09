@@ -98,13 +98,15 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @return rewardTokens The addresses of reward tokens claimed.
     /// @return rewardsAmounts The amount of rewards claimed for each reward token (in underlying).
-    /// @return rewardsFees The amount of fees taken by the claimer for each reward token (in underlying).
+    /// @return totalSupplied The total amount of rewards swapped and supplied to Morpho (in underlying).
+    /// @return totalRewardsFee The total amount of fees swapped and taken by the claimer (in underlying).
     function harvest()
         external
         returns (
             address[] memory rewardTokens,
             uint256[] memory rewardsAmounts,
-            uint256[] memory rewardsFees
+            uint256 totalSupplied,
+            uint256 totalRewardsFee
         )
     {
         address poolTokenMem = poolToken;
@@ -119,8 +121,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         ISwapper swapperMem = swapper;
         uint16 harvestingFeeMem = harvestingFee;
         uint256 nbRewardTokens = rewardTokens.length;
-        uint256 toSupply;
-        rewardsFees = new uint256[](nbRewardTokens);
 
         for (uint256 i; i < nbRewardTokens; ) {
             uint256 rewardsAmount = rewardsAmounts[i];
@@ -140,18 +140,19 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                     );
                 }
 
-                uint256 rewardsFee;
+                uint256 rewardFee;
                 if (harvestingFeeMem > 0) {
-                    rewardsFee = rewardsAmount.percentMul(harvestingFeeMem);
-                    rewardsFees[i] = rewardsFee;
-                    rewardsAmount -= rewardsFee;
-                    ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
+                    rewardFee = rewardsAmount.percentMul(harvestingFeeMem);
+                    unchecked {
+                        totalRewardsFee += rewardFee;
+                        rewardsAmount -= rewardFee;
+                    }
                 }
 
                 rewardsAmounts[i] = rewardsAmount;
-                toSupply += rewardsAmount;
+                totalSupplied += rewardsAmount;
 
-                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardsFee);
+                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardFee);
             }
 
             unchecked {
@@ -159,6 +160,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
             }
         }
 
-        morpho.supply(poolTokenMem, address(this), toSupply);
+        ERC20(assetMem).safeTransfer(msg.sender, totalRewardsFee);
+        morpho.supply(poolTokenMem, address(this), totalSupplied);
     }
 }

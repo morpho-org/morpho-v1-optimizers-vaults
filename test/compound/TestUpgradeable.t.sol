@@ -62,8 +62,7 @@ contract TestUpgradeable is TestSetupVaults {
             "MorphoCompoundETH",
             "mcETH",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 50),
-            address(cComp)
+            SupplyHarvestVault.HarvestConfig(3000, 500, 50)
         );
     }
 
