@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
-import "./SupplyVaultUpgradeable.sol";
+import {SupplyVaultUpgradeable, SafeTransferLib, ERC20} from "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
