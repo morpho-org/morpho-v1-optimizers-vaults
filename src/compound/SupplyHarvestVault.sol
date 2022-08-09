@@ -64,7 +64,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     bool public isEth; // Whether the underlying asset is WETH.
     address public wEth; // The address of WETH token.
-    address public cComp; // The address of cCOMP token.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
     /// UPGRADE ///
@@ -82,8 +81,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
-        HarvestConfig calldata _harvestConfig,
-        address _cComp
+        HarvestConfig calldata _harvestConfig
     ) external initializer {
         (isEth, wEth) = __SupplyVaultUpgradeable_init(
             _morpho,
@@ -94,8 +92,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         );
 
         harvestConfig = _harvestConfig;
-
-        cComp = _cComp;
 
         comp.safeApprove(address(SWAP_ROUTER), type(uint256).max);
     }
@@ -166,8 +162,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         } else rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         if (harvestConfigMem.harvestingFee > 0) {
-            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
-            rewardsAmount -= rewardsFee;
+            unchecked {
+                rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
+                rewardsAmount -= rewardsFee;
+            }
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);

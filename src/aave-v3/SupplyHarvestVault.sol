@@ -143,8 +143,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
                 uint256 rewardFee;
                 if (harvestingFeeMem > 0) {
                     rewardFee = rewardsAmount.percentMul(harvestingFeeMem);
-                    totalRewardsFee += rewardFee;
-                    rewardsAmount -= rewardFee;
+                    unchecked {
+                        totalRewardsFee += rewardFee;
+                        rewardsAmount -= rewardFee;
+                    }
                 }
 
                 rewardsAmounts[i] = rewardsAmount;
