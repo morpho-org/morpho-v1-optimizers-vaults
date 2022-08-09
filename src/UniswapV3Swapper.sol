@@ -25,7 +25,8 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum UniswapV3 pool fee value (100%).
-    error ExceedsMaxUniswapV3Fee();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxUniswapV3Fee(uint256 _value);
 
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
@@ -56,7 +57,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// @param _asset The address of the asset.
     /// @param _newSwapFee The new swap fee (in UniswapV3 fee unit).
     function setSwapFee(address _asset, uint24 _newSwapFee) external onlyOwner {
-        if (_newSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+        if (_newSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee(_newSwapFee);
 
         swapFee[_asset] = _newSwapFee;
         emit SwapFeeSet(_asset, _newSwapFee);

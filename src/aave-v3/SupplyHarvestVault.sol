@@ -42,7 +42,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum basis points value (100%).
-    error ExceedsMaxBasisPoints();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxBasisPoints(uint16 _value);
 
     /// STORAGE ///
 
@@ -70,7 +71,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         address _swapper
     ) external initializer {
         if (_swapper == address(0)) revert ZeroAddress();
-        if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+        if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_harvestingFee);
 
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
@@ -83,14 +84,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
     /// @param _newHarvestingFee The new harvesting fee to set (in bps).
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
-        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_newHarvestingFee);
 
         harvestingFee = _newHarvestingFee;
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
     /// @notice Sets the swapper contract to swap reward tokens for underlying asset.
-    /// @param _swapper The new swapper to set.
+    /// @param _swapper The new swapper to set.testShouldNotSetHarvestingFeeTooLarge
     function setSwapper(address _swapper) external onlyOwner {
         swapper = ISwapper(_swapper);
         emit SwapperSet(_swapper);

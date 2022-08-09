@@ -30,7 +30,12 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         uint16 moreThanMaxBasisPoints = vault.MAX_BASIS_POINTS() + 1;
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxBasisPoints.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SupplyHarvestVault.ExceedsMaxBasisPoints.selector,
+                moreThanMaxBasisPoints
+            )
+        );
         vault.initialize(
             address(morpho),
             aWrappedNativeToken,
@@ -313,7 +318,9 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
     function testShouldNotSetHarvestingFeeTooLarge() public {
         uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxBasisPoints.selector, newVal)
+        );
         daiSupplyHarvestVault.setHarvestingFee(newVal);
     }
 }

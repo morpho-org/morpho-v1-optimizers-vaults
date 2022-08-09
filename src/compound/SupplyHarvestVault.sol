@@ -42,10 +42,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum basis points value (100%).
-    error ExceedsMaxBasisPoints();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxBasisPoints(uint16 _value);
 
     /// @notice Thrown when the input is above the maximum UniswapV3 pool fee value (100%).
-    error ExceedsMaxUniswapV3Fee();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxUniswapV3Fee(uint24 _value);
 
     /// STRUCTS ///
 
@@ -83,11 +85,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint256 _initialDeposit,
         HarvestConfig calldata _harvestConfig
     ) external initializer {
-        if (
-            _harvestConfig.compSwapFee > MAX_UNISWAP_FEE ||
-            _harvestConfig.assetSwapFee > MAX_UNISWAP_FEE
-        ) revert ExceedsMaxUniswapV3Fee();
-        if (_harvestConfig.harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+        if (_harvestConfig.compSwapFee > MAX_UNISWAP_FEE)
+            revert ExceedsMaxUniswapV3Fee(_harvestConfig.compSwapFee);
+        if (_harvestConfig.assetSwapFee > MAX_UNISWAP_FEE)
+            revert ExceedsMaxUniswapV3Fee(_harvestConfig.assetSwapFee);
+        if (_harvestConfig.harvestingFee > MAX_BASIS_POINTS)
+            revert ExceedsMaxBasisPoints(_harvestConfig.harvestingFee);
 
         (isEth, wEth) = __SupplyVaultUpgradeable_init(
             _morpho,
@@ -107,7 +110,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
     /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
     function setCompSwapFee(uint24 _newCompSwapFee) external onlyOwner {
-        if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+        if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee(_newCompSwapFee);
 
         harvestConfig.compSwapFee = _newCompSwapFee;
         emit CompSwapFeeSet(_newCompSwapFee);
@@ -116,7 +119,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
     /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
     function setAssetSwapFee(uint24 _newAssetSwapFee) external onlyOwner {
-        if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+        if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee(_newAssetSwapFee);
 
         harvestConfig.assetSwapFee = _newAssetSwapFee;
         emit AssetSwapFeeSet(_newAssetSwapFee);
@@ -125,7 +128,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
     /// @param _newHarvestingFee The new harvesting fee to set (in bps).
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
-        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_newHarvestingFee);
 
         harvestConfig.harvestingFee = _newHarvestingFee;
         emit HarvestingFeeSet(_newHarvestingFee);
