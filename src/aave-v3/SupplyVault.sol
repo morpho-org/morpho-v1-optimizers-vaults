@@ -6,7 +6,7 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
-import "./SupplyVaultUpgradeable.sol";
+import {SupplyVaultUpgradeable, SafeTransferLib, ERC20, IMorpho} from "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
