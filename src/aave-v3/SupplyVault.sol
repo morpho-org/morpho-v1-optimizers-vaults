@@ -222,24 +222,30 @@ contract SupplyVault is SupplyVaultBase {
         for (uint256 i; i < rewardTokens.length; ) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
+            uint128 rewardsIndexMem = rewardsIndex[rewardToken];
 
-            if (supply > 0 && claimedAmount > 0)
-                rewardsIndex[rewardToken] += claimedAmount
-                .mulDivDown(SCALE, supply)
-                .safeCastTo128();
+            if (supply > 0 && claimedAmount > 0) {
+                rewardsIndexMem += claimedAmount.mulDivDown(SCALE, supply).safeCastTo128();
+                rewardsIndex[rewardToken] = rewardsIndexMem;
+            }
 
-            uint128 newRewardsIndex = rewardsIndex[rewardToken];
             UserRewards storage rewards = userRewards[rewardToken][_user];
+            uint256 rewardsIndexDiff;
 
-            uint256 rewardsIndexDiff = newRewardsIndex - rewards.index;
+            // Safe because we always have `rewardsIndex` >= `rewards.index`.
+            // Indeed `rewardsIndex` is never decreasing, and `rewards.index` is always set to former values of `rewardsIndex`.
+            unchecked {
+                rewardsIndexDiff = rewardsIndexMem - rewards.index;
+            }
+
             if (rewardsIndexDiff > 0) {
                 uint128 accruedRewards = balanceOf(_user)
                 .mulDivDown(rewardsIndexDiff, SCALE)
                 .safeCastTo128();
                 rewards.unclaimed += accruedRewards;
-                rewards.index = newRewardsIndex;
+                rewards.index = rewardsIndexMem;
 
-                emit Accrued(rewardToken, _user, newRewardsIndex, accruedRewards);
+                emit Accrued(rewardToken, _user, rewardsIndexMem, accruedRewards);
             }
 
             unchecked {
