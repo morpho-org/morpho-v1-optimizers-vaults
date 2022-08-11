@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@tests/aave-v3/setup/TestSetup.sol";
 
-import {SupplyVaultUpgradeable} from "@vaults/aave-v3/SupplyVaultUpgradeable.sol";
+import {SupplyVaultBase} from "@vaults/aave-v3/SupplyVaultBase.sol";
 import {SupplyHarvestVault} from "@vaults/aave-v3/SupplyHarvestVault.sol";
 import {SupplyVault} from "@vaults/aave-v3/SupplyVault.sol";
 import "@vaults/UniswapV2Swapper.sol";

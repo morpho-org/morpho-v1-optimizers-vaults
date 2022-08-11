@@ -19,13 +19,13 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         vault.initialize(address(0), aWrappedNativeToken, "test", "test", 0, 0, address(swapper));
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         vault.initialize(address(morpho), address(0), "test", "test", 0, 0, address(swapper));
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         vault.initialize(address(morpho), aWrappedNativeToken, "test", "test", 0, 0, address(0));
 
         uint16 moreThanMaxBasisPoints = vault.MAX_BASIS_POINTS() + 1;

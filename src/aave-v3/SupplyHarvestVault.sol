@@ -7,13 +7,13 @@ import {ISwapper} from "../interfaces/ISwapper.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {SupplyVaultUpgradeable, SafeTransferLib, ERC20, WadRayMath} from "./SupplyVaultUpgradeable.sol";
+import {SupplyVaultBase, SafeTransferLib, ERC20, WadRayMath} from "./SupplyVaultBase.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
-contract SupplyHarvestVault is SupplyVaultUpgradeable, OwnableUpgradeable {
+contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
     using WadRayMath for uint256;
@@ -75,7 +75,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable, OwnableUpgradeable {
         if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_harvestingFee);
 
         __Ownable_init();
-        __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
+        __SupplyVaultBase_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
         swapper = ISwapper(_swapper);

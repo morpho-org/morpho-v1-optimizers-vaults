@@ -19,7 +19,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         vault.initialize(
             address(0),
             cDai,
@@ -29,7 +29,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             SupplyHarvestVault.HarvestConfig(3000, 500, 100)
         );
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         vault.initialize(
             address(morpho),
             address(0),

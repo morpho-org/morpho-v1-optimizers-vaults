@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@tests/compound/setup/TestSetup.sol";
 
-import {SupplyVaultUpgradeable} from "@vaults/compound/SupplyVaultUpgradeable.sol";
+import {SupplyVaultBase} from "@vaults/compound/SupplyVaultBase.sol";
 import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
 import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 

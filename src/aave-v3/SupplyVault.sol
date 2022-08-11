@@ -6,13 +6,13 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
-import {SupplyVaultUpgradeable, SafeTransferLib, ERC20, IMorpho} from "./SupplyVaultUpgradeable.sol";
+import {SupplyVaultBase, SafeTransferLib, ERC20, IMorpho} from "./SupplyVaultBase.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
-contract SupplyVault is SupplyVaultUpgradeable {
+contract SupplyVault is SupplyVaultBase {
     using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
@@ -68,7 +68,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
+        __SupplyVaultBase_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         rewardsManager = IMorpho(_morpho).rewardsManager();
     }
