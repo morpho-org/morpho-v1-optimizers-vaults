@@ -4,10 +4,12 @@ pragma solidity 0.8.10;
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
+import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {SupplyVaultBase, SafeTransferLib, ERC20, WadRayMath} from "./SupplyVaultBase.sol";
+import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.

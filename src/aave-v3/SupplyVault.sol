@@ -2,20 +2,22 @@
 pragma solidity 0.8.10;
 
 import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
+import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
-import {SupplyVaultBase, SafeTransferLib, ERC20, IMorpho} from "./SupplyVaultBase.sol";
+import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is SupplyVaultBase {
-    using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
+    using SafeCastLib for uint256;
 
     /// STRUCTS ///
 
