@@ -6,12 +6,12 @@ import {IPool} from "@contracts/aave-v3/interfaces/aave/IPool.sol";
 import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
 
-import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
-import "@morpho-labs/morpho-utils/math/Math.sol";
-import "@contracts/aave-v3/libraries/Types.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
+import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
+import {Types} from "@contracts/aave-v3/libraries/Types.sol";
 
-import "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultUpgradeable.
 /// @author Morpho Labs.
