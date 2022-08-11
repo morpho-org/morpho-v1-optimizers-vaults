@@ -2,17 +2,18 @@
 pragma solidity 0.8.10;
 
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import "../interfaces/ISwapper.sol";
+import {ISwapper} from "../interfaces/ISwapper.sol";
 
-import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
+import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
-import "./SupplyVaultUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SupplyVaultUpgradeable, SafeTransferLib, ERC20, WadRayMath} from "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
-contract SupplyHarvestVault is SupplyVaultUpgradeable {
+contract SupplyHarvestVault is SupplyVaultUpgradeable, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
     using WadRayMath for uint256;
@@ -42,7 +43,8 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum basis points value (100%).
-    error ExceedsMaxBasisPoints();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxBasisPoints(uint16 _value);
 
     /// STORAGE ///
 
@@ -69,6 +71,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         uint16 _harvestingFee,
         address _swapper
     ) external initializer {
+        if (_swapper == address(0)) revert ZeroAddress();
+        if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_harvestingFee);
+
+        __Ownable_init();
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
@@ -80,14 +86,14 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
     /// @param _newHarvestingFee The new harvesting fee to set (in bps).
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
-        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_newHarvestingFee);
 
         harvestingFee = _newHarvestingFee;
         emit HarvestingFeeSet(_newHarvestingFee);
     }
 
     /// @notice Sets the swapper contract to swap reward tokens for underlying asset.
-    /// @param _swapper The new swapper to set.
+    /// @param _swapper The new swapper to set.testShouldNotSetHarvestingFeeTooLarge
     function setSwapper(address _swapper) external onlyOwner {
         swapper = ISwapper(_swapper);
         emit SwapperSet(_swapper);

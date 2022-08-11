@@ -6,6 +6,47 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using WadRayMath for uint256;
 
+    function testInitializationShouldRevertWithWrongInputs() public {
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault();
+
+        SupplyHarvestVault vault = SupplyHarvestVault(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(supplyHarvestVaultImpl),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vault.initialize(address(0), aWrappedNativeToken, "test", "test", 0, 0, address(swapper));
+
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vault.initialize(address(morpho), address(0), "test", "test", 0, 0, address(swapper));
+
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultUpgradeable.ZeroAddress.selector));
+        vault.initialize(address(morpho), aWrappedNativeToken, "test", "test", 0, 0, address(0));
+
+        uint16 moreThanMaxBasisPoints = vault.MAX_BASIS_POINTS() + 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SupplyHarvestVault.ExceedsMaxBasisPoints.selector,
+                moreThanMaxBasisPoints
+            )
+        );
+        vault.initialize(
+            address(morpho),
+            aWrappedNativeToken,
+            "test",
+            "test",
+            0,
+            moreThanMaxBasisPoints,
+            address(swapper)
+        );
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10000 ether;
 
@@ -277,7 +318,9 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
     function testShouldNotSetHarvestingFeeTooLarge() public {
         uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxBasisPoints.selector, newVal)
+        );
         daiSupplyHarvestVault.setHarvestingFee(newVal);
     }
 }

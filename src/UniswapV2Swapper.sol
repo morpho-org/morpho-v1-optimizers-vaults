@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import "./interfaces/ISwapper.sol";
+import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import {ISwapper} from "./interfaces/ISwapper.sol";
 
-import "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
 /// @title UniswapV2Swapper.
 /// @author Morpho Labs.
@@ -12,6 +12,11 @@ import "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 /// @notice Swapper contract for Uniswap V2 DEXes.
 contract UniswapV2Swapper is ISwapper {
     using SafeTransferLib for ERC20;
+
+    /// ERRORS ///
+
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
 
     /// STORAGE ///
 
@@ -24,6 +29,8 @@ contract UniswapV2Swapper is ISwapper {
     /// @param _swapRouter The swap router used for swapping assets.
     /// @param _wrappedNativeToken The wrapped native token of the given network.
     constructor(address _swapRouter, address _wrappedNativeToken) {
+        if (_swapRouter == address(0) || _wrappedNativeToken == address(0)) revert ZeroAddress();
+
         swapRouter = IUniswapV2Router02(_swapRouter);
         wrappedNativeToken = _wrappedNativeToken;
     }

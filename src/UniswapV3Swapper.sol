@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import "./interfaces/ISwapper.sol";
+import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import {ISwapper} from "./interfaces/ISwapper.sol";
 
-import "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title UniswapV3Swapper.
 /// @author Morpho Labs.
@@ -25,7 +25,11 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum UniswapV3 pool fee value (100%).
-    error ExceedsMaxUniswapV3Fee();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxUniswapV3Fee(uint256 _value);
+
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
 
     /// STORAGE ///
 
@@ -42,6 +46,8 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// @notice Constructs contract.
     /// @param _wrappedNativeToken The wrapped native token of the given network.
     constructor(address _wrappedNativeToken) {
+        if (_wrappedNativeToken == address(0)) revert ZeroAddress();
+
         wrappedNativeToken = _wrappedNativeToken;
     }
 
@@ -51,7 +57,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// @param _asset The address of the asset.
     /// @param _newSwapFee The new swap fee (in UniswapV3 fee unit).
     function setSwapFee(address _asset, uint24 _newSwapFee) external onlyOwner {
-        if (_newSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+        if (_newSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee(_newSwapFee);
 
         swapFee[_asset] = _newSwapFee;
         emit SwapFeeSet(_asset, _newSwapFee);
