@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import "@contracts/compound/interfaces/compound/ICompound.sol";
-import "@contracts/compound/interfaces/IMorpho.sol";
+import {IComptroller, ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
+import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 
-import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import "@morpho-labs/morpho-utils/math/CompoundMath.sol";
-import "@contracts/compound/libraries/Types.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
+import {Types} from "@contracts/compound/libraries/Types.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultUpgradeable.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
-abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgradeable {
+abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
 
@@ -52,7 +51,6 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
             _poolToken
         );
 
-        __Ownable_init();
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
     }

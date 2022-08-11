@@ -2,17 +2,18 @@
 pragma solidity 0.8.10;
 
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import "../interfaces/ISwapper.sol";
+import {ISwapper} from "../interfaces/ISwapper.sol";
 
-import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
+import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
-import "./SupplyVaultUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SupplyVaultUpgradeable, SafeTransferLib, ERC20, WadRayMath} from "./SupplyVaultUpgradeable.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
-contract SupplyHarvestVault is SupplyVaultUpgradeable {
+contract SupplyHarvestVault is SupplyVaultUpgradeable, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
     using WadRayMath for uint256;
@@ -73,6 +74,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         if (_swapper == address(0)) revert ZeroAddress();
         if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_harvestingFee);
 
+        __Ownable_init();
         __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;
