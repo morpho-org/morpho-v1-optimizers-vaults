@@ -225,12 +225,14 @@ contract SupplyVault is SupplyVaultBase {
         for (uint256 i; i < rewardTokens.length; ) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
-            uint128 rewardsIndexMem = rewardsIndex[rewardToken];
+            uint128 rewardsIndexMem;
 
             if (supply > 0 && claimedAmount > 0) {
-                rewardsIndexMem += claimedAmount.mulDivDown(SCALE, supply).safeCastTo128();
+                rewardsIndexMem =
+                    rewardsIndex[rewardToken] +
+                    claimedAmount.mulDivDown(SCALE, supply).safeCastTo128();
                 rewardsIndex[rewardToken] = rewardsIndexMem;
-            }
+            } else rewardsIndexMem = rewardsIndex[rewardToken];
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             uint256 rewardsIndexDiff;

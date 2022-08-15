@@ -99,13 +99,15 @@ contract SupplyVault is SupplyVaultBase {
 
     function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
         uint256 supply = totalSupply();
-        uint256 rewardsIndexMem = rewardsIndex;
+        uint256 rewardsIndexMem;
 
         if (supply > 0) {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
-            rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
-        }
+            rewardsIndexMem =
+                rewardsIndex +
+                morpho.claimRewards(poolTokens, false).divWadDown(supply);
+        } else rewardsIndex = rewardsIndex;
 
         UserRewardsData storage userRewardsData = userRewards[_user];
         rewardsIndex = rewardsIndexMem;
