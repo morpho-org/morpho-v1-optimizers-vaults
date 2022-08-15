@@ -112,7 +112,6 @@ contract SupplyVault is SupplyVaultBase {
         uint256 rewardsIndexDiff;
 
         // Safe because we always have `rewardsIndex` >= `rewards.index`.
-        // Indeed `rewardsIndex` is never decreasing, and `rewards.index` is always set to former values of `rewardsIndex`.
         unchecked {
             rewardsIndexDiff = rewardsIndexMem - rewards.index;
         }
