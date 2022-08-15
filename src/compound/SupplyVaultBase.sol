@@ -1,30 +1,33 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.13;
 
-import "@contracts/compound/interfaces/compound/ICompound.sol";
-import "@contracts/compound/interfaces/IMorpho.sol";
+import {IComptroller, ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
+import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 
-import {ERC20, SafeTransferLib} from "@solmate/utils/SafeTransferLib.sol";
-import "@contracts/compound/libraries/CompoundMath.sol";
-import "@contracts/compound/libraries/Types.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
+import {Types} from "@contracts/compound/libraries/Types.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
 
-/// @title SupplyVaultUpgradeable.
+/// @title SupplyVaultBase.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
-abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgradeable {
+abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
+
+    /// ERRORS ///
+
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
 
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
-    IComptroller public comptroller; // The Comptroller contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    ERC20 public comp;
+    ERC20 public comp; // The COMP token.
 
     /// UPGRADE ///
 
@@ -34,7 +37,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    function __SupplyVaultUpgradeable_init(
+    function __SupplyVaultBase_init(
         address _morpho,
         address _poolToken,
         string calldata _name,
@@ -42,12 +45,8 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
         uint256 _initialDeposit
     ) internal onlyInitializing returns (bool isEth, address wEth) {
         ERC20 underlyingToken;
-        (isEth, wEth, underlyingToken) = __SupplyVaultUpgradeable_init_unchained(
-            _morpho,
-            _poolToken
-        );
+        (isEth, wEth, underlyingToken) = __SupplyVaultBase_init_unchained(_morpho, _poolToken);
 
-        __Ownable_init();
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
     }
@@ -55,7 +54,7 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
     /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    function __SupplyVaultUpgradeable_init_unchained(address _morpho, address _poolToken)
+    function __SupplyVaultBase_init_unchained(address _morpho, address _poolToken)
         internal
         onlyInitializing
         returns (
@@ -64,10 +63,11 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
             ERC20 underlyingToken
         )
     {
+        if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
+
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        comptroller = morpho.comptroller();
-        comp = ERC20(comptroller.getCompAddress());
+        comp = ERC20(morpho.comptroller().getCompAddress());
 
         isEth = _poolToken == morpho.cEth();
         wEth = morpho.wEth();

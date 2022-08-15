@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.13;
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
-import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
-import "./SupplyVaultUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
 /// @title SupplyHarvestVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
-contract SupplyHarvestVault is SupplyVaultUpgradeable {
+contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
 
@@ -42,10 +44,12 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// ERRORS ///
 
     /// @notice Thrown when the input is above the maximum basis points value (100%).
-    error ExceedsMaxBasisPoints();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxBasisPoints(uint16 _value);
 
     /// @notice Thrown when the input is above the maximum UniswapV3 pool fee value (100%).
-    error ExceedsMaxUniswapV3Fee();
+    /// @param _value The value exceeding the threshold.
+    error ExceedsMaxUniswapV3Fee(uint24 _value);
 
     /// STRUCTS ///
 
@@ -57,14 +61,13 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    uint16 public constant MAX_BASIS_POINTS = 10_000; // 100% in basis points.
-    uint24 public constant MAX_UNISWAP_FEE = 1_000_000; // 100% in UniswapV3 fee units.
+    uint16 public constant MAX_BASIS_POINTS = 100_00; // 100% in basis points.
+    uint24 public constant MAX_UNISWAP_FEE = 100_0000; // 100% in UniswapV3 fee units.
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
 
     bool public isEth; // Whether the underlying asset is WETH.
     address public wEth; // The address of WETH token.
-    address public cComp; // The address of cCOMP token.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
     /// UPGRADE ///
@@ -82,10 +85,17 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit,
-        HarvestConfig calldata _harvestConfig,
-        address _cComp
+        HarvestConfig calldata _harvestConfig
     ) external initializer {
-        (isEth, wEth) = __SupplyVaultUpgradeable_init(
+        if (_harvestConfig.compSwapFee > MAX_UNISWAP_FEE)
+            revert ExceedsMaxUniswapV3Fee(_harvestConfig.compSwapFee);
+        if (_harvestConfig.assetSwapFee > MAX_UNISWAP_FEE)
+            revert ExceedsMaxUniswapV3Fee(_harvestConfig.assetSwapFee);
+        if (_harvestConfig.harvestingFee > MAX_BASIS_POINTS)
+            revert ExceedsMaxBasisPoints(_harvestConfig.harvestingFee);
+
+        __Ownable_init();
+        (isEth, wEth) = __SupplyVaultBase_init(
             _morpho,
             _poolToken,
             _name,
@@ -95,8 +105,6 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
 
         harvestConfig = _harvestConfig;
 
-        cComp = _cComp;
-
         comp.safeApprove(address(SWAP_ROUTER), type(uint256).max);
     }
 
@@ -105,7 +113,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping COMP rewards for WETH.
     /// @param _newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
     function setCompSwapFee(uint24 _newCompSwapFee) external onlyOwner {
-        if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+        if (_newCompSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee(_newCompSwapFee);
 
         harvestConfig.compSwapFee = _newCompSwapFee;
         emit CompSwapFeeSet(_newCompSwapFee);
@@ -114,7 +122,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the UniswapV3Pool for swapping WETH for the underlying asset.
     /// @param _newAssetSwapFee The new asset swap fee (in UniswapV3 fee unit).
     function setAssetSwapFee(uint24 _newAssetSwapFee) external onlyOwner {
-        if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee();
+        if (_newAssetSwapFee > MAX_UNISWAP_FEE) revert ExceedsMaxUniswapV3Fee(_newAssetSwapFee);
 
         harvestConfig.assetSwapFee = _newAssetSwapFee;
         emit AssetSwapFeeSet(_newAssetSwapFee);
@@ -123,7 +131,7 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
     /// @notice Sets the fee taken by the claimer from the total amount of COMP rewards when harvesting the vault.
     /// @param _newHarvestingFee The new harvesting fee to set (in bps).
     function setHarvestingFee(uint16 _newHarvestingFee) external onlyOwner {
-        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints();
+        if (_newHarvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_newHarvestingFee);
 
         harvestConfig.harvestingFee = _newHarvestingFee;
         emit HarvestingFeeSet(_newHarvestingFee);
@@ -166,8 +174,10 @@ contract SupplyHarvestVault is SupplyVaultUpgradeable {
         } else rewardsAmount = morpho.claimRewards(poolTokens, false);
 
         if (harvestConfigMem.harvestingFee > 0) {
-            rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
-            rewardsAmount -= rewardsFee;
+            unchecked {
+                rewardsFee = rewardsAmount.percentMul(harvestConfigMem.harvestingFee);
+                rewardsAmount -= rewardsFee;
+            }
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);

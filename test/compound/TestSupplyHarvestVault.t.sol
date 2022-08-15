@@ -6,6 +6,88 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using CompoundMath for uint256;
 
+    function testInitializationShouldRevertWithWrongInputs() public {
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault();
+
+        SupplyHarvestVault vault = SupplyHarvestVault(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(supplyHarvestVaultImpl),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
+        vault.initialize(
+            address(0),
+            cDai,
+            "test",
+            "test",
+            0,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
+        vault.initialize(
+            address(morpho),
+            address(0),
+            "test",
+            "test",
+            0,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
+        );
+
+        uint16 moreThanMaxBasisPoints = vault.MAX_BASIS_POINTS() + 1;
+        uint24 moreThanMaxUniswapFee = vault.MAX_UNISWAP_FEE() + 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector,
+                moreThanMaxUniswapFee
+            )
+        );
+        vault.initialize(
+            address(morpho),
+            cDai,
+            "test",
+            "test",
+            0,
+            SupplyHarvestVault.HarvestConfig(moreThanMaxUniswapFee, 500, 100)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector,
+                moreThanMaxUniswapFee
+            )
+        );
+        vault.initialize(
+            address(morpho),
+            cDai,
+            "test",
+            "test",
+            0,
+            SupplyHarvestVault.HarvestConfig(3000, moreThanMaxUniswapFee, 100)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SupplyHarvestVault.ExceedsMaxBasisPoints.selector,
+                moreThanMaxBasisPoints
+            )
+        );
+        vault.initialize(
+            address(morpho),
+            cDai,
+            "test",
+            "test",
+            0,
+            SupplyHarvestVault.HarvestConfig(3000, 500, moreThanMaxBasisPoints)
+        );
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10000 ether;
 
@@ -257,19 +339,25 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
     function testShouldNotSetCompSwapFeeTooLarge() public {
         uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector, newVal)
+        );
         daiSupplyHarvestVault.setCompSwapFee(newVal);
     }
 
     function testShouldNotSetAssetSwapFeeTooLarge() public {
         uint24 newVal = daiSupplyHarvestVault.MAX_UNISWAP_FEE() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector, newVal)
+        );
         daiSupplyHarvestVault.setAssetSwapFee(newVal);
     }
 
     function testShouldNotSetHarvestingFeeTooLarge() public {
         uint16 newVal = daiSupplyHarvestVault.MAX_BASIS_POINTS() + 1;
-        vm.expectRevert(SupplyHarvestVault.ExceedsMaxBasisPoints.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxBasisPoints.selector, newVal)
+        );
         daiSupplyHarvestVault.setHarvestingFee(newVal);
     }
 }

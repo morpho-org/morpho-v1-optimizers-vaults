@@ -1,37 +1,35 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
-import "@aave/core-v3/contracts/interfaces/IAToken.sol";
-import "@aave/core-v3/contracts/interfaces/IPool.sol";
-import "@contracts/aave-v3/interfaces/IMorpho.sol";
+import {IAToken} from "@aave/core-v3/contracts/interfaces/IAToken.sol";
+import {IPool} from "@contracts/aave-v3/interfaces/aave/IPool.sol";
+import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
+import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
 
-import {ERC20, SafeTransferLib} from "@solmate/utils/SafeTransferLib.sol";
-import "@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol";
-import "@contracts/aave-v3/libraries/Types.sol";
-import "@contracts/aave-v3/libraries/Math.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
+import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
+import {Types} from "@contracts/aave-v3/libraries/Types.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
 
-/// @title SupplyVaultUpgradeable.
+/// @title SupplyVaultBase.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V3.
-abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgradeable {
+abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
     using SafeTransferLib for ERC20;
     using WadRayMath for uint256;
 
-    /// EVENTS ///
+    /// ERRORS ///
 
-    /// @notice Emitted when the address of the `rewardsController` is set.
-    /// @param _rewardsController The new address of the `rewardsController`.
-    event RewardsControllerSet(address indexed _rewardsController);
+    /// @notice Thrown when the zero address is passed as input.
+    error ZeroAddress();
 
     /// STORAGE ///
 
     IMorpho public morpho; // The main Morpho contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    IRewardsController public rewardsController;
     IPool public pool;
 
     /// UPGRADE ///
@@ -42,16 +40,15 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    function __SupplyVaultUpgradeable_init(
+    function __SupplyVaultBase_init(
         address _morpho,
         address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        ERC20 underlyingToken = __SupplyVaultUpgradeable_init_unchained(_morpho, _poolToken);
+        ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_morpho, _poolToken);
 
-        __Ownable_init();
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
     }
@@ -59,27 +56,19 @@ abstract contract SupplyVaultUpgradeable is ERC4626UpgradeableSafe, OwnableUpgra
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
     /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    function __SupplyVaultUpgradeable_init_unchained(address _morpho, address _poolToken)
+    function __SupplyVaultBase_init_unchained(address _morpho, address _poolToken)
         internal
         onlyInitializing
         returns (ERC20 underlyingToken)
     {
+        if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
+
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        rewardsController = morpho.rewardsController();
         pool = morpho.pool();
 
         underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(_morpho, type(uint256).max);
-    }
-
-    /// GOVERNANCE ///
-
-    /// @notice Sets the `rewardsController`.
-    /// @param _rewardsController The address of the new `rewardsController`.
-    function setRewardsController(address _rewardsController) external onlyOwner {
-        rewardsController = IRewardsController(_rewardsController);
-        emit RewardsControllerSet(_rewardsController);
     }
 
     /// PUBLIC ///

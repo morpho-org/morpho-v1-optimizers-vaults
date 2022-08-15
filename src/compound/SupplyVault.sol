@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.13;
 
-import "@solmate/utils/FixedPointMathLib.sol";
+import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
-import "./SupplyVaultUpgradeable.sol";
+import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which tracks rewards from Compound's pool accrued by its users.
-contract SupplyVault is SupplyVaultUpgradeable {
+contract SupplyVault is SupplyVaultBase {
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
+    using SafeCastLib for uint256;
 
     /// EVENTS ///
 
@@ -28,13 +31,13 @@ contract SupplyVault is SupplyVaultUpgradeable {
 
     /// STORAGE ///
 
-    struct UserRewards {
+    struct UserRewardsData {
         uint128 index; // User index for the reward token.
         uint128 unclaimed; // User's unclaimed rewards.
     }
 
     uint256 public rewardsIndex; // The vault's rewards index.
-    mapping(address => UserRewards) public userRewards; // The rewards index of a user, used to track rewards accrued.
+    mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.
 
     /// UPGRADE ///
 
@@ -51,7 +54,7 @@ contract SupplyVault is SupplyVaultUpgradeable {
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVaultUpgradeable_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
+        __SupplyVaultBase_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
     }
 
     /// EXTERNAL ///
@@ -60,9 +63,8 @@ contract SupplyVault is SupplyVaultUpgradeable {
     /// @param _user The address of the user to claim rewards for.
     /// @return rewardsAmount The amount of rewards claimed.
     function claimRewards(address _user) external returns (uint256 rewardsAmount) {
-        _accrueUnclaimedRewards(_user);
+        rewardsAmount = _accrueUnclaimedRewards(_user);
 
-        rewardsAmount = userRewards[_user].unclaimed;
         if (rewardsAmount > 0) {
             userRewards[_user].unclaimed = 0;
 
@@ -95,28 +97,34 @@ contract SupplyVault is SupplyVaultUpgradeable {
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
-    function _accrueUnclaimedRewards(address _user) internal {
+    function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
         uint256 supply = totalSupply();
-        uint256 rewardsIndexMem = rewardsIndex;
+        uint256 rewardsIndexMem;
 
         if (supply > 0) {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
-            rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
-        }
+            rewardsIndexMem =
+                rewardsIndex +
+                morpho.claimRewards(poolTokens, false).divWadDown(supply);
+        } else rewardsIndex = rewardsIndex;
 
+        UserRewardsData storage userRewardsData = userRewards[_user];
         rewardsIndex = rewardsIndexMem;
-        uint256 rewardsIndexDiff = rewardsIndexMem - userRewards[_user].index;
-        uint256 unclaimed;
+        uint256 rewardsIndexDiff;
 
-        if (rewardsIndexDiff > 0) {
-            unclaimed =
-                userRewards[_user].unclaimed +
-                uint128(balanceOf(_user).mulWadDown(rewardsIndexDiff));
-            userRewards[_user].unclaimed = uint128(unclaimed);
+        // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
+        unchecked {
+            rewardsIndexDiff = rewardsIndexMem - userRewardsData.index;
         }
 
-        userRewards[_user].index = uint128(rewardsIndexMem);
+        unclaimed = userRewardsData.unclaimed;
+        if (rewardsIndexDiff > 0) {
+            unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff).safeCastTo128();
+            userRewardsData.unclaimed = unclaimed.safeCastTo128();
+        }
+
+        userRewardsData.index = rewardsIndexMem.safeCastTo128();
 
         emit Accrued(_user, rewardsIndexMem, unclaimed);
     }

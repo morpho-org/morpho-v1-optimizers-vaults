@@ -1,4 +1,4 @@
-[default]
+[profile.default]
 auto_detect_solc = true
 optimizer = true
 optimizer_runs = 200
@@ -10,3 +10,4 @@ sparse_mode = true
 revert_strings = "default"
 names = true
 sizes = true
+fuzz_runs = 1024

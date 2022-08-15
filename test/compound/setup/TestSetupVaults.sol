@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import "@tests/compound/setup/TestSetup.sol";
 
-import "@vaults/compound/SupplyHarvestVault.sol";
-import "@vaults/compound/SupplyVault.sol";
+import {SupplyVaultBase} from "@vaults/compound/SupplyVaultBase.sol";
+import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
+import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 
-import "@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol";
+import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
 import "../helpers/VaultUser.sol";
 
@@ -62,8 +63,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 50),
-            cComp
+            SupplyHarvestVault.HarvestConfig(3000, 500, 50)
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
 
@@ -82,8 +82,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100),
-            cComp
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
         );
         mchDai = ERC20(address(daiSupplyHarvestVault));
 
@@ -102,8 +101,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 3000, 50),
-            cComp
+            SupplyHarvestVault.HarvestConfig(3000, 3000, 50)
         );
         mchUsdc = ERC20(address(usdcSupplyHarvestVault));
 
@@ -123,8 +121,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestCOMP",
             "mchCOMP",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100),
-            cComp
+            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
         );
         mchComp = ERC20(address(compSupplyHarvestVault));
 
