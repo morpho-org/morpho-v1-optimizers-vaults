@@ -31,13 +31,13 @@ contract SupplyVault is SupplyVaultBase {
 
     /// STORAGE ///
 
-    struct UserRewards {
+    struct UserRewardsData {
         uint128 index; // User index for the reward token.
         uint128 unclaimed; // User's unclaimed rewards.
     }
 
     uint256 public rewardsIndex; // The vault's rewards index.
-    mapping(address => UserRewards) public userRewards; // The rewards index of a user, used to track rewards accrued.
+    mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.
 
     /// UPGRADE ///
 
@@ -107,22 +107,22 @@ contract SupplyVault is SupplyVaultBase {
             rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
         }
 
-        UserRewards storage rewards = userRewards[_user];
+        UserRewardsData storage userRewardsData = userRewards[_user];
         rewardsIndex = rewardsIndexMem;
         uint256 rewardsIndexDiff;
 
-        // Safe because we always have `rewardsIndex` >= `rewards.index`.
+        // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
         unchecked {
-            rewardsIndexDiff = rewardsIndexMem - rewards.index;
+            rewardsIndexDiff = rewardsIndexMem - userRewardsData.index;
         }
 
-        unclaimed = rewards.unclaimed;
+        unclaimed = userRewardsData.unclaimed;
         if (rewardsIndexDiff > 0) {
             unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff).safeCastTo128();
-            rewards.unclaimed = unclaimed.safeCastTo128();
+            userRewardsData.unclaimed = unclaimed.safeCastTo128();
         }
 
-        rewards.index = rewardsIndexMem.safeCastTo128();
+        userRewardsData.index = rewardsIndexMem.safeCastTo128();
 
         emit Accrued(_user, rewardsIndexMem, unclaimed);
     }

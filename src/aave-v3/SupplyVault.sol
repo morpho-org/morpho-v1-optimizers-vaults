@@ -21,7 +21,7 @@ contract SupplyVault is SupplyVaultBase {
 
     /// STRUCTS ///
 
-    struct UserRewards {
+    struct UserRewardsData {
         uint128 index; // User rewards index for a given reward token (in wad).
         uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
@@ -33,7 +33,7 @@ contract SupplyVault is SupplyVaultBase {
     IRewardsManager public rewardsManager; // Morpho's rewards manager.
 
     mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
-    mapping(address => mapping(address => UserRewards)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
+    mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
 
     /// EVENTS ///
 
@@ -94,12 +94,12 @@ contract SupplyVault is SupplyVaultBase {
 
         for (uint256 i; i < nbRewardTokens; ) {
             address rewardToken = rewardTokens[i];
-            UserRewards storage rewards = userRewards[rewardToken][_user];
+            UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
-            uint128 unclaimedAmount = rewards.unclaimed;
+            uint128 unclaimedAmount = userRewardsData.unclaimed;
             if (unclaimedAmount > 0) {
                 claimedAmounts[i] = unclaimedAmount;
-                rewards.unclaimed = 0;
+                userRewardsData.unclaimed = 0;
 
                 ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
@@ -137,13 +137,14 @@ contract SupplyVault is SupplyVaultBase {
 
             for (uint256 i; i < rewardTokens.length; ) {
                 address rewardToken = rewardTokens[i];
-                UserRewards memory rewards = userRewards[rewardToken][_user];
+                UserRewardsData memory userRewardsData = userRewards[rewardToken][_user];
 
                 unclaimedAmounts[i] =
-                    rewards.unclaimed +
+                    userRewardsData.unclaimed +
                     balanceOf(_user).mulDivDown(
                         (rewardsIndex[rewardToken] +
-                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) - rewards.index,
+                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) -
+                            userRewardsData.index,
                         SCALE
                     );
 
@@ -174,7 +175,7 @@ contract SupplyVault is SupplyVaultBase {
             address(this),
             _rewardToken
         );
-        UserRewards memory rewards = userRewards[_rewardToken][_user];
+        UserRewardsData memory rewards = userRewards[_rewardToken][_user];
 
         return
             rewards.unclaimed +
@@ -231,20 +232,20 @@ contract SupplyVault is SupplyVaultBase {
                 rewardsIndex[rewardToken] = rewardsIndexMem;
             }
 
-            UserRewards storage rewards = userRewards[rewardToken][_user];
+            UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             uint256 rewardsIndexDiff;
 
-            // Safe because we always have `rewardsIndex` >= `rewards.index`.
+            // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
             unchecked {
-                rewardsIndexDiff = rewardsIndexMem - rewards.index;
+                rewardsIndexDiff = rewardsIndexMem - userRewardsData.index;
             }
 
             if (rewardsIndexDiff > 0) {
                 uint128 accruedRewards = balanceOf(_user)
                 .mulDivDown(rewardsIndexDiff, SCALE)
                 .safeCastTo128();
-                rewards.unclaimed += accruedRewards;
-                rewards.index = rewardsIndexMem;
+                userRewardsData.unclaimed += accruedRewards;
+                userRewardsData.index = rewardsIndexMem;
 
                 emit Accrued(rewardToken, _user, rewardsIndexMem, accruedRewards);
             }
