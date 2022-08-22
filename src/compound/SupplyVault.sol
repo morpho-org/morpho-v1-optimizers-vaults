@@ -107,7 +107,7 @@ contract SupplyVault is SupplyVaultBase {
             rewardsIndexMem =
                 rewardsIndex +
                 morpho.claimRewards(poolTokens, false).divWadDown(supply);
-        } else rewardsIndex = rewardsIndex;
+        } else rewardsIndexMem = rewardsIndex;
 
         UserRewardsData storage userRewardsData = userRewards[_user];
         rewardsIndex = rewardsIndexMem;
