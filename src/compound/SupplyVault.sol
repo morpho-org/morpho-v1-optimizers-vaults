@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
@@ -13,7 +13,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which tracks rewards from Compound's pool accrued by its users.
 contract SupplyVault is SupplyVaultBase {
     using FixedPointMathLib for uint256;
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for IERC20;
     using SafeCastLib for uint256;
 
     /// EVENTS ///

@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import {IComptroller, ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
 import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import {Types} from "@contracts/compound/libraries/Types.sol";
 
@@ -15,7 +15,7 @@ import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSaf
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
 abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for IERC20;
     using CompoundMath for uint256;
 
     /// ERRORS ///
@@ -27,7 +27,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
 
     IMorpho public morpho; // The main Morpho contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    ERC20 public comp; // The COMP token.
+    IERC20 public comp; // The COMP token.
 
     /// UPGRADE ///
 
@@ -44,7 +44,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing returns (bool isEth, address wEth) {
-        ERC20 underlyingToken;
+        IERC20 underlyingToken;
         (isEth, wEth, underlyingToken) = __SupplyVaultBase_init_unchained(_morpho, _poolToken);
 
         __ERC20_init(_name, _symbol);
@@ -60,19 +60,19 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         returns (
             bool isEth,
             address wEth,
-            ERC20 underlyingToken
+            IERC20 underlyingToken
         )
     {
         if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
 
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        comp = ERC20(morpho.comptroller().getCompAddress());
+        comp = IERC20(morpho.comptroller().getCompAddress());
 
         isEth = _poolToken == morpho.cEth();
         wEth = morpho.wEth();
 
-        underlyingToken = ERC20(isEth ? wEth : ICToken(_poolToken).underlying());
+        underlyingToken = IERC20(isEth ? wEth : ICToken(_poolToken).underlying());
         underlyingToken.safeApprove(_morpho, type(uint256).max);
     }
 
