@@ -12,11 +12,6 @@ FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
 ifeq (${NETWORK}, eth-mainnet)
   FOUNDRY_CHAIN_ID=1
   FOUNDRY_FORK_BLOCK_NUMBER=14292587
-
-  # The case for running the compound script
-  ifeq (${PROTOCOL}, compound)
-    FOUNDRY_FORK_BLOCK_NUMBER=15404042
-  endif
 endif
 
 ifeq (${NETWORK}, polygon-mainnet)
