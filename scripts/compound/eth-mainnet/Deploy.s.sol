@@ -56,7 +56,7 @@ contract Deploy is Script, Config {
             supplyVaultImpl,
             supplyHarvestVaultImpl,
             DEFAULT_INITIAL_DEPOSIT,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+            SupplyHarvestVault.HarvestConfig(3000, 0, 200)
         );
         deployVaults(
             cUsdt,
