@@ -37,13 +37,55 @@ contract Deploy is Script, Config {
 
         address supplyVaultImpl = deploySupplyVaultImplementation();
         address supplyHarvestVaultImpl = deploySupplyHarvestVaultImplementation();
-        deployVaults(cDai, supplyVaultImpl, supplyHarvestVaultImpl, DEFAULT_INITIAL_DEPOSIT);
-        deployVaults(cUsdc, supplyVaultImpl, supplyHarvestVaultImpl, DEFAULT_INITIAL_DEPOSIT);
-        deployVaults(cEth, supplyVaultImpl, supplyHarvestVaultImpl, DEFAULT_INITIAL_DEPOSIT);
-        deployVaults(cUsdt, supplyVaultImpl, supplyHarvestVaultImpl, DEFAULT_INITIAL_DEPOSIT);
-        deployVaults(CWBTC2, supplyVaultImpl, supplyHarvestVaultImpl, WBTC_INITIAL_DEPOSIT);
-        deployVaults(cComp, supplyVaultImpl, supplyHarvestVaultImpl, DEFAULT_INITIAL_DEPOSIT);
-        deployVaults(cUni, supplyVaultImpl, supplyHarvestVaultImpl, DEFAULT_INITIAL_DEPOSIT);
+        deployVaults(
+            cDai,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            DEFAULT_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            cUsdc,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            DEFAULT_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            cEth,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            DEFAULT_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            cUsdt,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            DEFAULT_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            CWBTC2,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            WBTC_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            cComp,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            DEFAULT_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 3000, 200)
+        );
+        deployVaults(
+            cUni,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            DEFAULT_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 3000, 200)
+        );
 
         vm.stopBroadcast();
     }
@@ -75,7 +117,8 @@ contract Deploy is Script, Config {
         address _poolToken,
         address _supplyVaultImpl,
         address _supplyHarvestVaultImpl,
-        uint256 _initialDeposit
+        uint256 _initialDeposit,
+        SupplyHarvestVault.HarvestConfig memory _harvestConfig
     ) internal returns (address supplyVault_, address supplyHarvestVault_) {
         address cEth = IMorpho(MORPHO).cEth();
         address underlying;
@@ -111,7 +154,8 @@ contract Deploy is Script, Config {
             underlying,
             supplyHarvestVaultName,
             supplyHarvestVaultSymbol,
-            _initialDeposit
+            _initialDeposit,
+            _harvestConfig
         );
     }
 
@@ -155,13 +199,9 @@ contract Deploy is Script, Config {
         address _underlying,
         string memory _name,
         string memory _symbol,
-        uint256 _initialDeposit
+        uint256 _initialDeposit,
+        SupplyHarvestVault.HarvestConfig memory _harvestConfig
     ) internal returns (address supplyHarvestVault_) {
-        SupplyHarvestVault.HarvestConfig memory harvestConfig = SupplyHarvestVault.HarvestConfig(
-            3000,
-            500,
-            50
-        );
         bytes memory creationCode = abi.encodePacked(
             type(TransparentUpgradeableProxy).creationCode,
             abi.encode(_supplyHarvestVaultImpl, PROXY_ADMIN, "")
@@ -183,7 +223,7 @@ contract Deploy is Script, Config {
             _name,
             _symbol,
             _initialDeposit,
-            harvestConfig
+            _harvestConfig
         );
         console2.log(
             string(
