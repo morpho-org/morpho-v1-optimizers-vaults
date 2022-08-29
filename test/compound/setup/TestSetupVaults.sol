@@ -63,7 +63,7 @@ contract TestSetupVaults is TestSetup {
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 50)
+            SupplyHarvestVault.HarvestConfig(3000, 0, 50)
         );
         mchWeth = ERC20(address(wethSupplyHarvestVault));
 

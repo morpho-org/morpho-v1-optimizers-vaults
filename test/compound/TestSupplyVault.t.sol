@@ -44,7 +44,7 @@ contract TestSupplyVault is TestSetupVaults {
         assertApproxEqAbs(
             daiSupplyVault.balanceOf(address(vaultSupplier1)),
             0,
-            1e3,
+            2e3,
             "mcDAI balance not zero"
         );
         assertEq(balanceOnPool, 0, "onPool amount not zero");
@@ -312,6 +312,6 @@ contract TestSupplyVault is TestSetupVaults {
             "non zero comp balance on vault"
         );
         assertApproxEqAbs(rewardsAmount1, rewardsAmount2, 1e9, "unexpected rewards amount 1-2"); // not exact because of compounded interests
-        assertApproxEqAbs(rewardsAmount2, rewardsAmount3, 1e8, "unexpected rewards amount 2-3"); // not exact because of compounded interests
+        assertApproxEqAbs(rewardsAmount2, rewardsAmount3, 1e9, "unexpected rewards amount 2-3"); // not exact because of compounded interests
     }
 }
