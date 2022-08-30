@@ -4,8 +4,6 @@ pragma solidity 0.8.13;
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {ILendingPool} from "@contracts/aave-v2/interfaces/aave/ILendingPool.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
-import {IAaveIncentivesController} from "@contracts/aave-v2/interfaces/aave/IAaveIncentivesController.sol";
-import {IRewardsManager} from "@contracts/aave-v2/interfaces/IRewardsManager.sol";
 
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
@@ -32,9 +30,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
     IMorpho public morpho; // The main Morpho contract.
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     ILendingPool public pool;
-    IRewardsManager public rewardsManager; // Morpho's rewards manager.
-    IAaveIncentivesController public incentivesController;
-    ERC20 public aave; // The AAVE token.
 
     /// UPGRADE ///
 
@@ -70,9 +65,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
         pool = morpho.pool();
-        rewardsManager = morpho.rewardsManager();
-        incentivesController = morpho.aaveIncentivesController();
-        aave = ERC20(incentivesController.REWARD_TOKEN());
 
         underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(_morpho, type(uint256).max);
