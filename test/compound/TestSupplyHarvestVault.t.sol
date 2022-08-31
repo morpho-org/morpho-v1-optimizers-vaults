@@ -7,7 +7,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     using CompoundMath for uint256;
 
     function testInitializationShouldRevertWithWrongInputs() public {
-        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault();
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho), cEth);
 
         SupplyHarvestVault vault = SupplyHarvestVault(
             address(
@@ -20,24 +20,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
-        vault.initialize(
-            address(0),
-            cDai,
-            "test",
-            "test",
-            0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
-        );
+        new SupplyHarvestVault(address(0), cDai);
 
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
-        vault.initialize(
-            address(morpho),
-            address(0),
-            "test",
-            "test",
-            0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
-        );
+        new SupplyHarvestVault(address(morpho), address(0));
 
         uint16 moreThanMaxBasisPoints = vault.MAX_BASIS_POINTS() + 1;
         uint24 moreThanMaxUniswapFee = vault.MAX_UNISWAP_FEE() + 1;
@@ -49,8 +35,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
         vault.initialize(
-            address(morpho),
-            cDai,
             "test",
             "test",
             0,
@@ -64,8 +48,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
         vault.initialize(
-            address(morpho),
-            cDai,
             "test",
             "test",
             0,
@@ -79,8 +61,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
         vault.initialize(
-            address(morpho),
-            cDai,
             "test",
             "test",
             0,

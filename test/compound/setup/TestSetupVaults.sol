@@ -17,8 +17,13 @@ contract TestSetupVaults is TestSetup {
     TransparentUpgradeableProxy internal wethSupplyVaultProxy;
     TransparentUpgradeableProxy internal wethSupplyHarvestVaultProxy;
 
-    SupplyVault internal supplyVaultImplV1;
-    SupplyHarvestVault internal supplyHarvestVaultImplV1;
+    SupplyVault internal wethSupplyVaultImplV1;
+    SupplyVault internal daiSupplyVaultImplV1;
+    SupplyVault internal usdcSupplyVaultImplV1;
+    SupplyHarvestVault internal wethSupplyHarvestVaultImplV1;
+    SupplyHarvestVault internal daiSupplyHarvestVaultImplV1;
+    SupplyHarvestVault internal usdcSupplyHarvestVaultImplV1;
+    SupplyHarvestVault internal compSupplyHarvestVaultImplV1;
 
     SupplyVault internal wethSupplyVault;
     SupplyVault internal daiSupplyVault;
@@ -48,18 +53,27 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        supplyVaultImplV1 = new SupplyVault();
-        supplyHarvestVaultImplV1 = new SupplyHarvestVault();
+        wethSupplyVaultImplV1 = new SupplyVault(address(morpho), cEth);
+        daiSupplyVaultImplV1 = new SupplyVault(address(morpho), address(cDai));
+        usdcSupplyVaultImplV1 = new SupplyVault(address(morpho), address(cUsdc));
+        wethSupplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho), cEth);
+        daiSupplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho), cDai);
+        usdcSupplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho), cUsdc);
+        compSupplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho), cComp);
 
-        wethSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
-            address(supplyHarvestVaultImplV1),
+        wethSupplyVaultProxy = new TransparentUpgradeableProxy(
+            address(wethSupplyVaultImplV1),
             address(proxyAdmin),
             ""
         );
+        wethSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
+            address(wethSupplyHarvestVaultImplV1),
+            address(proxyAdmin),
+            ""
+        );
+
         wethSupplyHarvestVault = SupplyHarvestVault(address(wethSupplyHarvestVaultProxy));
         wethSupplyHarvestVault.initialize(
-            address(morpho),
-            cEth,
             "MorphoCompoundHarvestWETH",
             "mchWETH",
             0,
@@ -70,15 +84,13 @@ contract TestSetupVaults is TestSetup {
         daiSupplyHarvestVault = SupplyHarvestVault(
             address(
                 new TransparentUpgradeableProxy(
-                    address(supplyHarvestVaultImplV1),
+                    address(daiSupplyHarvestVaultImplV1),
                     address(proxyAdmin),
                     ""
                 )
             )
         );
         daiSupplyHarvestVault.initialize(
-            address(morpho),
-            cDai,
             "MorphoCompoundHarvestDAI",
             "mchDAI",
             0,
@@ -89,15 +101,13 @@ contract TestSetupVaults is TestSetup {
         usdcSupplyHarvestVault = SupplyHarvestVault(
             address(
                 new TransparentUpgradeableProxy(
-                    address(supplyHarvestVaultImplV1),
+                    address(usdcSupplyHarvestVaultImplV1),
                     address(proxyAdmin),
                     ""
                 )
             )
         );
         usdcSupplyHarvestVault.initialize(
-            address(morpho),
-            cUsdc,
             "MorphoCompoundHarvestUSDC",
             "mchUSDC",
             0,
@@ -109,15 +119,13 @@ contract TestSetupVaults is TestSetup {
         compSupplyHarvestVault = SupplyHarvestVault(
             address(
                 new TransparentUpgradeableProxy(
-                    address(supplyHarvestVaultImplV1),
+                    address(compSupplyHarvestVaultImplV1),
                     address(proxyAdmin),
                     ""
                 )
             )
         );
         compSupplyHarvestVault.initialize(
-            address(morpho),
-            cComp,
             "MorphoCompoundHarvestCOMP",
             "mchCOMP",
             0,
@@ -125,35 +133,32 @@ contract TestSetupVaults is TestSetup {
         );
         mchComp = ERC20(address(compSupplyHarvestVault));
 
-        wethSupplyVaultProxy = new TransparentUpgradeableProxy(
-            address(supplyVaultImplV1),
-            address(proxyAdmin),
-            ""
-        );
         wethSupplyVault = SupplyVault(address(wethSupplyVaultProxy));
-        wethSupplyVault.initialize(address(morpho), cEth, "MorphoCompoundWETH", "mcWETH", 0);
+        wethSupplyVault.initialize("MorphoCompoundWETH", "mcWETH", 0);
         mcWeth = ERC20(address(wethSupplyVault));
 
         daiSupplyVault = SupplyVault(
             address(
-                new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
+                new TransparentUpgradeableProxy(
+                    address(daiSupplyVaultImplV1),
+                    address(proxyAdmin),
+                    ""
+                )
             )
         );
-        daiSupplyVault.initialize(address(morpho), address(cDai), "MorphoCompoundDAI", "mcDAI", 0);
+        daiSupplyVault.initialize("MorphoCompoundDAI", "mcDAI", 0);
         mcDai = ERC20(address(daiSupplyVault));
 
         usdcSupplyVault = SupplyVault(
             address(
-                new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
+                new TransparentUpgradeableProxy(
+                    address(usdcSupplyVaultImplV1),
+                    address(proxyAdmin),
+                    ""
+                )
             )
         );
-        usdcSupplyVault.initialize(
-            address(morpho),
-            address(cUsdc),
-            "MorphoCompoundUSDC",
-            "mcUSDC",
-            0
-        );
+        usdcSupplyVault.initialize("MorphoCompoundUSDC", "mcUSDC", 0);
         mcUsdc = ERC20(address(usdcSupplyVault));
     }
 
@@ -179,7 +184,19 @@ contract TestSetupVaults is TestSetup {
     }
 
     function setVaultContractsLabels() internal {
-        vm.label(address(supplyHarvestVaultImplV1), "SupplyHarvestVaultImplV1");
+        vm.label(address(wethSupplyVaultImplV1), "WETHSupplyVaultImplV1");
+        vm.label(address(daiSupplyVaultImplV1), "DAISupplyVaultImplV1");
+        vm.label(address(usdcSupplyVaultImplV1), "USDCSupplyVaultImplV1");
+
+        vm.label(address(wethSupplyHarvestVaultImplV1), "WETHSupplyHarvestVaultImplV1");
+        vm.label(address(daiSupplyHarvestVaultImplV1), "DAISupplyHarvestVaultImplV1");
+        vm.label(address(usdcSupplyHarvestVaultImplV1), "USDCSupplyHarvestVaultImplV1");
+        vm.label(address(compSupplyHarvestVaultImplV1), "USDCSupplyHarvestVaultImplV1");
+
+        vm.label(address(wethSupplyVault), "SupplyVault (WETH)");
+        vm.label(address(daiSupplyVault), "SupplyVault (DAI)");
+        vm.label(address(usdcSupplyVault), "SupplyVault (USDC)");
+
         vm.label(address(wethSupplyHarvestVault), "SupplyHarvestVault (WETH)");
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");

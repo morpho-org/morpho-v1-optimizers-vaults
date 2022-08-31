@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
+import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
+
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
@@ -39,22 +41,28 @@ contract SupplyVault is SupplyVaultBase {
     uint256 public rewardsIndex; // The vault's rewards index.
     mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.
 
-    /// UPGRADE ///
+    /// CONSTRUCTOR ///
 
     /// @notice Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
+    constructor(address _morpho, address _poolToken)
+        SupplyVaultBase(_morpho, _poolToken)
+        initializer
+    {}
+
+    /// UPGRADE ///
+
+    /// @notice Initializes the vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function initialize(
-        address _morpho,
-        address _poolToken,
-        string calldata _name,
-        string calldata _symbol,
+        string memory _name,
+        string memory _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVaultBase_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
+        __SupplyVaultBase_init(_name, _symbol, _initialDeposit);
     }
 
     /// EXTERNAL ///
@@ -68,7 +76,7 @@ contract SupplyVault is SupplyVaultBase {
         if (rewardsAmount > 0) {
             userRewards[_user].unclaimed = 0;
 
-            comp.safeTransfer(_user, rewardsAmount);
+            ERC20(comp).safeTransfer(_user, rewardsAmount);
         }
 
         emit Claimed(_user, rewardsAmount);

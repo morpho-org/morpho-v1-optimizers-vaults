@@ -13,7 +13,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
-contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
+contract SupplyHarvestVault is OwnableUpgradeable, SupplyVaultBase {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
 
@@ -66,24 +66,28 @@ contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
 
-    bool public isEth; // Whether the underlying asset is WETH.
-    address public wEth; // The address of WETH token.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
-    /// UPGRADE ///
+    /// CONSTRUCTOR ///
 
     /// @notice Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
+    constructor(address _morpho, address _poolToken)
+        SupplyVaultBase(_morpho, _poolToken)
+        initializer
+    {}
+
+    /// UPGRADE ///
+
+    /// @notice Initializes the vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     /// @param _harvestConfig The swap config to set.
     function initialize(
-        address _morpho,
-        address _poolToken,
-        string calldata _name,
-        string calldata _symbol,
+        string memory _name,
+        string memory _symbol,
         uint256 _initialDeposit,
         HarvestConfig calldata _harvestConfig
     ) external initializer {
@@ -95,17 +99,11 @@ contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
             revert ExceedsMaxBasisPoints(_harvestConfig.harvestingFee);
 
         __Ownable_init();
-        (isEth, wEth) = __SupplyVaultBase_init(
-            _morpho,
-            _poolToken,
-            _name,
-            _symbol,
-            _initialDeposit
-        );
+        __SupplyVaultBase_init(_name, _symbol, _initialDeposit);
 
         harvestConfig = _harvestConfig;
 
-        comp.safeApprove(address(SWAP_ROUTER), type(uint256).max);
+        ERC20(comp).safeApprove(address(SWAP_ROUTER), type(uint256).max);
     }
 
     /// GOVERNANCE ///
@@ -144,22 +142,20 @@ contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
     /// @return rewardsFee The amount of fees taken by the claimer (in underlying).
     function harvest() external returns (uint256 rewardsAmount, uint256 rewardsFee) {
         address assetMem = asset();
-        address poolTokenMem = poolToken;
-        address compMem = address(comp);
         HarvestConfig memory harvestConfigMem = harvestConfig;
 
         address[] memory poolTokens = new address[](1);
-        poolTokens[0] = poolTokenMem;
+        poolTokens[0] = poolToken;
 
         // Note: Uniswap pairs are considered to have enough market depth.
         // The amount swapped is considered low enough to avoid relying on any oracle.
-        if (assetMem != compMem) {
+        if (assetMem != comp) {
             rewardsAmount = SWAP_ROUTER.exactInput(
                 ISwapRouter.ExactInputParams({
-                    path: isEth
-                        ? abi.encodePacked(compMem, harvestConfigMem.compSwapFee, wEth)
+                    path: assetMem == wEth
+                        ? abi.encodePacked(comp, harvestConfigMem.compSwapFee, wEth)
                         : abi.encodePacked(
-                            compMem,
+                            comp,
                             harvestConfigMem.compSwapFee,
                             wEth,
                             harvestConfigMem.assetSwapFee,
@@ -180,7 +176,7 @@ contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
             }
         }
 
-        morpho.supply(poolTokenMem, address(this), rewardsAmount);
+        morpho.supply(poolToken, address(this), rewardsAmount);
         if (rewardsFee > 0) ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
 
         emit Harvested(msg.sender, rewardsAmount, rewardsFee);

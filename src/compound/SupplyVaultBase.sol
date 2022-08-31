@@ -8,13 +8,13 @@ import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransf
 import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import {Types} from "@contracts/compound/libraries/Types.sol";
 
-import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, IERC20MetadataUpgradeable} from "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultBase.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
-abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
+contract SupplyVaultBase is ERC4626UpgradeableSafe {
     using SafeTransferLib for ERC20;
     using CompoundMath for uint256;
 
@@ -25,71 +25,69 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
 
     /// STORAGE ///
 
-    IMorpho public morpho; // The main Morpho contract.
-    address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    ERC20 public comp; // The COMP token.
+    IMorpho public immutable morpho; // The main Morpho contract.
+    address public immutable poolToken; // The pool token corresponding to the market to supply to through this vault.
+    address public immutable wEth; // The address of WETH token.
+    address public immutable comp; // The address of COMP token.
 
-    /// UPGRADE ///
+    /// CONSTRUCTOR ///
 
-    /// @dev Initializes the vault.
+    /// @notice Constructs the vault.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    /// @param _name The name of the ERC20 token associated to this tokenized vault.
-    /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
-    /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
-    function __SupplyVaultBase_init(
-        address _morpho,
-        address _poolToken,
-        string calldata _name,
-        string calldata _symbol,
-        uint256 _initialDeposit
-    ) internal onlyInitializing returns (bool isEth, address wEth) {
-        ERC20 underlyingToken;
-        (isEth, wEth, underlyingToken) = __SupplyVaultBase_init_unchained(_morpho, _poolToken);
-
-        __ERC20_init(_name, _symbol);
-        __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
-    }
-
-    /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
-    /// @param _morpho The address of the main Morpho contract.
-    /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    function __SupplyVaultBase_init_unchained(address _morpho, address _poolToken)
-        internal
-        onlyInitializing
-        returns (
-            bool isEth,
-            address wEth,
-            ERC20 underlyingToken
-        )
-    {
+    constructor(address _morpho, address _poolToken) initializer {
         if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
 
         morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        comp = ERC20(morpho.comptroller().getCompAddress());
-
-        isEth = _poolToken == morpho.cEth();
         wEth = morpho.wEth();
+        comp = morpho.comptroller().getCompAddress();
+    }
 
-        underlyingToken = ERC20(isEth ? wEth : ICToken(_poolToken).underlying());
-        underlyingToken.safeApprove(_morpho, type(uint256).max);
+    /// UPGRADE ///
+
+    /// @dev Initializes the vault.
+    /// @param _name The name of the ERC20 token associated to this tokenized vault.
+    /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
+    /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
+    function __SupplyVaultBase_init(
+        string memory _name,
+        string memory _symbol,
+        uint256 _initialDeposit
+    ) internal onlyInitializing {
+        ERC20 underlyingToken = __SupplyVaultBase_init_unchained();
+
+        __ERC20_init(_name, _symbol);
+        __ERC4626UpgradeableSafe_init(
+            IERC20MetadataUpgradeable(address(underlyingToken)),
+            _initialDeposit
+        );
+    }
+
+    /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
+    function __SupplyVaultBase_init_unchained()
+        internal
+        onlyInitializing
+        returns (ERC20 underlyingToken)
+    {
+        underlyingToken = ERC20(
+            poolToken == morpho.cEth() ? wEth : ICToken(poolToken).underlying()
+        );
+
+        underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
-        IMorpho morphoMem = morpho;
-        address poolTokenMem = poolToken;
-
-        Types.SupplyBalance memory supplyBalance = morphoMem.supplyBalanceInOf(
-            poolTokenMem,
+        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
+            poolToken,
             address(this)
         );
 
         return
-            supplyBalance.onPool.mul(ICToken(poolTokenMem).exchangeRateStored()) +
-            supplyBalance.inP2P.mul(morphoMem.p2pSupplyIndex(poolTokenMem));
+            supplyBalance.onPool.mul(ICToken(poolToken).exchangeRateStored()) +
+            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolToken));
     }
 
     /// INTERNAL ///
