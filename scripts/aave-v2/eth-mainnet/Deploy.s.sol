@@ -21,10 +21,10 @@ import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeE
 contract Deploy is Script, Config {
     using SafeERC20 for IERC20;
 
-    address constant deployer = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
-    address constant safe = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
-    address constant proxyAdmin = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
-    address constant morpho = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
+    address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
+    address constant SAFE = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
+    address constant MORPHO = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
     address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
 
@@ -32,7 +32,7 @@ contract Deploy is Script, Config {
     uint256 constant WBTC_INITIAL_DEPOSIT = 5e5;
 
     function run() external {
-        vm.startBroadcast(deployer);
+        vm.startBroadcast(DEPLOYER);
 
         address supplyVaultImpl = deploySupplyVaultImplementation();
         deployVaults(aDai, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
@@ -44,7 +44,7 @@ contract Deploy is Script, Config {
         supplyVaultImpl = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
             0,
             type(SupplyVault).creationCode,
-            keccak256(abi.encode("Morpho Aave V2 Supply Vault Implementation 1.0"))
+            keccak256(abi.encode("Morpho-AaveV2 Supply Vault Implementation 1.0"))
         );
         console2.log("Deployed Supply Vault Implementation:");
         console2.log(supplyVaultImpl);
@@ -60,7 +60,7 @@ contract Deploy is Script, Config {
         underlying = IAToken(_poolToken).UNDERLYING_ASSET_ADDRESS();
 
         string memory supplyVaultName = string(
-            abi.encodePacked("Morpho-AaveV2 ", ERC20(underlying).name(), " Supply Vault")
+            abi.encodePacked("Morpho-Aave-V2 ", ERC20(underlying).name(), " Supply Vault")
         );
         string memory supplyVaultSymbol = string(
             abi.encodePacked("ma2", ERC20(underlying).symbol())
@@ -86,9 +86,11 @@ contract Deploy is Script, Config {
     ) internal returns (address supplyVault_) {
         bytes memory creationCode = abi.encodePacked(
             type(TransparentUpgradeableProxy).creationCode,
-            abi.encode(_supplyVaultImpl, proxyAdmin, "")
+            abi.encode(_supplyVaultImpl, PROXY_ADMIN, "")
         );
-        bytes32 salt = keccak256(abi.encode("Morpho Supply Vault", _poolToken, _name, _symbol));
+        bytes32 salt = keccak256(
+            abi.encode("Morpho-AaveV2 Supply Vault", _poolToken, _name, _symbol)
+        );
 
         supplyVault_ = Create2.computeAddress(salt, keccak256(creationCode), ADMO_DEPLOYER);
         IERC20(_underlying).safeApprove(supplyVault_, _initialDeposit);
@@ -97,7 +99,7 @@ contract Deploy is Script, Config {
             "Incorrect precompute address"
         );
 
-        SupplyVault(supplyVault_).initialize(morpho, _poolToken, _name, _symbol, _initialDeposit);
+        SupplyVault(supplyVault_).initialize(MORPHO, _poolToken, _name, _symbol, _initialDeposit);
         console2.log(
             string(
                 abi.encodePacked(

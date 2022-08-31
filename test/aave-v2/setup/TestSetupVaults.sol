@@ -6,23 +6,20 @@ import "@tests/aave-v2/setup/TestSetup.sol";
 import {SupplyVaultBase} from "@vaults/aave-v2/SupplyVaultBase.sol";
 import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
 
-import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
-import "@vaults/UniswapV2Swapper.sol";
-
 import "../helpers/VaultUser.sol";
 
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
 
-    TransparentUpgradeableProxy internal wethSupplyVaultProxy;
+    TransparentUpgradeableProxy internal wNativeSupplyVaultProxy;
 
     SupplyVault internal supplyVaultImplV1;
 
-    SupplyVault internal wethSupplyVault;
+    SupplyVault internal wNativeSupplyVault;
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
 
-    ERC20 ma2Weth;
+    ERC20 ma2WNative;
     ERC20 ma2Dai;
     ERC20 ma2Usdc;
 
@@ -37,23 +34,23 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        supplyVaultImplV1 = new SupplyVault();
+        supplyVaultImplV1 = new SupplyVault(address(morpho));
 
-        wethSupplyVaultProxy = new TransparentUpgradeableProxy(
+        wNativeSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
             address(proxyAdmin),
             ""
         );
-        wethSupplyVault = SupplyVault(address(wethSupplyVaultProxy));
-        wethSupplyVault.initialize(address(morpho), aWeth, "MorphoAave2WETH", "ma2WETH", 0);
-        ma2Weth = ERC20(address(wethSupplyVault));
+        wNativeSupplyVault = SupplyVault(address(wNativeSupplyVaultProxy));
+        wNativeSupplyVault.initialize(aWeth, "MorphoAave2WETH", "ma2WETH", 0);
+        ma2WNative = ERC20(address(wNativeSupplyVault));
 
         daiSupplyVault = SupplyVault(
             address(
                 new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
             )
         );
-        daiSupplyVault.initialize(address(morpho), address(aDai), "MorphoAave2DAI", "ma2DAI", 0);
+        daiSupplyVault.initialize(address(aDai), "MorphoAave2DAI", "ma2DAI", 0);
         ma2Dai = ERC20(address(daiSupplyVault));
 
         usdcSupplyVault = SupplyVault(
@@ -61,13 +58,7 @@ contract TestSetupVaults is TestSetup {
                 new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
             )
         );
-        usdcSupplyVault.initialize(
-            address(morpho),
-            address(aUsdc),
-            "MorphoAave2USDC",
-            "ma2USDC",
-            0
-        );
+        usdcSupplyVault.initialize(address(aUsdc), "MorphoAave2USDC", "ma2USDC", 0);
         ma2Usdc = ERC20(address(usdcSupplyVault));
     }
 
@@ -75,7 +66,6 @@ contract TestSetupVaults is TestSetup {
         for (uint256 i = 0; i < 3; i++) {
             suppliers[i] = new VaultUser(morpho);
             fillUserBalances(suppliers[i]);
-            deal(comp, address(suppliers[i]), INITIAL_BALANCE * WAD);
 
             vm.label(
                 address(suppliers[i]),
