@@ -43,7 +43,7 @@ contract Deploy is Script, Config {
     function deploySupplyVaultImplementation() internal returns (address supplyVaultImpl) {
         supplyVaultImpl = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
             0,
-            type(SupplyVault).creationCode,
+            abi.encodePacked(type(SupplyVault).creationCode, abi.encode(MORPHO)),
             keccak256(abi.encode("Morpho-AaveV2 Supply Vault Implementation 1.0"))
         );
         console2.log("Deployed Supply Vault Implementation:");
@@ -99,7 +99,7 @@ contract Deploy is Script, Config {
             "Incorrect precompute address"
         );
 
-        SupplyVault(supplyVault_).initialize(MORPHO, _poolToken, _name, _symbol, _initialDeposit);
+        SupplyVault(supplyVault_).initialize(_poolToken, _name, _symbol, _initialDeposit);
         console2.log(
             string(
                 abi.encodePacked(
