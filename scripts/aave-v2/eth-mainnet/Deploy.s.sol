@@ -27,15 +27,21 @@ contract Deploy is Script, Config {
     address constant MORPHO = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
     address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
+    address constant A_CRV = 0x8dAE6Cb04688C62d939ed9B68d32Bc62e49970b1;
 
-    uint256 constant DEFAULT_INITIAL_DEPOSIT = 5e7;
-    uint256 constant WBTC_INITIAL_DEPOSIT = 5e5;
+    uint256 constant DEFAULT_INITIAL_DEPOSIT = 1e8;
+    uint256 constant WBTC_INITIAL_DEPOSIT = 1e6;
 
     function run() external {
         vm.startBroadcast(DEPLOYER);
 
         address supplyVaultImpl = deploySupplyVaultImplementation();
         deployVaults(aDai, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
+        deployVaults(aWeth, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
+        deployVaults(A_CRV, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
+        deployVaults(aUsdt, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
+        deployVaults(aUsdc, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
+        deployVaults(aWbtc, supplyVaultImpl, WBTC_INITIAL_DEPOSIT);
 
         vm.stopBroadcast();
     }
