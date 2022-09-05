@@ -50,7 +50,7 @@ contract Deploy is Script, Config {
         supplyVaultImpl = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
             0,
             abi.encodePacked(type(SupplyVault).creationCode, abi.encode(MORPHO)),
-            keccak256(abi.encode("Morpho-AaveV2 Supply Vault Implementation 1.0"))
+            keccak256(abi.encode("Morpho-Aave Supply Vault Implementation 1.0"))
         );
         console2.log("Deployed Supply Vault Implementation:");
         console2.log(supplyVaultImpl);
@@ -66,10 +66,10 @@ contract Deploy is Script, Config {
         underlying = IAToken(_poolToken).UNDERLYING_ASSET_ADDRESS();
 
         string memory supplyVaultName = string(
-            abi.encodePacked("Morpho-Aave-V2 ", ERC20(underlying).name(), " Supply Vault")
+            abi.encodePacked("Morpho-Aave ", ERC20(underlying).name(), " Supply Vault")
         );
         string memory supplyVaultSymbol = string(
-            abi.encodePacked("ma2", ERC20(underlying).symbol())
+            abi.encodePacked("ma", ERC20(underlying).symbol())
         );
 
         supplyVault_ = deploySupplyVaultProxy(
@@ -95,7 +95,7 @@ contract Deploy is Script, Config {
             abi.encode(_supplyVaultImpl, PROXY_ADMIN, "")
         );
         bytes32 salt = keccak256(
-            abi.encode("Morpho-AaveV2 Supply Vault", _poolToken, _name, _symbol)
+            abi.encode("Morpho-Aave Supply Vault", _poolToken, _name, _symbol)
         );
 
         supplyVault_ = Create2.computeAddress(salt, keccak256(creationCode), ADMO_DEPLOYER);

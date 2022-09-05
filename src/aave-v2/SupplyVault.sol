@@ -10,7 +10,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 contract SupplyVault is SupplyVaultBase {
     /// UPGRADE ///
 
-    /// @dev Initializes network-wide immutables
+    /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) SupplyVaultBase(_morpho) {}
 
