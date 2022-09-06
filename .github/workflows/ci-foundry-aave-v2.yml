@@ -1,0 +1,35 @@
+name: Foundry tests (Morpho-Aave V2)
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    paths:
+      - lib/**
+      - src/*
+      - src/aave-v2/**
+      - test/aave-v2/**
+      - yarn.lock
+      - Makefile
+      - foundry.toml
+      - remappings.txt
+      - .github/actions/ci-foundry/*
+      - .github/workflows/ci-foundry-aave-v2.yml
+
+jobs:
+  morpho-aave-v2-eth-mainnet:
+    name: eth-mainnet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.CI_PRIVATE_KEY }}
+
+      - uses: ./.github/actions/ci-foundry
+        with:
+          alchemyKey: ${{ secrets.ALCHEMY_KEY }}
+          protocol: aave-v2
+          network: eth-mainnet
