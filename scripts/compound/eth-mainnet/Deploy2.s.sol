@@ -28,7 +28,6 @@ contract Deploy is Script, Config {
     address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
     address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
     address constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
-    address constant CWBTC2 = 0xccF4429DB6322D5C611ee964527D42E5d685DD6a;
     address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
 
@@ -67,29 +66,6 @@ contract Deploy is Script, Config {
         );
 
         vm.stopBroadcast();
-    }
-
-    function deploySupplyVaultImplementation() internal returns (address supplyVaultImpl) {
-        supplyVaultImpl = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
-            0,
-            type(SupplyVault).creationCode,
-            keccak256(abi.encode("Morpho-Compound Supply Vault Implementation 1.0"))
-        );
-        console2.log("Deployed Supply Vault Implementation:");
-        console2.log(supplyVaultImpl);
-    }
-
-    function deploySupplyHarvestVaultImplementation()
-        internal
-        returns (address supplyHarvestVaultImpl)
-    {
-        supplyHarvestVaultImpl = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
-            0,
-            type(SupplyHarvestVault).creationCode,
-            keccak256(abi.encode("Morpho-Compound Supply Harvest Vault Implementation 1.0"))
-        );
-        console2.log("Deployed Supply Harvest Vault Implementation:");
-        console2.log(supplyHarvestVaultImpl);
     }
 
     function deployVaults(
