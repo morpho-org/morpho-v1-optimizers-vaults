@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0;
 
 import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
