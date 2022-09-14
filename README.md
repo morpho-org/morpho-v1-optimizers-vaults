@@ -23,7 +23,7 @@ All audits are stored in the [audits](./audits/)' folder.
 
 ## Deployment Addresses
 
-### Morpho-Compound Vaults
+### Morpho-Compound (Ethereum)
 
 #### Supply Vaults
 
@@ -46,7 +46,7 @@ All audits are stored in the [audits](./audits/)' folder.
 ​​- mchUNI: [0xafb6d25d2b0e9183fc363aff75e6a107d35bb414](https://etherscan.io/address/0xafb6d25d2b0e9183fc363aff75e6a107d35bb414)
 ​
 
-### Morpho-Aave-V2 Ethereum
+### Morpho-Aave-V2 (Ethereum)
 
 #### Supply Vaults
 
@@ -57,7 +57,7 @@ All audits are stored in the [audits](./audits/)' folder.
 - maUSDT: [0x1926bb3977336fd376be0aee2915406a904e5870](https://etherscan.io/address/0x1926bb3977336fd376be0aee2915406a904e5870)
 - maCRV: [0x963311ebb58043755a33bc3de4be8b492fda66d0](https://etherscan.io/address/0x963311ebb58043755a33bc3de4be8b492fda66d0)
 
-### Common Ethereum
+### Common Contracts (Ethereum)
 
 - ProxyAdmin: [0x99917ca0426fbc677e84f873fb0b726bb4799cd8](https://etherscan.io/address/0x99917ca0426fbc677e84f873fb0b726bb4799cd8)
 
@@ -91,7 +91,7 @@ or to run only a specific set of tests of a specific protocol (e.g. for Morpho-A
 make c-TestSupplyVault PROTOCOL=aave-v2
 ```
 
-or to run an individual test of a specific protocol (e.g. for Morpho-Aave V3):
+or to run an individual test of a specific protocol (e.g. for Morpho-Aave V2):
 
 ```bash
 make s-testShouldDepositAmount PROTOCOL=aave-v2
