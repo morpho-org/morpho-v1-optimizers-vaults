@@ -37,14 +37,13 @@ All audits are stored in the [audits](./audits/)' folder.
 
 #### Supply Harvest Vaults
 
-​​- mchWBTC: [0xbb61dce011f8d66bcca212a501eb315a563f965e](https://etherscan.io/address/0xbb61dce011f8d66bcca212a501eb315a563f965e)
-​​- mchWETH: [0x51bd0aca7bf4c3b4927c794bee338465f3885408](https://etherscan.io/address/0x51bd0aca7bf4c3b4927c794bee338465f3885408)
-​​- mchDAI: [0xd9b7a4401d4e430ad8b268d72c907a5c7516317f](https://etherscan.io/address/0xd9b7a4401d4e430ad8b268d72c907a5c7516317f)
-​​- mchUSDC: [0xaf7ddc2e19248fe4e400abc052162f146791745f](https://etherscan.io/address/0xaf7ddc2e19248fe4e400abc052162f146791745f)
-​​- mchUSDT: [0x182971cd346b87d9f99712e3030290f4ddc664d3](https://etherscan.io/address/0x182971cd346b87d9f99712e3030290f4ddc664d3)
-​​- mchCOMP: [0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5](https://etherscan.io/address/0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5)
-​​- mchUNI: [0xafb6d25d2b0e9183fc363aff75e6a107d35bb414](https://etherscan.io/address/0xafb6d25d2b0e9183fc363aff75e6a107d35bb414)
-​
+- mchWBTC: [0xbb61dce011f8d66bcca212a501eb315a563f965e](https://etherscan.io/address/0xbb61dce011f8d66bcca212a501eb315a563f965e)
+- mchWETH: [0x51bd0aca7bf4c3b4927c794bee338465f3885408](https://etherscan.io/address/0x51bd0aca7bf4c3b4927c794bee338465f3885408)
+- mchDAI: [0xd9b7a4401d4e430ad8b268d72c907a5c7516317f](https://etherscan.io/address/0xd9b7a4401d4e430ad8b268d72c907a5c7516317f)
+- mchUSDC: [0xaf7ddc2e19248fe4e400abc052162f146791745f](https://etherscan.io/address/0xaf7ddc2e19248fe4e400abc052162f146791745f)
+- mchUSDT: [0x182971cd346b87d9f99712e3030290f4ddc664d3](https://etherscan.io/address/0x182971cd346b87d9f99712e3030290f4ddc664d3)
+- mchCOMP: [0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5](https://etherscan.io/address/0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5)
+- mchUNI: [0xafb6d25d2b0e9183fc363aff75e6a107d35bb414](https://etherscan.io/address/0xafb6d25d2b0e9183fc363aff75e6a107d35bb414)
 
 ### Morpho-Aave-V2 (Ethereum)
 
