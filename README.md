@@ -1,8 +1,65 @@
 # Morpho Tokenized Vaults
 
-[![Test](https://github.com/morpho-labs/morpho-contracts/actions/workflows/ci-foundry.yml/badge.svg)](https://github.com/morpho-labs/morpho-contracts/actions/workflows/ci-foundry.yml)
+[![Test](https://github.com/morpho-labs/morpho-contracts/actions/workflows/ci-foundry.yml/badge.svg)](https://github.com/morpho-dao/morpho-tokenized-vaults/actions/workflows/ci-foundry.yml)
 
-This repository contains the Morpho tokeneized vaults contracts.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://i.imgur.com/uLq5V14.png">
+  <img alt="" src="https://i.imgur.com/ZiL1Lr2.png">
+</picture>
+
+---
+
+## Morpho's vaults
+
+Morpho's vaults represent tokenized supply positions on Morpho. Vaults are compliant to the ERC4626 standard and can be easily integrated. Please refer to the [vaults documentation](https://developers.morpho.xyz/vaults) for more information.
+
+---
+
+## Audits
+
+All audits are stored in the [audits](./audits/)' folder.
+
+---
+
+## Deployment Addresses
+
+### Morpho-Compound Vaults
+
+#### Supply Vaults
+
+- mcWBTC: [0x9aca9579b797a9fa14656b3234902374c77600d3](https://etherscan.io/address/0x9aca9579b797a9fa14656b3234902374c77600d3)
+- mcWETH: [0x5c17aa0730030ca7d0afc2a472bbd1d7e3ddc72d](https://etherscan.io/address/0x5c17aa0730030ca7d0afc2a472bbd1d7e3ddc72d)
+- mcDAI: [0xdfe7d9322835ebd7317b5947e898780a2f97b636](https://etherscan.io/address/0xdfe7d9322835ebd7317b5947e898780a2f97b636)
+- mcUSDC: [0x125e52e814d1f32d64f62677bffa28225a9283d1](https://etherscan.io/address/0x125e52e814d1f32d64f62677bffa28225a9283d1)
+- mcUSDT​: [0x54dbe0f95df628217c418f423d69aa70227cf9cc](https://etherscan.io/address/0x54dbe0f95df628217c418f423d69aa70227cf9cc)
+- mcCOMP: [0x1744e5d9692d86d29b54d7ac435b665c036739a6](https://etherscan.io/address/0x1744e5d9692d86d29b54d7ac435b665c036739a6)
+- mcUNI: [0x0516cdc8ca5b9af576b5214075ae71914b8a863b](https://etherscan.io/address/0x0516cdc8ca5b9af576b5214075ae71914b8a863b)
+
+#### Supply Harvest Vaults
+
+​​- mchWBTC: [0xbb61dce011f8d66bcca212a501eb315a563f965e](https://etherscan.io/address/0xbb61dce011f8d66bcca212a501eb315a563f965e)
+​​- mchWETH: [0x51bd0aca7bf4c3b4927c794bee338465f3885408](https://etherscan.io/address/0x51bd0aca7bf4c3b4927c794bee338465f3885408)
+​​- mchDAI: [0xd9b7a4401d4e430ad8b268d72c907a5c7516317f](https://etherscan.io/address/0xd9b7a4401d4e430ad8b268d72c907a5c7516317f)
+​​- mchUSDC: [0xaf7ddc2e19248fe4e400abc052162f146791745f](https://etherscan.io/address/0xaf7ddc2e19248fe4e400abc052162f146791745f)
+​​- mchUSDT: [0x182971cd346b87d9f99712e3030290f4ddc664d3](https://etherscan.io/address/0x182971cd346b87d9f99712e3030290f4ddc664d3)
+​​- mchCOMP: [0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5](https://etherscan.io/address/0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5)
+​​- mchUNI: [0xafb6d25d2b0e9183fc363aff75e6a107d35bb414](https://etherscan.io/address/0xafb6d25d2b0e9183fc363aff75e6a107d35bb414)
+​
+
+### Morpho-Aave-V2 Ethereum
+
+#### Supply Vaults
+
+- maWBTC: [0xa59d6996bdbfaef7b64eee436e5326869c9d8399](https://etherscan.io/address/0xa59d6996bdbfaef7b64eee436e5326869c9d8399)
+- maWETH: [0x762fafa0257cd3b697e0d7fd40f1f6c03f07a8ef](https://etherscan.io/address/0x762fafa0257cd3b697e0d7fd40f1f6c03f07a8ef)
+- maDAI: [0x3a91d37bac30c913369e1abc8cad1c13d1ff2e98](https://etherscan.io/address/0x3a91d37bac30c913369e1abc8cad1c13d1ff2e98)
+- maUSDC: [0xd45ef8c9b9431298019fc15753609db2fb101aa5](https://etherscan.io/address/0xd45ef8c9b9431298019fc15753609db2fb101aa5)
+- maUSDT: [0x1926bb3977336fd376be0aee2915406a904e5870](https://etherscan.io/address/0x1926bb3977336fd376be0aee2915406a904e5870)
+- maCRV: [0x963311ebb58043755a33bc3de4be8b492fda66d0](https://etherscan.io/address/0x963311ebb58043755a33bc3de4be8b492fda66d0)
+
+### Common Ethereum
+
+- ProxyAdmin: [0x99917ca0426fbc677e84f873fb0b726bb4799cd8](https://etherscan.io/address/0x99917ca0426fbc677e84f873fb0b726bb4799cd8)
 
 ---
 
@@ -20,20 +77,6 @@ Alternatively, if you only want to set up
 
 Refer to the `env.example` for the required environment variable.
 
-In order to have the traces of the run exported as an HTML page, install the aha module.
-
-For OSX users:
-
-```bash
-brew install aha
-```
-
-For debian users:
-
-```bash
-apt install aha
-```
-
 To run tests on different protocols, navigate a Unix terminal to the root folder of the project and run the command of your choice:
 
 To run every test of a specific protocol (e.g. for Morpho-Compound):
@@ -45,83 +88,25 @@ make test PROTOCOL=compound
 or to run only a specific set of tests of a specific protocol (e.g. for Morpho-Aave V2):
 
 ```bash
-make c-TestBorrow PROTOCOL=aave-v2
-make c-TestGovernance PROTOCOL=aave-v2
-...
+make c-TestSupplyVault PROTOCOL=aave-v2
 ```
 
-or to run individual tests of a specific protocol (e.g. for Morpho-Aave V3):
+or to run an individual test of a specific protocol (e.g. for Morpho-Aave V3):
 
 ```bash
-make s-testShouldCollectTheRightAmountOfFees PROTOCOL=aave-v3
-make s-testShouldReduceTheFeeToRepay PROTOCOL=aave-v3
-...
+make s-testShouldDepositAmount PROTOCOL=aave-v2
 ```
 
 For the other commands, check the [Makefile](./Makefile).
 
 ---
 
-## Style guide 💅
+## Questions & Feedback
 
-### Code Formatting
-
-We use prettier with the default configuration mentionned in the [Solidity Prettier Plugin](https://github.com/prettier-solidity/prettier-plugin-solidity).
-We recommend developers using VS Code to set their local config as below:
-
-```json
-{
-  "editor.formatOnSave": true,
-  "solidity.formatter": "prettier",
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-}
-```
-
-In doing so the code will be formatted on each save.
-
-We use Husky hook to format code before being pushed to any remote branch to enforce coding style among all developers.
-
-### Code Style
-
-We follow the Solidity style guide from the [Solidity Documentation](https://docs.soliditylang.org/en/latest/style-guide.html) and the [NatSpec format](https://docs.soliditylang.org/en/latest/natspec-format.html) using this pattern `///`.
-Comments should begin with a capital letter and end with a period. You can check the current code to have an overview of what is expected.
+For any question or feedback you can send an email to [merlin@morpho.xyz](mailto:merlin@morpho.xyz).
 
 ---
 
-## Contributing 💪
+## Licensing
 
-In this section, you will find some guidelines to read before contributing to the project.
-
-### Creating issues and PRs
-
-Guidelines for creating issues and PRs:
-
-- Issues must be created and labelled with relevant labels (type of issues, high/medium/low priority, etc.).
-- Nothing should be pushed directly to the `main` branch.
-- Pull requests must be created before and branch names must follow this pattern: `feat/<feature-name>`, `test/<test-name>` or `fix/<fix-name>`. `docs`, `ci` can also be used. The goal is to have clear branches names and make easier their management.
-- PRs must be labelled with the relevant labels.
-- Issues must be linked to PRs so that once the PR is merged related issues are closed at the same time.
-- Reviewers must be added to the PR.
-- For commits, install the gitmoji VS Code extension and use the appropriate emoji for each commit. It should match this pattern: `<emoji> (<branch-name>) <commit-message>`. For a real world example: `✨ (feat/new-feature) Add new feature`.
-
-### Before merging a PR
-
-Before merging a PR:
-
-- PR must have been reviewed by reviewers. The must deliver a complete report on the smart contracts (see the section below).
-- Comments and requested changes must have been resolved.
-- PR must have been approved by every reviewers.
-- CI must pass.
-
-For smart contract reviews, a complete report must have been done, not just a reading of the changes in the code. This is very important as a simple change on one line of code can bring dramatic consequences on a smart contracts (bad copy/paste have already lead to hacks).
-For the guidelines on "How to review contracts and write a report?", you can follow this [link](https://morpho-labs.notion.site/How-to-do-a-Smart-Contract-Review-81d1dc692259463993cc7d81544767d1).
-
-By default, PR are rebased with `dev` before merging to keep a clean historic of commits and the branch is deleted. The same process is done from `dev` to `main`.
-
-## External resources & documentation 📚
-
-- [General documentation](https://morpho-labs.gitbook.io/morpho-documentation/)
-- [Developer documentation](https://morpho-labs.gitbook.io/technical-documentation/)
-- [Whitepaper](https://whitepaper.morpho.best)
-- [Foundry](https://github.com/gakonst/foundry)
-- [Solidity Prettier Plugin](https://github.com/prettier-solidity/prettier-plugin-solidity)
+The code is under the GNU General Public License v3.0 license, see [`LICENSE`](https://github.com/morphodao/morpho-core-v1/blob/main/LICENSE).
