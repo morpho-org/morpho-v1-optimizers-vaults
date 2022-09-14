@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
+import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
 import {ILendingPool} from "@contracts/aave-v2/interfaces/aave/ILendingPool.sol";
+import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
+import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
 import {Types} from "@contracts/aave-v2/libraries/Types.sol";
 
-import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultBase.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V2.
-abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
+abstract contract SupplyVaultBase is ISupplyVault, ERC4626UpgradeableSafe {
     using SafeTransferLib for ERC20;
     using WadRayMath for uint256;
 
@@ -76,7 +78,12 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
 
     /// PUBLIC ///
 
-    function totalAssets() public view override returns (uint256) {
+    function totalAssets()
+        public
+        view
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         address poolTokenMem = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
             poolTokenMem,
