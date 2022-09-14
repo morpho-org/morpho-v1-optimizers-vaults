@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
+import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
+
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V2.
-contract SupplyVault is SupplyVaultBase {
+contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// UPGRADE ///
 
     /// @dev Initializes network-wide immutables.

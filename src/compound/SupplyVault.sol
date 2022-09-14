@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
+import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
+
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
@@ -11,7 +13,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which tracks rewards from Compound's pool accrued by its users.
-contract SupplyVault is SupplyVaultBase {
+contract SupplyVault is ISupplyVault, SupplyVaultBase {
     using FixedPointMathLib for uint256;
     using SafeTransferLib for ERC20;
     using SafeCastLib for uint256;
