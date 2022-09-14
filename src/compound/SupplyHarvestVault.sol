@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import {ISupplyHarvestVault} from "./interfaces/ISupplyHarvestVault.sol";
 
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
@@ -13,7 +14,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
-contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
+contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgradeable {
     using SafeTransferLib for ERC20;
     using PercentageMath for uint256;
 
