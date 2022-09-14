@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
 import {ILendingPool} from "@contracts/aave-v2/interfaces/aave/ILendingPool.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
