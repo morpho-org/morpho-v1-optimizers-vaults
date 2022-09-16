@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
+import "src/aave-v2/SupplyVaultV2.sol";
 import "../setup/TestSetupVaultsLive.sol";
 
-contract TestUpgradeableLive is TestSetupVaultsLive {
+contract TestUpgradeToV2Live is TestSetupVaultsLive {
     using WadRayMath for uint256;
 
     function testUpgradeSupplyVault() public {
-        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVaultV2 wNativeSupplyVaultImplV2 = new SupplyVaultV2(address(morpho));
 
         vm.record();
         vm.prank(PROXY_ADMIN_OWNER);
@@ -26,7 +27,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
-        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVaultV2 supplyVaultImplV2 = new SupplyVaultV2(address(morpho));
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -37,7 +38,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
-        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVaultV2 wNativeSupplyVaultImplV2 = new SupplyVaultV2(address(morpho));
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -60,5 +61,23 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     function testSupplyVaultImplementationsShouldBeInitialized() public {
         vm.expectRevert("Initializable: contract is already initialized");
         supplyVaultImplV1.initialize(address(aWeth), "MorphoAave2WETH", "ma2WETH", 0);
+    }
+
+    function testSupplyVaultShouldBeInitializedWithRightOwner() public {
+        SupplyVaultV2 supplyVaultImplV2 = new SupplyVaultV2(address(morpho));
+        vm.prank(PROXY_ADMIN_OWNER);
+        proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
+        SupplyVaultV2 supplyVaultV2 = SupplyVaultV2(address(wNativeSupplyVaultProxy));
+
+        assertEq(supplyVaultV2.upgradedToV2(), false);
+        assertEq(supplyVaultV2.owner(), address(0));
+
+        supplyVaultV2.initialize();
+
+        assertEq(supplyVaultV2.upgradedToV2(), true);
+        assertEq(supplyVaultV2.owner(), address(this));
+
+        vm.expectRevert("already upgraded to V2");
+        supplyVaultV2.initialize();
     }
 }
