@@ -130,7 +130,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertApproxEqAbs(
             daiSupplyHarvestVault.balanceOf(address(vaultSupplier1)),
             0,
-            2e3,
+            5e3,
             "mcDAI balance not zero"
         );
         assertEq(balanceOnPool, 0, "onPool amount not zero");
