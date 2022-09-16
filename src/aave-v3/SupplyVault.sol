@@ -5,7 +5,7 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
-import {IERC20Upgradeable, SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
@@ -17,7 +17,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
 contract SupplyVault is ISupplyVault, OwnableUpgradeable, SupplyVaultBase {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
     using FixedPointMathLib for uint256;
     using SafeCastLib for uint256;
 
@@ -109,7 +109,7 @@ contract SupplyVault is ISupplyVault, OwnableUpgradeable, SupplyVaultBase {
                 claimedAmounts[i] = unclaimedAmount;
                 userRewardsData.unclaimed = 0;
 
-                IERC20Upgradeable(rewardToken).safeTransfer(_user, unclaimedAmount);
+                IERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
                 emit Claimed(rewardToken, _user, unclaimedAmount);
             }
@@ -200,7 +200,7 @@ contract SupplyVault is ISupplyVault, OwnableUpgradeable, SupplyVaultBase {
         address _to,
         uint256 _amount
     ) external onlyOwner {
-        IERC20Upgradeable(_asset).safeTransfer(_to, _amount);
+        IERC20(_asset).safeTransfer(_to, _amount);
     }
 
     /// INTERNAL ///

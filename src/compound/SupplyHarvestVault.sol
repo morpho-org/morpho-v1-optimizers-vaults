@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import {ISupplyHarvestVault} from "./interfaces/ISupplyHarvestVault.sol";
 
-import {IERC20Upgradeable, SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -15,7 +15,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgradeable {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
     using PercentageMath for uint256;
 
     /// EVENTS ///
@@ -111,7 +111,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgr
 
         harvestConfig = _harvestConfig;
 
-        IERC20Upgradeable(address(comp)).safeApprove(address(SWAP_ROUTER), type(uint256).max);
+        IERC20(address(comp)).safeApprove(address(SWAP_ROUTER), type(uint256).max);
     }
 
     /// GOVERNANCE ///
@@ -187,7 +187,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgr
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
-        if (rewardsFee > 0) IERC20Upgradeable(assetMem).safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) IERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
 
         emit Harvested(msg.sender, rewardsAmount, rewardsFee);
     }
@@ -197,7 +197,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgr
         address _to,
         uint256 _amount
     ) external onlyOwner {
-        IERC20Upgradeable(_asset).safeTransfer(_to, _amount);
+        IERC20(_asset).safeTransfer(_to, _amount);
     }
 
     /// GETTERS ///

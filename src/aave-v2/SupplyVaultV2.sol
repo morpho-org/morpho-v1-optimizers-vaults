@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
-import {IERC20Upgradeable, SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
@@ -13,7 +13,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V2.
 contract SupplyVaultV2 is ISupplyVault, SupplyVaultBase, OwnableUpgradeable {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
 
     /// STORAGE ///
 
@@ -49,6 +49,6 @@ contract SupplyVaultV2 is ISupplyVault, SupplyVaultBase, OwnableUpgradeable {
         address _to,
         uint256 _amount
     ) external onlyOwner {
-        IERC20Upgradeable(_asset).safeTransfer(_to, _amount);
+        IERC20(_asset).safeTransfer(_to, _amount);
     }
 }
