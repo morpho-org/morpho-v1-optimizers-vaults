@@ -128,9 +128,9 @@ contract TestSetupVaultsLive is TestSetup {
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
         vm.label(address(compSupplyHarvestVault), "SupplyHarvestVault (COMP)");
-        vm.label(address(supplyVaultImplV1), "SupplyHarvestVaultImplV1");
-        vm.label(address(wethSupplyVault), "SupplyHarvestVault (WETH)");
-        vm.label(address(daiSupplyVault), "SupplyHarvestVault (DAI)");
-        vm.label(address(usdcSupplyVault), "SupplyHarvestVault (USDC)");
+        vm.label(address(supplyVaultImplV1), "SupplyVaultImplV1");
+        vm.label(address(wethSupplyVault), "SupplyVault (WETH)");
+        vm.label(address(daiSupplyVault), "SupplyVault (DAI)");
+        vm.label(address(usdcSupplyVault), "SupplyVault (USDC)");
     }
 }
