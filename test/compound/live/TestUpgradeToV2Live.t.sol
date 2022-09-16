@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
+import "src/compound/SupplyVaultV2.sol";
 import "../setup/TestSetupVaultsLive.sol";
 
 contract TestSupplyVaultLive is TestSetupVaultsLive {
@@ -358,5 +359,23 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
         assertLt(rewardsAmount1 + rewardsAmount2 + rewardsAmount3, expectedTotalRewardsAmount);
         assertApproxEqAbs(rewardsAmount1, rewardsAmount2, 1e9, "unexpected rewards amount 1-2"); // not exact because of compounded interests
         assertApproxEqAbs(rewardsAmount2, rewardsAmount3, 1e9, "unexpected rewards amount 2-3"); // not exact because of compounded interests
+    }
+
+    function testSupplyVaultShouldBeInitializedWithRightOwner() public {
+        SupplyVaultV2 supplyVaultImplV2 = new SupplyVaultV2();
+        vm.prank(PROXY_ADMIN_OWNER);
+        proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
+        SupplyVaultV2 supplyVaultV2 = SupplyVaultV2(address(wethSupplyVaultProxy));
+
+        assertEq(supplyVaultV2.upgradedToV2(), false);
+        assertEq(supplyVaultV2.owner(), address(0));
+
+        supplyVaultV2.initialize();
+
+        assertEq(supplyVaultV2.upgradedToV2(), true);
+        assertEq(supplyVaultV2.owner(), address(this));
+
+        vm.expectRevert("already upgraded to V2");
+        supplyVaultV2.initialize();
     }
 }
