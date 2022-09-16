@@ -41,7 +41,7 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
-    function onSetUp() public override {
+    function onSetUp() public virtual override {
         initVaultContracts();
         setVaultContractsLabels();
         initVaultUsers();
