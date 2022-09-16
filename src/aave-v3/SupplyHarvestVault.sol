@@ -5,7 +5,7 @@ import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRoute
 import {ISupplyHarvestVault} from "./interfaces/ISupplyHarvestVault.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {IERC20Upgradeable, SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 
@@ -17,7 +17,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Rewardsound.
 contract SupplyHarvestVault is ISupplyHarvestVault, OwnableUpgradeable, SupplyVaultBase {
-    using SafeTransferLib for ERC20;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     using PercentageMath for uint256;
     using WadRayMath for uint256;
 
@@ -140,7 +140,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, OwnableUpgradeable, SupplyVa
             uint256 rewardsAmount = rewardsAmounts[i];
 
             if (rewardsAmount > 0) {
-                ERC20 rewardToken = ERC20(rewardTokens[i]);
+                IERC20Upgradeable rewardToken = IERC20Upgradeable(rewardTokens[i]);
 
                 // Note: Uniswap pairs are considered to have enough market depth.
                 // The amount swapped is considered low enough to avoid relying on any oracle.
@@ -174,7 +174,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, OwnableUpgradeable, SupplyVa
             }
         }
 
-        ERC20(assetMem).safeTransfer(msg.sender, totalRewardsFee);
+        IERC20Upgradeable(assetMem).safeTransfer(msg.sender, totalRewardsFee);
         morpho.supply(poolTokenMem, address(this), totalSupplied);
     }
 
