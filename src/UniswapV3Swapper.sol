@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import {ISwapper} from "./interfaces/ISwapper.sol";
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -13,7 +13,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice Swapper contract for Uniswap V3 DEXes.
 contract UniswapV3Swapper is ISwapper, Ownable {
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for IERC20;
 
     /// EVENTS ///
 
