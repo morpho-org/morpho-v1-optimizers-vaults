@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 import "@tests/aave-v3/setup/TestSetup.sol";
 
+import {ISwapper} from "@vaults/interfaces/ISwapper.sol";
+
 import {SupplyVaultBase} from "@vaults/aave-v3/SupplyVaultBase.sol";
 import {SupplyHarvestVault} from "@vaults/aave-v3/SupplyHarvestVault.sol";
 import {SupplyVault} from "@vaults/aave-v3/SupplyVault.sol";
-import "@vaults/UniswapV2Swapper.sol";
-import "@vaults/UniswapV3Swapper.sol";
+import {UniswapV2Swapper} from "@vaults/UniswapV2Swapper.sol";
+import {UniswapV3Swapper} from "@vaults/UniswapV3Swapper.sol";
 
 import "../helpers/VaultUser.sol";
 

@@ -67,7 +67,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         poolToken = _poolToken;
         pool = morpho.pool();
 
-        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = IERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(_morpho, type(uint256).max);
     }
 
