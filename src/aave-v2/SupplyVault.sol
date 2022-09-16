@@ -10,6 +10,13 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V2.
 contract SupplyVault is ISupplyVault, SupplyVaultBase {
+    /// STORAGE ///
+
+    /// @dev This empty reserved space is put in place to allow future versions to add new
+    /// variables without shifting down storage in the inheritance chain.
+    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[50] private __gap;
+
     /// UPGRADE ///
 
     /// @dev Initializes network-wide immutables.
