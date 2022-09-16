@@ -28,7 +28,6 @@ contract TestSetupVaultsLive is TestSetup {
     address internal constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
     address internal constant PROXY_ADMIN_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
 
-    address internal constant OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address internal constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
     address internal constant LENS = 0x930f1b46e1D081Ec1524efD95752bE3eCe51EF67;
 
@@ -122,5 +121,9 @@ contract TestSetupVaultsLive is TestSetup {
         vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
         vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
         vm.label(address(compSupplyHarvestVault), "SupplyHarvestVault (COMP)");
+        vm.label(address(supplyVaultImplV1), "SupplyHarvestVaultImplV1");
+        vm.label(address(wethSupplyVault), "SupplyHarvestVault (WETH)");
+        vm.label(address(daiSupplyVault), "SupplyHarvestVault (DAI)");
+        vm.label(address(usdcSupplyVault), "SupplyHarvestVault (USDC)");
     }
 }

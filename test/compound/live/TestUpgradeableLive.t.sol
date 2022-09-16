@@ -10,7 +10,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault();
 
         vm.record();
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(wethSupplyHarvestVaultImplV2));
         (, bytes32[] memory writes) = vm.accesses(address(wethSupplyHarvestVault));
 
@@ -32,7 +32,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
 
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
     }
 
@@ -48,7 +48,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         // Revert for wrong data not wrong caller.
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
             wethSupplyHarvestVaultProxy,
@@ -58,7 +58,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testSupplyHarvestVaultImplementationsShouldBeInitialized() public {
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         vm.expectRevert("Initializable: contract is already initialized");
         supplyHarvestVaultImplV1.initialize(
             address(morpho),
@@ -74,7 +74,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         SupplyVault wethSupplyVaultImplV2 = new SupplyVault();
 
         vm.record();
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(wethSupplyVaultImplV2));
         (, bytes32[] memory writes) = vm.accesses(address(wethSupplyVault));
 
@@ -96,7 +96,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
 
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
     }
 
@@ -112,7 +112,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         // Revert for wrong data not wrong caller.
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
             wethSupplyVaultProxy,
@@ -122,7 +122,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testSupplyVaultImplementationsShouldBeInitialized() public {
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         vm.expectRevert("Initializable: contract is already initialized");
         supplyVaultImplV1.initialize(
             address(morpho),

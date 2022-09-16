@@ -13,6 +13,9 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
             address(daiSupplyVault)
         );
 
+        uint256 p2pSupplyIndexBefore = morpho.p2pSupplyIndex(cDai);
+        uint256 poolSupplyIndexBefore = ICToken(cDai).exchangeRateCurrent();
+
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         (uint256 balanceInP2PAfter, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
@@ -20,15 +23,16 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
             address(daiSupplyVault)
         );
 
-        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(cDai);
-        uint256 poolSupplyIndex = ICToken(cDai).exchangeRateCurrent();
+        uint256 p2pSupplyIndexAfter = morpho.p2pSupplyIndex(cDai);
+        uint256 poolSupplyIndexAfter = ICToken(cDai).exchangeRateCurrent();
 
         assertGt(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcDAI balance is zero");
         assertApproxEqAbs(
-            balanceInP2PAfter.mul(p2pSupplyIndex) + balanceOnPoolAfter.mul(poolSupplyIndex),
+            balanceInP2PAfter.mul(p2pSupplyIndexAfter) +
+                balanceOnPoolAfter.mul(poolSupplyIndexAfter),
             amount +
-                balanceInP2PBefore.mul(p2pSupplyIndex) +
-                balanceOnPoolBefore.mul(poolSupplyIndex),
+                balanceInP2PBefore.mul(p2pSupplyIndexBefore) +
+                balanceOnPoolBefore.mul(poolSupplyIndexBefore),
             1e10
         );
     }

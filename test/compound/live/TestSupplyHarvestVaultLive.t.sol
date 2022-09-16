@@ -270,7 +270,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         daiSupplyHarvestVault.setCompSwapFee(1);
 
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         daiSupplyHarvestVault.setCompSwapFee(1);
         assertEq(daiSupplyHarvestVault.compSwapFee(), 1);
     }
@@ -280,7 +280,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         daiSupplyHarvestVault.setAssetSwapFee(1);
 
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         daiSupplyHarvestVault.setAssetSwapFee(1);
         assertEq(daiSupplyHarvestVault.assetSwapFee(), 1);
     }
@@ -290,7 +290,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         daiSupplyHarvestVault.setHarvestingFee(1);
 
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         daiSupplyHarvestVault.setHarvestingFee(1);
         assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
     }
@@ -302,7 +302,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         vm.expectRevert(
             abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector, newVal)
         );
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         daiSupplyHarvestVault.setCompSwapFee(newVal);
     }
 
@@ -311,7 +311,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         vm.expectRevert(
             abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxUniswapV3Fee.selector, newVal)
         );
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         daiSupplyHarvestVault.setAssetSwapFee(newVal);
     }
 
@@ -320,7 +320,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         vm.expectRevert(
             abi.encodeWithSelector(SupplyHarvestVault.ExceedsMaxBasisPoints.selector, newVal)
         );
-        vm.prank(OWNER);
+        vm.prank(PROXY_ADMIN_OWNER);
         daiSupplyHarvestVault.setHarvestingFee(newVal);
     }
 }
