@@ -13,20 +13,31 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
     function testShouldDepositAmount() public {
         uint256 amount = 10_000 ether;
 
-        vaultSupplier1.depositVault(daiSupplyVault, amount);
-
-        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+        (uint256 balanceInP2PBefore, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
             aDai,
             address(daiSupplyVault)
         );
 
-        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(aDai);
-        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
+        uint256 p2pSupplyIndexBefore = morpho.p2pSupplyIndex(aDai);
+        uint256 poolSupplyIndexBefore = pool.getReserveNormalizedIncome(dai);
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        (uint256 balanceInP2PAfter, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
+            aDai,
+            address(daiSupplyVault)
+        );
+
+        uint256 p2pSupplyIndexAfter = morpho.p2pSupplyIndex(aDai);
+        uint256 poolSupplyIndexAfter = pool.getReserveNormalizedIncome(dai);
 
         assertGt(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "maDAI balance is zero");
         assertApproxEqAbs(
-            balanceInP2P.rayMul(p2pSupplyIndex) + balanceOnPool.rayMul(poolSupplyIndex),
-            amount.rayDiv(poolSupplyIndex).rayMul(poolSupplyIndex),
+            balanceInP2PAfter.rayMul(p2pSupplyIndexAfter) +
+                balanceOnPoolAfter.rayMul(poolSupplyIndexAfter),
+            amount +
+                balanceInP2PBefore.rayMul(p2pSupplyIndexBefore) +
+                balanceOnPoolBefore.rayMul(poolSupplyIndexBefore),
             1e10
         );
     }
@@ -34,13 +45,21 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
     function testShouldWithdrawAllAmount() public {
         uint256 amount = 10_000 ether;
 
+        (uint256 balanceInP2PBefore, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
+            aDai,
+            address(daiSupplyVault)
+        );
+
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(aDai);
+        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
+
         vaultSupplier1.depositVault(daiSupplyVault, amount);
         vaultSupplier1.withdrawVault(
             daiSupplyVault,
             daiSupplyVault.maxWithdraw(address(vaultSupplier1))
         );
 
-        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+        (uint256 balanceInP2PAfter, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             aDai,
             address(daiSupplyVault)
         );
@@ -51,8 +70,11 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
             1e3,
             "mcDAI balance not zero"
         );
-        assertLe(balanceOnPool, INITIAL_DEPOSIT, "onPool amount not zero");
-        assertEq(balanceInP2P, 0, "inP2P amount not zero");
+        assertApproxEqAbs(
+            balanceInP2PAfter.rayMul(p2pSupplyIndex) + balanceOnPoolAfter.rayMul(poolSupplyIndex),
+            balanceInP2PBefore.rayMul(p2pSupplyIndex) + balanceOnPoolBefore.rayMul(poolSupplyIndex),
+            1e10
+        );
     }
 
     function testShouldWithdrawAllUsdcAmount() public {
@@ -60,13 +82,21 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
 
         uint256 balanceBefore = ERC20(usdc).balanceOf(address(vaultSupplier1));
 
+        (uint256 balanceInP2PBefore, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
+            aUsdc,
+            address(usdcSupplyVault)
+        );
+
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(aUsdc);
+        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(usdc);
+
         vaultSupplier1.depositVault(usdcSupplyVault, amount);
         vaultSupplier1.withdrawVault(
             usdcSupplyVault,
             usdcSupplyVault.maxWithdraw(address(vaultSupplier1))
         );
 
-        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+        (uint256 balanceInP2PAfter, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             address(aUsdc),
             address(usdcSupplyVault)
         );
@@ -78,24 +108,38 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
 
         assertApproxEqAbs(ERC20(usdc).balanceOf(address(vaultSupplier1)), balanceBefore, 1);
 
-        assertLe(balanceOnPool, INITIAL_DEPOSIT, "onPool amount not le initial deposit");
-        assertEq(balanceInP2P, 0, "inP2P amount not zero");
+        assertApproxEqAbs(
+            balanceInP2PAfter.rayMul(p2pSupplyIndex) + balanceOnPoolAfter.rayMul(poolSupplyIndex),
+            balanceInP2PBefore.rayMul(p2pSupplyIndex) + balanceOnPoolBefore.rayMul(poolSupplyIndex),
+            1e5
+        );
     }
 
     function testShouldWithdrawAllShares() public {
         uint256 amount = 10_000 ether;
 
+        (uint256 balanceInP2PBefore, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
+            aDai,
+            address(daiSupplyVault)
+        );
+
+        uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(aDai);
+        uint256 poolSupplyIndex = pool.getReserveNormalizedIncome(dai);
+
         uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
         vaultSupplier1.redeemVault(daiSupplyVault, shares); // cannot withdraw amount because of Compound rounding errors
 
-        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+        (uint256 balanceInP2PAfter, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             aDai,
             address(daiSupplyVault)
         );
 
         assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcDAI balance not zero");
-        assertLe(balanceOnPool, INITIAL_DEPOSIT, "onPool amount not lt initial deposit");
-        assertEq(balanceInP2P, 0, "inP2P amount not zero");
+        assertApproxEqAbs(
+            balanceInP2PAfter.rayMul(p2pSupplyIndex) + balanceOnPoolAfter.rayMul(poolSupplyIndex),
+            balanceInP2PBefore.rayMul(p2pSupplyIndex) + balanceOnPoolBefore.rayMul(poolSupplyIndex),
+            1e5
+        );
     }
 
     function testShouldNotWithdrawWhenNotDeposited() public {
