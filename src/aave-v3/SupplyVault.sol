@@ -5,19 +5,20 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {IERC20Upgradeable, SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V3, which tracks rewards from Aave's pool accrued by its users.
-contract SupplyVault is ISupplyVault, SupplyVaultBase {
+contract SupplyVault is ISupplyVault, OwnableUpgradeable, SupplyVaultBase {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     using FixedPointMathLib for uint256;
-    using SafeTransferLib for ERC20;
     using SafeCastLib for uint256;
 
     /// STRUCTS ///
@@ -77,6 +78,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _initialDeposit
     ) external initializer {
         __SupplyVaultBase_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
+        __Ownable_init();
 
         rewardsManager = IMorpho(_morpho).rewardsManager();
     }
@@ -107,7 +109,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                 claimedAmounts[i] = unclaimedAmount;
                 userRewardsData.unclaimed = 0;
 
-                ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
+                IERC20Upgradeable(rewardToken).safeTransfer(_user, unclaimedAmount);
 
                 emit Claimed(rewardToken, _user, unclaimedAmount);
             }
@@ -191,6 +193,14 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                     rewards.index),
                 SCALE
             );
+    }
+
+    function transferTokens(
+        address _asset,
+        address _to,
+        uint256 _amount
+    ) external onlyOwner {
+        IERC20Upgradeable(_asset).safeTransfer(_to, _amount);
     }
 
     /// INTERNAL ///
