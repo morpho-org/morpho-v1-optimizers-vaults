@@ -6,7 +6,6 @@ import "./setup/TestSetupVaults.sol";
 import "../helpers/FakeToken.sol";
 
 contract TestSupplyVaultV2 is TestSetupVaults {
-    address public constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
     SupplyVaultV2 public supplyVaultImplV2;
     SupplyVaultV2 public supplyVaultV2;
     FakeToken public token;
@@ -33,7 +32,7 @@ contract TestSupplyVaultV2 is TestSetupVaults {
         vm.assume(_caller != supplyVaultV2.owner());
         vm.prank(_caller);
         vm.expectRevert("Ownable: caller is not the owner");
-        supplyVaultV2.transfer(MORPHO_TOKEN, _receiver, _amount);
+        supplyVaultV2.transferTokens($token, _receiver, _amount);
     }
 
     function testOwnerShouldTransferTokens(
@@ -45,7 +44,7 @@ contract TestSupplyVaultV2 is TestSetupVaults {
         deal($token, address(supplyVaultV2), _deal);
 
         vm.prank(supplyVaultV2.owner());
-        supplyVaultV2.transfer($token, _to, _toTransfer);
+        supplyVaultV2.transferTokens($token, _to, _toTransfer);
 
         assertEq(token.balanceOf(address(supplyVaultV2)), _deal - _toTransfer);
         assertEq(token.balanceOf(_to), _toTransfer);
