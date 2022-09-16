@@ -11,10 +11,6 @@ FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
 
 ifeq (${NETWORK}, eth-mainnet)
   FOUNDRY_CHAIN_ID=1
-  FOUNDRY_FORK_BLOCK_NUMBER=15498601
-  ifeq (${PROTOCOL}, aave-v2)
-    FOUNDRY_FORK_BLOCK_NUMBER=15492200
-  endif
 endif
 
 ifeq (${NETWORK}, polygon-mainnet)
@@ -52,7 +48,7 @@ deploy:
 
 test:
 	@echo Running all ${PROTOCOL} tests on ${NETWORK}
-	@forge test -vv | tee trace.ansi
+	@forge test -vvv | tee trace.ansi
 
 gas-report:
 	@echo Creating gas report for ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}

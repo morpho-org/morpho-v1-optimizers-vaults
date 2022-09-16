@@ -197,7 +197,7 @@ contract TestSupplyVault is TestSetupVaults {
             "unexpected total rewards amount"
         );
         assertLt(rewardsAmount1 + rewardsAmount2, expectedTotalRewardsAmount);
-        assertApproxEqAbs(rewardsAmount1, 2 * rewardsAmount2, 1e9, "unexpected rewards amount"); // not exact because of compounded interests
+        assertApproxEqAbs(rewardsAmount1, 2 * rewardsAmount2, 5e9, "unexpected rewards amount"); // not exact because of compounded interests
     }
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration1() public {

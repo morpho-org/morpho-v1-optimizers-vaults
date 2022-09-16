@@ -6,6 +6,10 @@ import "../setup/TestSetupVaultsLive.sol";
 contract TestSupplyVaultLive is TestSetupVaultsLive {
     using WadRayMath for uint256;
 
+    function testLog() public view {
+        console2.log(string(abi.encodePacked("Test at block ", Strings.toString(block.number))));
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10_000 ether;
 
