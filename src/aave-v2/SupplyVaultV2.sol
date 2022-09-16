@@ -40,7 +40,7 @@ contract SupplyVaultV2 is ISupplyVault, SupplyVaultBase, OwnableUpgradeable {
         _transferOwnership(_msgSender());
     }
 
-    function transfer(
+    function transferTokens(
         address _asset,
         address _to,
         uint256 _amount
