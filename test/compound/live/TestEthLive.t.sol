@@ -33,7 +33,7 @@ contract TestEthLive is TestSetupVaultsLive {
         );
     }
 
-    function testShouldWithdrawethOnVault() public {
+    function testShouldWithdrawEthOnVault() public {
         uint256 amount = 1 ether;
 
         uint256 poolSupplyIndex = ICToken(cEth).exchangeRateCurrent();
