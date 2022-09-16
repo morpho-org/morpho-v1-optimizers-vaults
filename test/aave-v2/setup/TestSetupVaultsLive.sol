@@ -36,7 +36,13 @@ contract TestSetupVaultsLive is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
+    uint256 forkId;
+
     function onSetUp() public override {
+        // Fork from latest block
+        string memory endpoint = vm.envString("FOUNDRY_ETH_RPC_URL");
+        forkId = vm.createFork(endpoint);
+        vm.selectFork(forkId);
         initVaultContracts();
         initVaultUsers();
     }
