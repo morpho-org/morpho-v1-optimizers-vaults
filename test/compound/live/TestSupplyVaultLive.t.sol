@@ -6,6 +6,10 @@ import "../setup/TestSetupVaultsLive.sol";
 contract TestSupplyVaultLive is TestSetupVaultsLive {
     using CompoundMath for uint256;
 
+    function testLog() public view {
+        console2.log(string(abi.encodePacked("Test at block ", Strings.toString(block.number))));
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10_000 ether;
         (uint256 balanceInP2PBefore, uint256 balanceOnPoolBefore) = morpho.supplyBalanceInOf(
@@ -244,7 +248,7 @@ contract TestSupplyVaultLive is TestSetupVaultsLive {
             "unexpected total rewards amount"
         );
         assertLt(rewardsAmount1 + rewardsAmount2, expectedTotalRewardsAmount);
-        assertApproxEqAbs(rewardsAmount1, 2 * rewardsAmount2, 1e9, "unexpected rewards amount"); // not exact because of compounded interests
+        assertApproxEqAbs(rewardsAmount1, 2 * rewardsAmount2, 5e9, "unexpected rewards amount"); // not exact because of compounded interests
     }
 
     function testShouldClaimSameRewardsWhenDepositedForSameAmountAndDuration1() public {

@@ -5,6 +5,7 @@ import "@tests/aave-v2/setup/TestSetup.sol";
 
 import {SupplyVaultBase} from "@vaults/aave-v2/SupplyVaultBase.sol";
 import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../helpers/VaultUser.sol";
 

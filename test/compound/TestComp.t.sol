@@ -60,30 +60,32 @@ contract TestComp is TestSetupVaults {
             address(compSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest();
+        if (comptroller.compSupplySpeeds(cComp) > 0) {
+            (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest();
 
-        (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
-            cComp,
-            address(compSupplyHarvestVault)
-        );
+            (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
+                cComp,
+                address(compSupplyHarvestVault)
+            );
 
-        uint256 harvestingFee = compSupplyHarvestVault.harvestingFee();
-        uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
-            (compSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
+            uint256 harvestingFee = compSupplyHarvestVault.harvestingFee();
+            uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
+                (compSupplyHarvestVault.MAX_BASIS_POINTS() - harvestingFee);
 
-        assertGt(rewardsFee, 0);
-        assertGt(rewardsAmount, 0);
-        assertEq(
-            ERC20(comp).balanceOf(address(compSupplyHarvestVault)),
-            0,
-            "non zero comp balance on vault"
-        );
-        assertEq(
-            balanceOnPoolAfter,
-            balanceOnPoolBefore + rewardsAmount.div(ICToken(cComp).exchangeRateCurrent()),
-            "unexpected balance on pool"
-        );
-        assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee");
-        assertEq(ERC20(comp).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+            assertGt(rewardsFee, 0);
+            assertGt(rewardsAmount, 0);
+            assertEq(
+                ERC20(comp).balanceOf(address(compSupplyHarvestVault)),
+                0,
+                "non zero comp balance on vault"
+            );
+            assertEq(
+                balanceOnPoolAfter,
+                balanceOnPoolBefore + rewardsAmount.div(ICToken(cComp).exchangeRateCurrent()),
+                "unexpected balance on pool"
+            );
+            assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee");
+            assertEq(ERC20(comp).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+        }
     }
 }
