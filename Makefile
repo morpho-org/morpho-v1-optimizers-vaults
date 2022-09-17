@@ -42,34 +42,34 @@ install:
 	@foundryup
 	@git submodule update --init --recursive
 
+build:
+	@forge build --sizes --force
+
 test-deploy:
-	@echo Building transactions to deploy vaults for ${PROTOCOL} on ${NETWORK}
+	@echo Building transactions to deploy vaults for Morpho-${PROTOCOL} on \"${NETWORK}\"
 	@forge script scripts/${PROTOCOL}/${NETWORK}/Deploy.s.sol:Deploy -vvv
 
 deploy:
-	@echo Deploying vaults for ${PROTOCOL} on ${NETWORK}
+	@echo Deploying vaults for Morpho-${PROTOCOL} on \"${NETWORK}\"
 	@forge script scripts/${PROTOCOL}/${NETWORK}/Deploy.s.sol:Deploy -vv --broadcast --private-key ${DEPLOYER_PRIVATE_KEY} --with-gas-price 40000000000
 
 test:
-	@echo Running all ${PROTOCOL} tests on ${NETWORK}
+	@echo Running all Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test -vv | tee trace.ansi
 
 gas-report:
-	@echo Creating gas report for ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}
+	@echo Creating gas report for Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test --gas-report
 
 contract-% c-%:
-	@echo Running tests for contract $* of ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}
+	@echo Running tests for contract $* of Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test -vvv --match-contract $* | tee trace.ansi
 
 single-% s-%:
-	@echo Running single test $* of ${PROTOCOL} on ${NETWORK} at ${FOUNDRY_FORK_BLOCK_NUMBER}
+	@echo Running single test $* of Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test -vvv --match-test $* | tee trace.ansi
 
 config:
 	@forge config
-
-sizes:
-	@forge build --sizes --force
 
 .PHONY: test config common foundry
