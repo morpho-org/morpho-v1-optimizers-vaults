@@ -14,7 +14,7 @@ contract VaultUser is User {
         returns (uint256)
     {
         ERC20(tokenizedVault.asset()).safeApprove(address(tokenizedVault), _amount);
-        return tokenizedVault.deposit(_amount, address(this));
+        return tokenizedVault.deposit(_amount);
     }
 
     function mintVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _shares)
@@ -25,7 +25,7 @@ contract VaultUser is User {
             address(tokenizedVault),
             tokenizedVault.previewMint(_shares)
         );
-        return tokenizedVault.mint(_shares, address(this));
+        return tokenizedVault.mint(_shares);
     }
 
     function withdrawVault(
@@ -40,7 +40,7 @@ contract VaultUser is User {
         external
         returns (uint256)
     {
-        return withdrawVault(tokenizedVault, _amount, address(this));
+        return tokenizedVault.withdraw(_amount);
     }
 
     function redeemVault(
@@ -55,6 +55,6 @@ contract VaultUser is User {
         external
         returns (uint256)
     {
-        return redeemVault(tokenizedVault, _shares, address(this));
+        return tokenizedVault.redeem(_shares);
     }
 }

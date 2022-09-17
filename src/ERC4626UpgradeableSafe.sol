@@ -45,7 +45,7 @@ abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
     /// @param shares The amount of shares to mint. The caller must have approved this contract to spend the corresponding amount of underlying asset.
     /// @return The amount of assets deposited.
     function mint(uint256 shares) external returns (uint256) {
-        return deposit(shares, msg.sender);
+        return mint(shares, msg.sender);
     }
 
     /// @notice Withdraws a given amount of underlying asset from the vault.
