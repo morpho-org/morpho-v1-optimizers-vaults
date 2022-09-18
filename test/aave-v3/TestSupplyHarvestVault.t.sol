@@ -314,6 +314,32 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(address(daiSupplyHarvestVault.swapper()), address(1));
     }
 
+    function testNotOwnerShouldNotTransferTokens(
+        address _caller,
+        address _receiver,
+        uint256 _amount
+    ) public {
+        vm.assume(_caller != daiSupplyVault.owner());
+        vm.prank(_caller);
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyHarvestVault.transferTokens($token, _receiver, _amount);
+    }
+
+    function testOwnerShouldTransferTokens(
+        address _to,
+        uint256 _deal,
+        uint256 _toTransfer
+    ) public {
+        _toTransfer = bound(_toTransfer, 0, _deal);
+        deal($token, address(daiSupplyHarvestVault), _deal);
+
+        vm.prank(daiSupplyHarvestVault.owner());
+        daiSupplyHarvestVault.transferTokens($token, _to, _toTransfer);
+
+        assertEq(token.balanceOf(address(daiSupplyHarvestVault)), _deal - _toTransfer);
+        assertEq(token.balanceOf(_to), _toTransfer);
+    }
+
     /// SETTERS ///
 
     function testShouldNotSetHarvestingFeeTooLarge() public {

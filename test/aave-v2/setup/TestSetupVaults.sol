@@ -6,6 +6,7 @@ import "@tests/aave-v2/setup/TestSetup.sol";
 import {SupplyVaultBase} from "@vaults/aave-v2/SupplyVaultBase.sol";
 import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
 
+import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
 
 contract TestSetupVaults is TestSetup {
@@ -28,9 +29,15 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
+    FakeToken public token;
+    address public $token;
+
     function onSetUp() public override {
         initVaultContracts();
         initVaultUsers();
+
+        token = new FakeToken("Token", "TKN");
+        $token = address(token);
     }
 
     function initVaultContracts() internal {
