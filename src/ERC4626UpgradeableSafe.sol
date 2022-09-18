@@ -12,7 +12,9 @@ abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
 
     /// @notice Constructs the contract.
     /// @dev The contract is automatically marked as initialized when deployed so that nobody can highjack the implementation contract.
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// UPGRADE ///
 
