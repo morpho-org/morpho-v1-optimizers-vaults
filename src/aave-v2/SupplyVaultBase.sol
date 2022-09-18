@@ -40,7 +40,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         pool = morpho.pool();
     }
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @dev Initializes the vault.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.

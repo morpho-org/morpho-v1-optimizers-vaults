@@ -32,7 +32,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     IPool public pool;
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @dev Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.

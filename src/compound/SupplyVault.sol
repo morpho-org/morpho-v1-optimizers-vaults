@@ -41,7 +41,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     uint256 public rewardsIndex; // The vault's rewards index.
     mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @notice Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.

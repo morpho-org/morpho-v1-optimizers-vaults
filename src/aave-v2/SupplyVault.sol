@@ -10,7 +10,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Aave V2.
 contract SupplyVault is ISupplyVault, SupplyVaultBase {
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.

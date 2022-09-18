@@ -56,7 +56,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgr
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     ISwapper public swapper; // Swapper contract to swap reward tokens for underlying asset.
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @notice Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.
