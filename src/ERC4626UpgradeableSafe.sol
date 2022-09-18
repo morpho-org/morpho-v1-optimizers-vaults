@@ -8,6 +8,13 @@ import {ERC4626Upgradeable, ERC20Upgradeable, IERC20MetadataUpgradeable} from "@
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626 Tokenized Vault abstract upgradeable implementation tweaking OZ's implementation to make it safer at initialization.
 abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
+    /// STORAGE ///
+
+    /// @dev This empty reserved space is put in place to allow future versions to add new
+    /// variables without shifting down storage in the inheritance chain.
+    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[50] private __gap;
+
     /// CONSTRUCTOR ///
 
     /// @notice Constructs the contract.
@@ -16,7 +23,7 @@ abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
         _disableInitializers();
     }
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     function __ERC4626UpgradeableSafe_init(
         IERC20MetadataUpgradeable _asset,
