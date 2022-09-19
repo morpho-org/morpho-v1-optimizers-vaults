@@ -108,7 +108,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// @return rewardsAmounts The amount of rewards claimed for each reward token (in underlying).
     /// @return totalSupplied The total amount of rewards swapped and supplied to Morpho (in underlying).
     /// @return totalRewardsFee The total amount of fees swapped and taken by the claimer (in underlying).
-    function harvest()
+    function harvest(address _receiver)
         external
         returns (
             address[] memory rewardTokens,
@@ -168,7 +168,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
             }
         }
 
-        IERC20(assetMem).safeTransfer(msg.sender, totalRewardsFee);
+        IERC20(assetMem).safeTransfer(_receiver, totalRewardsFee);
         morpho.supply(poolTokenMem, address(this), totalSupplied);
     }
 }

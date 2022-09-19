@@ -15,7 +15,7 @@ interface ISupplyHarvestVault is IERC4626Upgradeable {
 
     function setSwapper(address _swapper) external;
 
-    function harvest()
+    function harvest(address _receiver)
         external
         returns (
             address[] memory rewardTokens,

@@ -60,7 +60,7 @@ contract TestComp is TestSetupVaults {
             address(compSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest();
+        (uint256 rewardsAmount, uint256 rewardsFee) = compSupplyHarvestVault.harvest(address(2));
 
         (, uint256 balanceOnPoolAfter) = morpho.supplyBalanceInOf(
             cComp,
@@ -84,6 +84,6 @@ contract TestComp is TestSetupVaults {
             "unexpected balance on pool"
         );
         assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee");
-        assertEq(ERC20(comp).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+        assertEq(ERC20(comp).balanceOf(address(2)), rewardsFee, "unexpected fee collected");
     }
 }

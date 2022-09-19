@@ -68,7 +68,7 @@ contract TestWrappedNativeToken is TestSetupVaults {
             uint256[] memory rewardsAmounts,
             uint256 totalSupplied,
             uint256 totalRewardsFee
-        ) = wrappedNativeTokenSupplyHarvestVault.harvest();
+        ) = wrappedNativeTokenSupplyHarvestVault.harvest(address(this));
 
         assertEq(rewardTokens.length, 1, "unexpected reward tokens length");
         assertEq(rewardTokens[0], rewardToken, "unexpected reward token");
