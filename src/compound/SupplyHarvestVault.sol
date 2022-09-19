@@ -140,6 +140,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// EXTERNAL ///
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
+    /// @param _receiver The address of the receiver of the harvest fee.
     /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
     /// @return rewardsFee The amount of fees taken by the claimer (in underlying).
     function harvest(address _receiver)
