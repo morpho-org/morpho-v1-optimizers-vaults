@@ -36,11 +36,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
 
-    /// @dev This empty reserved space is put in place to allow future versions to add new
-    /// variables without shifting down storage in the inheritance chain.
-    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[48] private __gap;
-
     /// EVENTS ///
 
     /// @notice Emitted when rewards of an asset are accrued on behalf of a user.

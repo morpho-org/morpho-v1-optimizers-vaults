@@ -56,11 +56,6 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgr
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     ISwapper public swapper; // Swapper contract to swap reward tokens for underlying asset.
 
-    /// @dev This empty reserved space is put in place to allow future versions to add new
-    /// variables without shifting down storage in the inheritance chain.
-    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[48] private __gap;
-
     /// INITIALIZER ///
 
     /// @notice Initializes the vault.
