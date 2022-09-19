@@ -71,7 +71,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase, OwnableUpgr
     address public wEth; // The address of WETH token.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @notice Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.

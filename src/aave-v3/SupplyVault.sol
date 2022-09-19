@@ -56,7 +56,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @param claimedRewards The amount of rewards claimed.
     event Claimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @dev Initializes the vault.
     /// @param _morpho The address of the main Morpho contract.

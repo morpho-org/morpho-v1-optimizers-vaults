@@ -31,6 +31,13 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
     ILendingPool public immutable pool;
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
+    /// @dev This empty reserved space is put in place to allow future versions to add new
+    /// variables without shifting down storage in the inheritance chain.
+    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[47] private __gap;
+
+    /// CONSTRUCTOR ///
+
     /// @dev Initializes network-wide immutables
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
@@ -40,7 +47,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         pool = morpho.pool();
     }
 
-    /// UPGRADE ///
+    /// INITIALIZER ///
 
     /// @dev Initializes the vault.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
