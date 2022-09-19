@@ -316,9 +316,9 @@ contract TestSupplyVault is TestSetupVaults {
     }
 
     function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
-        vm.prank(address(0));
+        vm.prank(address(1));
         vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyVault.transferTokens($token, address(1), _amount);
+        daiSupplyVault.transferTokens($token, address(2), _amount);
     }
 
     function testOwnerShouldTransferTokens(

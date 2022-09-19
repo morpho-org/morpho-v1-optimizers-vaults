@@ -336,9 +336,9 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     }
 
     function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
-        vm.prank(address(0));
+        vm.prank(address(1));
         vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyHarvestVault.transferTokens($token, address(1), _amount);
+        daiSupplyHarvestVault.transferTokens($token, address(2), _amount);
     }
 
     function testOwnerShouldTransferTokens(
