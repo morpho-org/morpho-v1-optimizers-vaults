@@ -26,60 +26,64 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// STORAGE ///
 
-    IMorpho public morpho; // The main Morpho contract.
+    IMorpho public immutable morpho; // The main Morpho contract.
+    address public immutable wEth; // The address of WETH token.
+    IERC20 public immutable comp; // The COMP token.
+
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    IERC20 public comp; // The COMP token.
 
     /// @dev This empty reserved space is put in place to allow future versions to add new
     /// variables without shifting down storage in the inheritance chain.
     /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[47] private __gap;
+    uint256[49] private __gap;
+
+    /// CONSTRUCTOR ///
+
+    /// @dev Initializes network-wide immutables
+    /// @param _morpho The address of the main Morpho contract.
+    constructor(address _morpho) {
+        if (_morpho == address(0)) revert ZeroAddress();
+
+        morpho = IMorpho(_morpho);
+        wEth = morpho.wEth();
+        comp = IERC20(morpho.comptroller().getCompAddress());
+    }
 
     /// INITIALIZER ///
 
     /// @dev Initializes the vault.
-    /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function __SupplyVaultBase_init(
-        address _morpho,
         address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
-    ) internal onlyInitializing returns (bool isEth, address wEth) {
+    ) internal onlyInitializing returns (bool isEth) {
         IERC20 underlyingToken;
-        (isEth, wEth, underlyingToken) = __SupplyVaultBase_init_unchained(_morpho, _poolToken);
+        (isEth, underlyingToken) = __SupplyVaultBase_init_unchained(_poolToken);
 
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
     }
 
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
-    /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    function __SupplyVaultBase_init_unchained(address _morpho, address _poolToken)
+    function __SupplyVaultBase_init_unchained(address _poolToken)
         internal
         onlyInitializing
-        returns (
-            bool isEth,
-            address wEth,
-            IERC20 underlyingToken
-        )
+        returns (bool isEth, IERC20 underlyingToken)
     {
-        if (_morpho == address(0) || _poolToken == address(0)) revert ZeroAddress();
+        if (_poolToken == address(0)) revert ZeroAddress();
 
-        morpho = IMorpho(_morpho);
         poolToken = _poolToken;
-        comp = IERC20(morpho.comptroller().getCompAddress());
 
         isEth = _poolToken == morpho.cEth();
-        wEth = morpho.wEth();
 
         underlyingToken = IERC20(isEth ? wEth : ICToken(_poolToken).underlying());
-        underlyingToken.safeApprove(_morpho, type(uint256).max);
+        underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
     /// EXTERNAL ///

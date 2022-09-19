@@ -138,7 +138,7 @@ contract Deploy is Script, Config {
         );
         SupplyVault supplyVault = SupplyVault(supplyVault_);
 
-        supplyVault.initialize(MORPHO, _poolToken, _name, _symbol, _initialDeposit);
+        supplyVault.initialize(_poolToken, _name, _symbol, _initialDeposit);
         console2.log(
             string(
                 abi.encodePacked(
@@ -179,7 +179,6 @@ contract Deploy is Script, Config {
         IERC20(_underlying).safeApprove(supplyHarvestVault_, _initialDeposit);
         SupplyHarvestVault supplyHarvestVault = SupplyHarvestVault(supplyHarvestVault_);
         SupplyHarvestVault(supplyHarvestVault_).initialize(
-            MORPHO,
             _poolToken,
             _name,
             _symbol,

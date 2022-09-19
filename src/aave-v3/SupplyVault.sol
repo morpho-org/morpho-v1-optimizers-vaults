@@ -20,22 +20,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     using SafeCastLib for uint256;
     using SafeERC20 for IERC20;
 
-    /// STRUCTS ///
-
-    struct UserRewardsData {
-        uint128 index; // User rewards index for a given reward token (in wad).
-        uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
-    }
-
-    /// STORAGE ///
-
-    uint256 public constant SCALE = 1e36;
-
-    IRewardsManager public rewardsManager; // Morpho's rewards manager.
-
-    mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
-    mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
-
     /// EVENTS ///
 
     /// @notice Emitted when rewards of an asset are accrued on behalf of a user.
@@ -56,24 +40,44 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @param claimedRewards The amount of rewards claimed.
     event Claimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
 
+    /// STRUCTS ///
+
+    struct UserRewardsData {
+        uint128 index; // User rewards index for a given reward token (in wad).
+        uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
+    }
+
+    /// STORAGE ///
+
+    uint256 public constant SCALE = 1e36;
+
+    IRewardsManager public rewardsManager; // Morpho's rewards manager.
+
+    mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
+    mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
+
+    /// CONSTRUCTOR ///
+
+    /// @dev Initializes network-wide immutables.
+    /// @param _morpho The address of the main Morpho contract.
+    constructor(address _morpho) SupplyVaultBase(_morpho) {}
+
     /// INITIALIZER ///
 
     /// @dev Initializes the vault.
-    /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function initialize(
-        address _morpho,
         address _poolToken,
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
     ) external initializer {
-        __SupplyVaultBase_init(_morpho, _poolToken, _name, _symbol, _initialDeposit);
+        __SupplyVaultBase_init(_poolToken, _name, _symbol, _initialDeposit);
 
-        rewardsManager = IMorpho(_morpho).rewardsManager();
+        rewardsManager = morpho.rewardsManager();
     }
 
     /// EXTERNAL ///

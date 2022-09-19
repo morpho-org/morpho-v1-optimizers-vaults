@@ -7,7 +7,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     using CompoundMath for uint256;
 
     function testInitializationShouldRevertWithWrongInputs() public {
-        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault();
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho));
 
         SupplyHarvestVault vault = SupplyHarvestVault(
             address(
@@ -20,18 +20,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
-        vault.initialize(
-            address(0),
-            cDai,
-            "test",
-            "test",
-            0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 100)
-        );
+        new SupplyHarvestVault(address(0));
 
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         vault.initialize(
-            address(morpho),
             address(0),
             "test",
             "test",
@@ -49,7 +41,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
         vault.initialize(
-            address(morpho),
             cDai,
             "test",
             "test",
@@ -64,7 +55,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
         vault.initialize(
-            address(morpho),
             cDai,
             "test",
             "test",
@@ -79,7 +69,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
             )
         );
         vault.initialize(
-            address(morpho),
             cDai,
             "test",
             "test",

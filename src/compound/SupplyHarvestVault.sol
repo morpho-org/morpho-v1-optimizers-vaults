@@ -67,20 +67,23 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
 
     bool public isEth; // Whether the underlying asset is WETH.
-    address public wEth; // The address of WETH token.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.
+
+    /// CONSTRUCTOR ///
+
+    /// @dev Initializes network-wide immutables.
+    /// @param _morpho The address of the main Morpho contract.
+    constructor(address _morpho) SupplyVaultBase(_morpho) {}
 
     /// INITIALIZER ///
 
     /// @notice Initializes the vault.
-    /// @param _morpho The address of the main Morpho contract.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
     /// @param _name The name of the ERC20 token associated to this tokenized vault.
     /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     /// @param _harvestConfig The swap config to set.
     function initialize(
-        address _morpho,
         address _poolToken,
         string calldata _name,
         string calldata _symbol,
@@ -95,13 +98,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
             revert ExceedsMaxBasisPoints(_harvestConfig.harvestingFee);
 
         __Ownable_init();
-        (isEth, wEth) = __SupplyVaultBase_init(
-            _morpho,
-            _poolToken,
-            _name,
-            _symbol,
-            _initialDeposit
-        );
+        isEth = __SupplyVaultBase_init(_poolToken, _name, _symbol, _initialDeposit);
 
         harvestConfig = _harvestConfig;
 
