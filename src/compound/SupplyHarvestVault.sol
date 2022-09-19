@@ -142,7 +142,10 @@ contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
     /// @return rewardsAmount The amount of rewards claimed, swapped then supplied through Morpho (in underlying).
     /// @return rewardsFee The amount of fees taken by the claimer (in underlying).
-    function harvest() external returns (uint256 rewardsAmount, uint256 rewardsFee) {
+    function harvest(address _receiver)
+        external
+        returns (uint256 rewardsAmount, uint256 rewardsFee)
+    {
         address assetMem = asset();
         address poolTokenMem = poolToken;
         address compMem = address(comp);
@@ -181,7 +184,7 @@ contract SupplyHarvestVault is SupplyVaultBase, OwnableUpgradeable {
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
-        if (rewardsFee > 0) ERC20(assetMem).safeTransfer(msg.sender, rewardsFee);
+        if (rewardsFee > 0) ERC20(assetMem).safeTransfer(_receiver, rewardsFee);
 
         emit Harvested(msg.sender, rewardsAmount, rewardsFee);
     }
