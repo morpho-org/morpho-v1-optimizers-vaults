@@ -200,7 +200,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
             address(daiSupplyHarvestVault)
         );
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
+        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest(address(this));
 
         uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
         uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
@@ -240,7 +240,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
         );
         uint256 balanceBefore = vaultSupplier1.balanceOf(dai);
 
-        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest();
+        (uint256 rewardsAmount, uint256 rewardsFee) = daiSupplyHarvestVault.harvest(address(4));
 
         uint256 harvestingFee = daiSupplyHarvestVault.harvestingFee();
         uint256 expectedRewardsFee = (rewardsAmount * harvestingFee) /
@@ -260,7 +260,7 @@ contract TestSupplyHarvestVaultLive is TestSetupVaultsLive {
             "unexpected dai balance"
         );
         assertApproxEqAbs(rewardsFee, expectedRewardsFee, 1, "unexpected rewards fee amount");
-        assertEq(ERC20(dai).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+        assertEq(ERC20(dai).balanceOf(address(4)), rewardsFee, "unexpected fee collected");
     }
 
     /// GOVERNANCE ///

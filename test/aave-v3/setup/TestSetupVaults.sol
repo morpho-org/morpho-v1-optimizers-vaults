@@ -168,10 +168,6 @@ contract TestSetupVaults is TestSetup {
             );
         }
 
-        supplier1 = suppliers[0];
-        supplier2 = suppliers[1];
-        supplier3 = suppliers[2];
-
         vaultSupplier1 = VaultUser(payable(suppliers[0]));
         vaultSupplier2 = VaultUser(payable(suppliers[1]));
         vaultSupplier3 = VaultUser(payable(suppliers[2]));

@@ -23,12 +23,14 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// EVENTS ///
 
     /// @notice Emitted when an harvest is done.
-    /// @param harvester The address of the harvester receiving the fee.
+    /// @param harvester The address triggering the harvest.
+    /// @param receiver The address receiving the harvest fee.
     /// @param rewardToken The address of the reward token swapped.
     /// @param rewardsAmount The amount of rewards in underlying asset which is supplied to Morpho.
     /// @param rewardsFee The amount of underlying asset sent to the harvester.
     event Harvested(
         address indexed harvester,
+        address indexed receiver,
         address indexed rewardToken,
         uint256 rewardsAmount,
         uint256 rewardsFee
@@ -108,11 +110,12 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// EXTERNAL ///
 
     /// @notice Harvests the vault: claims rewards from the underlying pool, swaps them for the underlying asset and supply them through Morpho.
+    /// @param _receiver The address of the receiver of the harvest fee.
     /// @return rewardTokens The addresses of reward tokens claimed.
     /// @return rewardsAmounts The amount of rewards claimed for each reward token (in underlying).
     /// @return totalSupplied The total amount of rewards swapped and supplied to Morpho (in underlying).
     /// @return totalRewardsFee The total amount of fees swapped and taken by the claimer (in underlying).
-    function harvest()
+    function harvest(address _receiver)
         external
         returns (
             address[] memory rewardTokens,
@@ -164,7 +167,13 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
                 rewardsAmounts[i] = rewardsAmount;
                 totalSupplied += rewardsAmount;
 
-                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardFee);
+                emit Harvested(
+                    msg.sender,
+                    _receiver,
+                    address(rewardToken),
+                    rewardsAmount,
+                    rewardFee
+                );
             }
 
             unchecked {
@@ -172,7 +181,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
             }
         }
 
-        IERC20(assetMem).safeTransfer(msg.sender, totalRewardsFee);
+        IERC20(assetMem).safeTransfer(_receiver, totalRewardsFee);
         morpho.supply(poolTokenMem, address(this), totalSupplied);
     }
 }

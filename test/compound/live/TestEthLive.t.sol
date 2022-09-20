@@ -76,7 +76,7 @@ contract TestEthLive is TestSetupVaultsLive {
         );
         uint256 poolSupplyIndex = ICToken(cEth).exchangeRateCurrent();
         uint256 p2pSupplyIndex = morpho.p2pSupplyIndex(cEth);
-        (uint256 rewardsAmount, uint256 rewardsFee) = wethSupplyHarvestVault.harvest();
+        (uint256 rewardsAmount, uint256 rewardsFee) = wethSupplyHarvestVault.harvest(address(3));
         uint256 expectedRewardsFee = (rewardsAmount + rewardsFee).percentMul(
             wethSupplyHarvestVault.harvestingFee()
         );
@@ -101,6 +101,6 @@ contract TestEthLive is TestSetupVaultsLive {
             "comp amount is not zero"
         );
         assertEq(rewardsFee, expectedRewardsFee, "unexpected rewards fee amount");
-        assertEq(ERC20(wEth).balanceOf(address(this)), rewardsFee, "unexpected fee collected");
+        assertEq(ERC20(wEth).balanceOf(address(3)), rewardsFee, "unexpected fee collected");
     }
 }

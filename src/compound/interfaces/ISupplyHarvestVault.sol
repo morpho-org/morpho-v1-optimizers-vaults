@@ -35,5 +35,7 @@ interface ISupplyHarvestVault is IERC4626Upgradeable {
 
     function setHarvestingFee(uint16 _newHarvestingFee) external;
 
-    function harvest() external returns (uint256 rewardsAmount, uint256 rewardsFee);
+    function harvest(address _receiver)
+        external
+        returns (uint256 rewardsAmount, uint256 rewardsFee);
 }
