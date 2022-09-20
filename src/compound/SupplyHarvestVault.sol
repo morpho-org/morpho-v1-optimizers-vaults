@@ -20,10 +20,16 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// EVENTS ///
 
     /// @notice Emitted when an harvest is done.
-    /// @param harvester The address of the harvester receiving the fee.
+    /// @param harvester The address triggering the harvest.
+    /// @param receiver The address receiving the harvest fee.
     /// @param rewardsAmount The amount of rewards in underlying asset which is supplied to Morpho.
     /// @param rewardsFee The amount of underlying asset sent to the harvester.
-    event Harvested(address indexed harvester, uint256 rewardsAmount, uint256 rewardsFee);
+    event Harvested(
+        address indexed harvester,
+        address indexed receiver,
+        uint256 rewardsAmount,
+        uint256 rewardsFee
+    );
 
     /// @notice Emitted when the fee for swapping comp for WETH is set.
     /// @param newCompSwapFee The new comp swap fee (in UniswapV3 fee unit).
@@ -187,7 +193,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
         if (rewardsFee > 0) IERC20(assetMem).safeTransfer(_receiver, rewardsFee);
 
-        emit Harvested(msg.sender, rewardsAmount, rewardsFee);
+        emit Harvested(msg.sender, _receiver, rewardsAmount, rewardsFee);
     }
 
     /// GETTERS ///

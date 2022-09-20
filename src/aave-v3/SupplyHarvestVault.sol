@@ -23,12 +23,14 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// EVENTS ///
 
     /// @notice Emitted when an harvest is done.
-    /// @param harvester The address of the harvester receiving the fee.
+    /// @param harvester The address triggering the harvest.
+    /// @param receiver The address receiving the harvest fee.
     /// @param rewardToken The address of the reward token swapped.
     /// @param rewardsAmount The amount of rewards in underlying asset which is supplied to Morpho.
     /// @param rewardsFee The amount of underlying asset sent to the harvester.
     event Harvested(
         address indexed harvester,
+        address indexed receiver,
         address indexed rewardToken,
         uint256 rewardsAmount,
         uint256 rewardsFee
@@ -161,7 +163,13 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
                 rewardsAmounts[i] = rewardsAmount;
                 totalSupplied += rewardsAmount;
 
-                emit Harvested(msg.sender, address(rewardToken), rewardsAmount, rewardFee);
+                emit Harvested(
+                    msg.sender,
+                    _receiver,
+                    address(rewardToken),
+                    rewardsAmount,
+                    rewardFee
+                );
             }
 
             unchecked {
