@@ -55,11 +55,11 @@ deploy:
 
 test:
 	@echo Running all Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
-	@forge test -vv | tee trace.ansi
+	@forge test --no-match-path **/live/** -vv | tee trace.ansi
 
 gas-report:
 	@echo Creating gas report for Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
-	@forge test --gas-report
+	@forge test --no-match-path **/live/** --gas-report
 
 contract-% c-%:
 	@echo Running tests for contract $* of Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
