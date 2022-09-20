@@ -449,4 +449,25 @@ contract TestSupplyVault is TestSetupVaults {
             "unexpected rewards amount 2-3"
         ); // not exact because of rewardTokenounded interests
     }
+
+    function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
+        vm.prank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyVault.transferTokens($token, address(2), _amount);
+    }
+
+    function testOwnerShouldTransferTokens(
+        address _to,
+        uint256 _deal,
+        uint256 _toTransfer
+    ) public {
+        _toTransfer = bound(_toTransfer, 0, _deal);
+        deal($token, address(daiSupplyVault), _deal);
+
+        vm.prank(daiSupplyVault.owner());
+        daiSupplyVault.transferTokens($token, _to, _toTransfer);
+
+        assertEq(token.balanceOf(address(daiSupplyVault)), _deal - _toTransfer);
+        assertEq(token.balanceOf(_to), _toTransfer);
+    }
 }

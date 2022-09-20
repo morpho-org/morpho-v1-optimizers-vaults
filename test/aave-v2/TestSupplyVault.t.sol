@@ -140,4 +140,25 @@ contract TestSupplyVault is TestSetupVaults {
         vm.expectRevert("ERC4626: redeem more than max");
         vaultSupplier1.redeemVault(daiSupplyVault, shares + 1);
     }
+
+    function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
+        vm.prank(address(1));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyVault.transferTokens($token, address(2), _amount);
+    }
+
+    function testOwnerShouldTransferTokens(
+        address _to,
+        uint256 _deal,
+        uint256 _toTransfer
+    ) public {
+        _toTransfer = bound(_toTransfer, 0, _deal);
+        deal($token, address(daiSupplyVault), _deal);
+
+        vm.prank(daiSupplyVault.owner());
+        daiSupplyVault.transferTokens($token, _to, _toTransfer);
+
+        assertEq(token.balanceOf(address(daiSupplyVault)), _deal - _toTransfer);
+        assertEq(token.balanceOf(_to), _toTransfer);
+    }
 }
