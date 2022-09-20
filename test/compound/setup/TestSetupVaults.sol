@@ -9,6 +9,7 @@ import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 
 import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
+import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
 
 contract TestSetupVaults is TestSetup {
@@ -41,10 +42,16 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
+    FakeToken public token;
+    address public $token;
+
     function onSetUp() public override {
         initVaultContracts();
         setVaultContractsLabels();
         initVaultUsers();
+
+        token = new FakeToken("Token", "TKN");
+        $token = address(token);
     }
 
     function initVaultContracts() internal {

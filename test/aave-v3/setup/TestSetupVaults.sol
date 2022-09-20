@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "@tests/aave-v3/setup/TestSetup.sol";
+import {ISwapper} from "@vaults/interfaces/ISwapper.sol";
 
+import "@tests/aave-v3/setup/TestSetup.sol";
 import {SupplyVaultBase} from "@vaults/aave-v3/SupplyVaultBase.sol";
 import {SupplyHarvestVault} from "@vaults/aave-v3/SupplyHarvestVault.sol";
 import {SupplyVault} from "@vaults/aave-v3/SupplyVault.sol";
-import "@vaults/UniswapV2Swapper.sol";
-import "@vaults/UniswapV3Swapper.sol";
+import {UniswapV2Swapper} from "@vaults/UniswapV2Swapper.sol";
+import {UniswapV3Swapper} from "@vaults/UniswapV3Swapper.sol";
 
+import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
 
 contract TestSetupVaults is TestSetup {
@@ -41,10 +43,16 @@ contract TestSetupVaults is TestSetup {
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
+    FakeToken public token;
+    address public $token;
+
     function onSetUp() public override {
         initVaultContracts();
         setVaultContractsLabels();
         initVaultUsers();
+
+        token = new FakeToken("Token", "TKN");
+        $token = address(token);
     }
 
     function initVaultContracts() internal {

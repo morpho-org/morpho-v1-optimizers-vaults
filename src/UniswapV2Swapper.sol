@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {ISwapper} from "./interfaces/ISwapper.sol";
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title UniswapV2Swapper.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice Swapper contract for Uniswap V2 DEXes.
 contract UniswapV2Swapper is ISwapper {
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for IERC20;
 
     /// ERRORS ///
 
@@ -56,7 +56,7 @@ contract UniswapV2Swapper is ISwapper {
             path[2] = _tokenOut;
         }
 
-        ERC20(_tokenIn).safeApprove(address(swapRouter), _amountIn);
+        IERC20(_tokenIn).safeApprove(address(swapRouter), _amountIn);
         uint256[] memory amountsOut = swapRouter.swapExactTokensForTokens(
             _amountIn,
             0,

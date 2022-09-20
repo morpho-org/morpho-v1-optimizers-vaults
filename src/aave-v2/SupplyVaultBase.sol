@@ -5,7 +5,8 @@ import {ILendingPool} from "@contracts/aave-v2/interfaces/aave/ILendingPool.sol"
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
 
-import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
 import {Types} from "@contracts/aave-v2/libraries/Types.sol";
@@ -16,9 +17,9 @@ import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSaf
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V2.
-abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
-    using SafeTransferLib for ERC20;
+abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable {
     using WadRayMath for uint256;
+    using SafeERC20 for IERC20;
 
     /// ERRORS ///
 
@@ -60,7 +61,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
+        IERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
 
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
@@ -71,14 +72,24 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe {
     function __SupplyVaultBase_init_unchained(address _poolToken)
         internal
         onlyInitializing
-        returns (ERC20 underlyingToken)
+        returns (IERC20 underlyingToken)
     {
         if (_poolToken == address(0)) revert ZeroAddress();
 
         poolToken = _poolToken;
 
-        underlyingToken = ERC20(IAToken(_poolToken).UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = IERC20(IAToken(_poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
+    }
+
+    /// EXTERNAL ///
+
+    function transferTokens(
+        address _asset,
+        address _to,
+        uint256 _amount
+    ) external onlyOwner {
+        IERC20(_asset).safeTransfer(_to, _amount);
     }
 
     /// PUBLIC ///
