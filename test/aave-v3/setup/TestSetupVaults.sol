@@ -64,8 +64,8 @@ contract TestSetupVaults is TestSetup {
 
         createMarket(aWrappedNativeToken);
 
-        supplyVaultImplV1 = new SupplyVault();
-        supplyHarvestVaultImplV1 = new SupplyHarvestVault();
+        supplyVaultImplV1 = new SupplyVault(address(morpho));
+        supplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho));
 
         wrappedNativeTokenSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
             address(supplyHarvestVaultImplV1),
@@ -76,7 +76,6 @@ contract TestSetupVaults is TestSetup {
             address(wrappedNativeTokenSupplyHarvestVaultProxy)
         );
         wrappedNativeTokenSupplyHarvestVault.initialize(
-            address(morpho),
             aWrappedNativeToken,
             "MorphoAaveHarvestWNATIVE",
             "mahWNATIVE",
@@ -96,7 +95,6 @@ contract TestSetupVaults is TestSetup {
             )
         );
         daiSupplyHarvestVault.initialize(
-            address(morpho),
             aDai,
             "MorphoAaveHarvestDAI",
             "mahDAI",
@@ -117,7 +115,6 @@ contract TestSetupVaults is TestSetup {
         );
 
         usdcSupplyHarvestVault.initialize(
-            address(morpho),
             aUsdc,
             "MorphoAaveHarvestUSDC",
             "mahUSDC",
@@ -134,7 +131,6 @@ contract TestSetupVaults is TestSetup {
         );
         wrappedNativeTokenSupplyVault = SupplyVault(address(wrappedNativeTokenSupplyVaultProxy));
         wrappedNativeTokenSupplyVault.initialize(
-            address(morpho),
             address(aWrappedNativeToken),
             "MorphoAaveWNATIVE",
             "maWNATIVE",
@@ -147,7 +143,7 @@ contract TestSetupVaults is TestSetup {
                 new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
             )
         );
-        daiSupplyVault.initialize(address(morpho), address(aDai), "MorphoAaveDAI", "maDAI", 0);
+        daiSupplyVault.initialize(address(aDai), "MorphoAaveDAI", "maDAI", 0);
         maDai = ERC20(address(daiSupplyVault));
 
         usdcSupplyVault = SupplyVault(
@@ -155,7 +151,7 @@ contract TestSetupVaults is TestSetup {
                 new TransparentUpgradeableProxy(address(supplyVaultImplV1), address(proxyAdmin), "")
             )
         );
-        usdcSupplyVault.initialize(address(morpho), address(aUsdc), "MorphoAaveUSDC", "maUSDC", 0);
+        usdcSupplyVault.initialize(address(aUsdc), "MorphoAaveUSDC", "maUSDC", 0);
         maUsdc = ERC20(address(usdcSupplyVault));
     }
 

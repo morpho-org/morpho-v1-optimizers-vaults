@@ -14,8 +14,6 @@ interface ISupplyHarvestVault is IERC4626Upgradeable {
 
     function isEth() external view returns (bool);
 
-    function wEth() external view returns (address);
-
     function harvestConfig()
         external
         view

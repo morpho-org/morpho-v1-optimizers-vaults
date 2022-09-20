@@ -7,7 +7,7 @@ contract TestUpgradeable is TestSetupVaults {
     using WadRayMath for uint256;
 
     function testUpgradeSupplyHarvestVault() public {
-        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault();
+        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
 
         vm.record();
         proxyAdmin.upgrade(
@@ -28,7 +28,7 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyHarvestVault() public {
-        SupplyHarvestVault supplyHarvestVaultImplV2 = new SupplyHarvestVault();
+        SupplyHarvestVault supplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -44,7 +44,7 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyHarvestVault() public {
-        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault();
+        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -66,7 +66,6 @@ contract TestUpgradeable is TestSetupVaults {
     function testSupplyHarvestVaultImplementationsShouldBeInitialized() public {
         vm.expectRevert("Initializable: contract is already initialized");
         supplyHarvestVaultImplV1.initialize(
-            address(morpho),
             address(aWrappedNativeToken),
             "MorphoAaveWETH",
             "mahWETH",
@@ -77,7 +76,7 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testUpgradeSupplyVault() public {
-        SupplyVault wethSupplyVaultImplV2 = new SupplyVault();
+        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho));
 
         vm.record();
         proxyAdmin.upgrade(wrappedNativeTokenSupplyVaultProxy, address(wethSupplyVaultImplV2));
@@ -95,7 +94,7 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
-        SupplyVault supplyVaultImplV2 = new SupplyVault();
+        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho));
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -105,7 +104,7 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
-        SupplyVault wethSupplyVaultImplV2 = new SupplyVault();
+        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho));
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -126,12 +125,6 @@ contract TestUpgradeable is TestSetupVaults {
 
     function testSupplyVaultImplementationsShouldBeInitialized() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        supplyVaultImplV1.initialize(
-            address(morpho),
-            address(aWrappedNativeToken),
-            "MorphoAaveWETH",
-            "maWETH",
-            0
-        );
+        supplyVaultImplV1.initialize(address(aWrappedNativeToken), "MorphoAaveWETH", "maWETH", 0);
     }
 }
