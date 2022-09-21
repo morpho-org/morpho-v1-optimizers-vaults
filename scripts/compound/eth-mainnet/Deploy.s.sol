@@ -9,8 +9,9 @@ import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
-import {SupplyHarvestVault, OwnableUpgradeable} from "@vaults/compound/SupplyHarvestVault.sol";
+import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
 import {IAdmoDeployer} from "@vaults/interfaces/IAdmoDeployer.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "forge-std/console2.sol";
 
@@ -22,8 +23,8 @@ import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeE
 contract Deploy is Script, Config {
     using SafeERC20 for IERC20;
 
-    address constant supplyVaultImpl = 0xa43e60F739d3b5AfDDb317A1927fc5bDAc751a57;
-    address constant supplyHarvestVaultImpl = 0x301eF488D67d24B2CF4DdbC6771b6feD3Cc4A2a6;
+    address supplyVaultImpl;
+    address supplyHarvestVaultImpl;
 
     address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
     address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
@@ -32,9 +33,14 @@ contract Deploy is Script, Config {
     address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
 
     uint256 constant DEFAULT_INITIAL_DEPOSIT = 1e15;
+    uint256 constant USD_INITIAL_DEPOSIT = 1e8;
+    uint256 constant WBTC_INITIAL_DEPOSIT = 1e6;
 
     function run() external {
         vm.startBroadcast(DEPLOYER);
+
+        supplyVaultImpl = deploySupplyVaultImplementation();
+        supplyHarvestVaultImpl = deploySupplyHarvestVaultImplementation();
 
         deployVaults(
             cDai,
@@ -64,8 +70,52 @@ contract Deploy is Script, Config {
             DEFAULT_INITIAL_DEPOSIT,
             SupplyHarvestVault.HarvestConfig(3000, 3000, 200)
         );
+        deployVaults(
+            cUsdc,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            USD_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            cUsdt,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            USD_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 500, 200)
+        );
+        deployVaults(
+            cWbtc2,
+            supplyVaultImpl,
+            supplyHarvestVaultImpl,
+            WBTC_INITIAL_DEPOSIT,
+            SupplyHarvestVault.HarvestConfig(3000, 3000, 200)
+        );
 
         vm.stopBroadcast();
+    }
+
+    function deploySupplyVaultImplementation() internal returns (address supplyVaultImpl_) {
+        supplyVaultImpl_ = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
+            0,
+            abi.encodePacked(type(SupplyVault).creationCode, abi.encode(MORPHO)),
+            keccak256(abi.encode("Morpho-Compound Supply Vault Implementation 1.1"))
+        );
+        console2.log("Deployed Supply Vault Implementation:");
+        console2.log(supplyVaultImpl_);
+    }
+
+    function deploySupplyHarvestVaultImplementation()
+        internal
+        returns (address supplyHarvestVaultImpl_)
+    {
+        supplyHarvestVaultImpl_ = IAdmoDeployer(ADMO_DEPLOYER).performCreate2(
+            0,
+            abi.encodePacked(type(SupplyHarvestVault).creationCode, abi.encode(MORPHO)),
+            keccak256(abi.encode("Morpho-Compound Supply Vault Implementation 1.1"))
+        );
+        console2.log("Deployed Supply Harvest Vault Implementation:");
+        console2.log(supplyHarvestVaultImpl_);
     }
 
     function deployVaults(
