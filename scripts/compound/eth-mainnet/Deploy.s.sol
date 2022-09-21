@@ -31,7 +31,6 @@ contract Deploy is Script, Config {
     address constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
     address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
-    address constant CWBTC2 = 0xccF4429DB6322D5C611ee964527D42E5d685DD6a;
 
     uint256 constant DEFAULT_INITIAL_DEPOSIT = 1e15;
     uint256 constant USD_INITIAL_DEPOSIT = 1e8;
@@ -86,7 +85,7 @@ contract Deploy is Script, Config {
             SupplyHarvestVault.HarvestConfig(3000, 500, 200)
         );
         deployVaults(
-            CWBTC2,
+            cWbtc2,
             supplyVaultImpl,
             supplyHarvestVaultImpl,
             WBTC_INITIAL_DEPOSIT,
