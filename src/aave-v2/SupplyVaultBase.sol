@@ -34,11 +34,9 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// CONSTRUCTOR ///
 
-    /// @dev Initializes network-wide immutables
+    /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
-        if (_morpho == address(0)) revert ZeroAddress();
-
         morpho = IMorpho(_morpho);
         pool = morpho.pool();
     }
