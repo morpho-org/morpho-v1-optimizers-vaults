@@ -72,7 +72,7 @@ contract UniswapV3Swapper is ISwapper, Ownable {
         address _tokenOut,
         address _recipient
     ) external returns (uint256 amountOut) {
-        IERC20(_tokenIn).safeApprove(address(SWAP_ROUTER), _amountIn);
+        IERC20(_tokenIn).safeIncreaseAllowance(address(SWAP_ROUTER), _amountIn);
 
         amountOut = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({

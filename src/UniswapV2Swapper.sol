@@ -56,7 +56,7 @@ contract UniswapV2Swapper is ISwapper {
             path[2] = _tokenOut;
         }
 
-        IERC20(_tokenIn).safeApprove(address(swapRouter), _amountIn);
+        IERC20(_tokenIn).safeIncreaseAllowance(address(swapRouter), _amountIn);
         uint256[] memory amountsOut = swapRouter.swapExactTokensForTokens(
             _amountIn,
             0,
