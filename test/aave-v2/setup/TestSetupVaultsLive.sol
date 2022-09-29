@@ -49,17 +49,17 @@ contract TestSetupVaultsLive is TestSetup {
 
     function initVaultContracts() internal {
         morpho = Morpho(0x777777c9898D384F785Ee44Acfe945efDFf5f3E0);
-        wNativeSupplyVault = SupplyVault(wNativeVaultAddress);
-        daiSupplyVault = SupplyVault(daiVaultAddress);
-        usdcSupplyVault = SupplyVault(usdcVaultAddress);
+        wNativeSupplyVault = SupplyVault(W_NATIVE_VAULT_ADDRESS);
+        daiSupplyVault = SupplyVault(DAI_VAULT_ADDRESS);
+        usdcSupplyVault = SupplyVault(USDC_VAULT_ADDRESS);
 
-        ma2WNative = ERC20(wNativeVaultAddress);
-        ma2Dai = ERC20(daiVaultAddress);
-        ma2Usdc = ERC20(usdcVaultAddress);
+        ma2WNative = ERC20(W_NATIVE_VAULT_ADDRESS);
+        ma2Dai = ERC20(DAI_VAULT_ADDRESS);
+        ma2Usdc = ERC20(USDC_VAULT_ADDRESS);
 
         proxyAdmin = ProxyAdmin(0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8);
 
-        wNativeSupplyVaultProxy = TransparentUpgradeableProxy(payable(wNativeVaultAddress));
+        wNativeSupplyVaultProxy = TransparentUpgradeableProxy(payable(W_NATIVE_VAULT_ADDRESS));
         supplyVaultImplV1 = SupplyVault(0x65663ee4cC7c9C494802e7f10cbBd710d3F1FE95);
     }
 
