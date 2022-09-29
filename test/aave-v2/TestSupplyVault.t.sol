@@ -190,6 +190,54 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(token.balanceOf(_to), _toTransfer);
     }
 
+    // TODO: fix this test by using updated indexes in previewMint
+    // function testShouldMintCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+    //     uint256 amount = 10_000 ether;
+
+    //     vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+    //     vm.roll(block.number + 100_000);
+    //     vm.warp(block.timestamp + 1_000_000);
+
+    //     uint256 assets = vaultSupplier2.mintVault(daiSupplyVault, amount);
+    //     uint256 shares = vaultSupplier2.withdrawVault(daiSupplyVault, assets);
+
+    //     assertEq(shares, amount, "unexpected redeemed shares");
+    // }
+
+    function testShouldDepositCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 shares = vaultSupplier2.depositVault(daiSupplyVault, amount);
+        uint256 assets = vaultSupplier2.redeemVault(daiSupplyVault, shares);
+
+        assertApproxEqAbs(assets, amount, 1, "unexpected withdrawn assets");
+    }
+
+    function testShouldRedeemAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 assets = vaultSupplier1.redeemVault(daiSupplyVault, shares);
+
+        assertEq(
+            assets,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai)),
+            "unexpected withdrawn assets"
+        );
+    }
+
     function testShouldWithdrawAllAmountWhenMorphoPoolIndexesOutdated() public {
         uint256 amount = 10_000 ether;
 
