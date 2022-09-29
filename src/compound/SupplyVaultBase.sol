@@ -92,17 +92,15 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// PUBLIC ///
 
     function totalAssets() public view override returns (uint256) {
-        IMorpho morphoMem = morpho;
         address poolTokenMem = poolToken;
-
-        Types.SupplyBalance memory supplyBalance = morphoMem.supplyBalanceInOf(
+        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
             poolTokenMem,
             address(this)
         );
 
         return
-            supplyBalance.onPool.mul(ICToken(poolTokenMem).exchangeRateStored()) +
-            supplyBalance.inP2P.mul(morphoMem.p2pSupplyIndex(poolTokenMem));
+            supplyBalance.onPool.mul(morpho.lastPoolIndexes(poolTokenMem).lastSupplyPoolIndex) +
+            supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenMem));
     }
 
     /// INTERNAL ///

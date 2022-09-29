@@ -97,7 +97,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         );
 
         return
-            supplyBalance.onPool.rayMul(pool.getReserveNormalizedIncome(asset())) +
+            supplyBalance.onPool.rayMul(morpho.poolIndexes(poolTokenMem).poolSupplyIndex) +
             supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenMem));
     }
 
