@@ -88,7 +88,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// PUBLIC ///
 
     /// @dev The indexes used by this function might not be up-to-date.
-    ///      As a consequence, public functions (like `maxWithdraw`) could underestimate the withdrawable amount.
+    ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
     ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
     function totalAssets() public view override returns (uint256) {
         address poolTokenMem = poolToken;
