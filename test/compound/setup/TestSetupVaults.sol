@@ -29,13 +29,13 @@ contract TestSetupVaults is TestSetup {
     SupplyHarvestVault internal usdcSupplyHarvestVault;
     SupplyHarvestVault internal compSupplyHarvestVault;
 
-    ERC20 mcWeth;
-    ERC20 mcDai;
-    ERC20 mcUsdc;
-    ERC20 mchWeth;
-    ERC20 mchDai;
-    ERC20 mchUsdc;
-    ERC20 mchComp;
+    ERC20 internal mcWeth;
+    ERC20 internal mcDai;
+    ERC20 internal mcUsdc;
+    ERC20 internal mchWeth;
+    ERC20 internal mchDai;
+    ERC20 internal mchUsdc;
+    ERC20 internal mchComp;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;

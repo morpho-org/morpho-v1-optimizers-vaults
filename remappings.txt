@@ -6,3 +6,4 @@
 @vaults/=src/
 @tests/=lib/morpho-contracts/test-foundry/
 @contracts/=lib/morpho-contracts/contracts/
+@forge-std/=lib/morpho-contracts/lib/forge-std/src/

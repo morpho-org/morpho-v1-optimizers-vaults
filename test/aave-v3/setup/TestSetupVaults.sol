@@ -31,12 +31,12 @@ contract TestSetupVaults is TestSetup {
 
     ISwapper internal swapper;
 
-    ERC20 maWrappedNativeToken;
-    ERC20 maDai;
-    ERC20 maUsdc;
-    ERC20 mahWrappedNativeToken;
-    ERC20 mahDai;
-    ERC20 mahUsdc;
+    ERC20 internal maWrappedNativeToken;
+    ERC20 internal maDai;
+    ERC20 internal maUsdc;
+    ERC20 internal mahWrappedNativeToken;
+    ERC20 internal mahDai;
+    ERC20 internal mahUsdc;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;

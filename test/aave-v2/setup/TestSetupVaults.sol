@@ -20,9 +20,9 @@ contract TestSetupVaults is TestSetup {
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
 
-    ERC20 ma2WNative;
-    ERC20 ma2Dai;
-    ERC20 ma2Usdc;
+    ERC20 internal ma2WNative;
+    ERC20 internal ma2Dai;
+    ERC20 internal ma2Usdc;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;
