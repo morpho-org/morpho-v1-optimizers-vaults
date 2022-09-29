@@ -7,7 +7,7 @@ import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
 import {Types} from "@contracts/aave-v3/libraries/Types.sol";
@@ -20,7 +20,7 @@ import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSaf
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V3.
 abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable {
     using WadRayMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     /// ERRORS ///
 
@@ -58,7 +58,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        IERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
+        ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
 
         __ERC20_init(_name, _symbol);
         __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
@@ -69,13 +69,13 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     function __SupplyVaultBase_init_unchained(address _poolToken)
         internal
         onlyInitializing
-        returns (IERC20 underlyingToken)
+        returns (ERC20 underlyingToken)
     {
         if (_poolToken == address(0)) revert ZeroAddress();
 
         poolToken = _poolToken;
 
-        underlyingToken = IERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
@@ -86,7 +86,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         address _to,
         uint256 _amount
     ) external onlyOwner {
-        IERC20(_asset).safeTransfer(_to, _amount);
+        ERC20(_asset).safeTransfer(_to, _amount);
     }
 
     /// PUBLIC ///

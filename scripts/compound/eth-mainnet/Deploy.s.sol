@@ -18,10 +18,10 @@ import "forge-std/console2.sol";
 import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 import {ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
 import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
-import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
 contract Deploy is Script, Config {
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     address supplyVaultImpl;
     address supplyHarvestVaultImpl;
@@ -181,7 +181,7 @@ contract Deploy is Script, Config {
         );
 
         supplyVault_ = Create2.computeAddress(salt, keccak256(creationCode), ADMO_DEPLOYER);
-        IERC20(_underlying).safeApprove(supplyVault_, _initialDeposit);
+        ERC20(_underlying).safeApprove(supplyVault_, _initialDeposit);
         require(
             supplyVault_ == IAdmoDeployer(ADMO_DEPLOYER).performCreate2(0, creationCode, salt),
             "Incorrect precompute address"
@@ -226,7 +226,7 @@ contract Deploy is Script, Config {
                 IAdmoDeployer(ADMO_DEPLOYER).performCreate2(0, creationCode, salt),
             "Incorrect precompute address"
         );
-        IERC20(_underlying).safeApprove(supplyHarvestVault_, _initialDeposit);
+        ERC20(_underlying).safeApprove(supplyHarvestVault_, _initialDeposit);
         SupplyHarvestVault supplyHarvestVault = SupplyHarvestVault(supplyHarvestVault_);
         SupplyHarvestVault(supplyHarvestVault_).initialize(
             _poolToken,

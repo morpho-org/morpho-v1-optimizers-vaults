@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import {ISupplyHarvestVault} from "./interfaces/ISupplyHarvestVault.sol";
 
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
@@ -15,7 +15,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 /// @notice ERC4626-upgradeable Tokenized Vault implementation for Morpho-Compound, which can harvest accrued COMP rewards, swap them and re-supply them through Morpho-Compound.
 contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     using PercentageMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     /// EVENTS ///
 
@@ -188,7 +188,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         }
 
         morpho.supply(poolTokenMem, address(this), rewardsAmount);
-        if (rewardsFee > 0) IERC20(assetMem).safeTransfer(_receiver, rewardsFee);
+        if (rewardsFee > 0) ERC20(assetMem).safeTransfer(_receiver, rewardsFee);
 
         emit Harvested(msg.sender, _receiver, rewardsAmount, rewardsFee);
     }

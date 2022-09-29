@@ -5,7 +5,7 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
@@ -18,7 +18,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 contract SupplyVault is ISupplyVault, SupplyVaultBase {
     using FixedPointMathLib for uint256;
     using SafeCastLib for uint256;
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     /// EVENTS ///
 
@@ -106,7 +106,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                 claimedAmounts[i] = unclaimedAmount;
                 userRewardsData.unclaimed = 0;
 
-                IERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
+                ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
                 emit Claimed(rewardToken, _user, unclaimedAmount);
             }
