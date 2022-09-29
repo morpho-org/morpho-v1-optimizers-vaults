@@ -34,11 +34,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
-    /// @dev This empty reserved space is put in place to allow future versions to add new
-    /// variables without shifting down storage in the inheritance chain.
-    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[49] private __gap;
-
     /// CONSTRUCTOR ///
 
     /// @dev Initializes network-wide immutables
@@ -130,4 +125,9 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         morpho.withdraw(address(poolToken), _assets);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
+
+    /// @dev This empty reserved space is put in place to allow future versions to add new
+    /// variables without shifting down storage in the inheritance chain.
+    /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }
