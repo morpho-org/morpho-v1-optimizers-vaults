@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import {IAToken} from "@aave/core-v3/contracts/interfaces/IAToken.sol";
-import {IPool} from "@contracts/aave-v3/interfaces/aave/IPool.sol";
 import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
 
@@ -30,7 +29,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// STORAGE ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
-    IPool public immutable pool; // The AaveV3 pool.
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
@@ -40,9 +38,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
         if (_morpho == address(0)) revert ZeroAddress();
-
         morpho = IMorpho(_morpho);
-        pool = morpho.pool();
     }
 
     /// INITIALIZER ///

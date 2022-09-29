@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {ILendingPool} from "@contracts/aave-v2/interfaces/aave/ILendingPool.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
 
@@ -29,7 +28,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// STORAGE ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
-    ILendingPool public immutable pool;
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
     /// CONSTRUCTOR ///
@@ -38,9 +36,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
         if (_morpho == address(0)) revert ZeroAddress();
-
         morpho = IMorpho(_morpho);
-        pool = morpho.pool();
     }
 
     /// INITIALIZER ///
