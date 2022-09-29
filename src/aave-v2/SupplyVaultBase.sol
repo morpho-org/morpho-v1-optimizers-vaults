@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {ILendingPool} from "@contracts/aave-v2/interfaces/aave/ILendingPool.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
 
@@ -29,7 +28,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// STORAGE ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
-    ILendingPool public immutable pool;
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
     /// CONSTRUCTOR ///
@@ -38,9 +36,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
         if (_morpho == address(0)) revert ZeroAddress();
-
         morpho = IMorpho(_morpho);
-        pool = morpho.pool();
     }
 
     /// INITIALIZER ///
@@ -89,6 +85,9 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// PUBLIC ///
 
+    /// @dev The indexes used by this function might not be up-to-date.
+    ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
+    ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
     function totalAssets() public view override returns (uint256) {
         address poolTokenMem = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
@@ -97,8 +96,40 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         );
 
         return
-            supplyBalance.onPool.rayMul(pool.getReserveNormalizedIncome(asset())) +
+            supplyBalance.onPool.rayMul(morpho.poolIndexes(poolTokenMem).poolSupplyIndex) +
             supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenMem));
+    }
+
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.deposit(assets, receiver);
+    }
+
+    function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.mint(shares, receiver);
+    }
+
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    ) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.withdraw(assets, receiver, owner);
+    }
+
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.redeem(shares, receiver, owner);
     }
 
     /// INTERNAL ///
