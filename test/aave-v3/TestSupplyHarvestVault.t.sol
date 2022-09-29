@@ -366,4 +366,29 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
         daiSupplyHarvestVault.setHarvestingFee(newVal);
     }
+
+    function testShouldWithdrawAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        vaultSupplier1.withdrawVault(
+            daiSupplyVault,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai))
+        );
+
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            address(aUsdc),
+            address(daiSupplyVault)
+        );
+
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcUSDT balance not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
+    }
 }

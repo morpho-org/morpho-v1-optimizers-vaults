@@ -487,4 +487,28 @@ contract TestSupplyVault is TestSetupVaults {
         assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
         assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
     }
+
+    function testShouldWithdrawAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.div(ICToken(cDai).exchangeRateCurrent());
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+
+        vaultSupplier1.withdrawVault(
+            daiSupplyVault,
+            expectedOnPool.mul(ICToken(cDai).exchangeRateCurrent())
+        );
+
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            address(cUsdc),
+            address(daiSupplyVault)
+        );
+
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcUSDT balance not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
+    }
 }
