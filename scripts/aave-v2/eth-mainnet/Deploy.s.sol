@@ -16,10 +16,10 @@ import "forge-std/console2.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
-import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
 contract Deploy is Script, Config {
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
     address constant SAFE = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
@@ -99,7 +99,7 @@ contract Deploy is Script, Config {
         );
 
         supplyVault_ = Create2.computeAddress(salt, keccak256(creationCode), ADMO_DEPLOYER);
-        IERC20(_underlying).safeApprove(supplyVault_, _initialDeposit);
+        ERC20(_underlying).safeApprove(supplyVault_, _initialDeposit);
         require(
             supplyVault_ == IAdmoDeployer(ADMO_DEPLOYER).performCreate2(0, creationCode, salt),
             "Incorrect precompute address"

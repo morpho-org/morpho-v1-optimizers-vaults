@@ -5,7 +5,7 @@ import {IComptroller, ICToken} from "@contracts/compound/interfaces/compound/ICo
 import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import {Types} from "@contracts/compound/libraries/Types.sol";
 
@@ -17,7 +17,7 @@ import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSaf
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
 abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable {
     using CompoundMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     /// ERRORS ///
 
@@ -28,7 +28,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     IMorpho public immutable morpho; // The main Morpho contract.
     address public immutable wEth; // The address of WETH token.
-    IERC20 public immutable comp; // The COMP token.
+    ERC20 public immutable comp; // The COMP token.
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
@@ -39,7 +39,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     constructor(address _morpho) {
         morpho = IMorpho(_morpho);
         wEth = morpho.wEth();
-        comp = IERC20(morpho.comptroller().getCompAddress());
+        comp = ERC20(morpho.comptroller().getCompAddress());
     }
 
     /// INITIALIZER ///
@@ -55,7 +55,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         string calldata _symbol,
         uint256 _initialDeposit
     ) internal onlyInitializing returns (bool isEth) {
-        IERC20 underlyingToken;
+        ERC20 underlyingToken;
         (isEth, underlyingToken) = __SupplyVaultBase_init_unchained(_poolToken);
 
         __ERC20_init(_name, _symbol);
@@ -67,7 +67,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     function __SupplyVaultBase_init_unchained(address _poolToken)
         internal
         onlyInitializing
-        returns (bool isEth, IERC20 underlyingToken)
+        returns (bool isEth, ERC20 underlyingToken)
     {
         if (_poolToken == address(0)) revert ZeroAddress();
 
@@ -75,7 +75,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
         isEth = _poolToken == morpho.cEth();
 
-        underlyingToken = IERC20(isEth ? wEth : ICToken(_poolToken).underlying());
+        underlyingToken = ERC20(isEth ? wEth : ICToken(_poolToken).underlying());
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
@@ -86,7 +86,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         address _to,
         uint256 _amount
     ) external onlyOwner {
-        IERC20(_asset).safeTransfer(_to, _amount);
+        ERC20(_asset).safeTransfer(_to, _amount);
     }
 
     /// PUBLIC ///

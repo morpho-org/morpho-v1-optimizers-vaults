@@ -5,7 +5,7 @@ import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRoute
 import {ISupplyHarvestVault} from "./interfaces/ISupplyHarvestVault.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {PercentageMath} from "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 
@@ -18,7 +18,7 @@ import {SupplyVaultBase} from "./SupplyVaultBase.sol";
 contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     using PercentageMath for uint256;
     using WadRayMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     /// EVENTS ///
 
@@ -141,7 +141,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
             uint256 rewardsAmount = rewardsAmounts[i];
 
             if (rewardsAmount > 0) {
-                IERC20 rewardToken = IERC20(rewardTokens[i]);
+                ERC20 rewardToken = ERC20(rewardTokens[i]);
 
                 // Note: Uniswap pairs are considered to have enough market depth.
                 // The amount swapped is considered low enough to avoid relying on any oracle.
@@ -181,7 +181,7 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
             }
         }
 
-        IERC20(assetMem).safeTransfer(_receiver, totalRewardsFee);
+        ERC20(assetMem).safeTransfer(_receiver, totalRewardsFee);
         morpho.supply(poolTokenMem, address(this), totalSupplied);
     }
 }
