@@ -87,6 +87,9 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// PUBLIC ///
 
+    /// @dev The indexes used by this function might not be up-to-date.
+    ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
+    ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
     function totalAssets() public view override returns (uint256) {
         address poolTokenMem = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
@@ -97,6 +100,38 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         return
             supplyBalance.onPool.rayMul(morpho.poolIndexes(poolTokenMem).poolSupplyIndex) +
             supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenMem));
+    }
+
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.deposit(assets, receiver);
+    }
+
+    function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.mint(shares, receiver);
+    }
+
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    ) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.withdraw(assets, receiver, owner);
+    }
+
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public virtual override returns (uint256) {
+        // Update the indexes to get the most up-to-date total assets balance.
+        morpho.updateIndexes(poolToken);
+        return super.redeem(shares, receiver, owner);
     }
 
     /// INTERNAL ///
