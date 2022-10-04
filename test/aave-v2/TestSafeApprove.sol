@@ -17,12 +17,14 @@ contract TestSafeApprove is TestSetupVaults {
     bytes constant CREATION_CODE = abi.encodePacked(uint256(0));
     bytes32 constant salt = keccak256(abi.encode(0));
 
+    // fails
     function testSafeTransferLibApprove() public {
         address target = Create2.computeAddress(salt, keccak256(CREATION_CODE), address(0));
         vm.prank(address(supplier1));
         ERC20(crv).safeApprove(target, 1e8);
     }
 
+    // passes
     function testSafeERC20Approve() public {
         address target = Create2.computeAddress(salt, keccak256(CREATION_CODE), address(0));
         vm.prank(address(supplier1));
