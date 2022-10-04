@@ -21,6 +21,7 @@ contract TestSafeApprove is TestSetupVaults {
     address constant TARGET = 0xE045f841eC01Ce6e81060004f1B42b05D3ce01A3;
 
     // fails
+    // with compute address
     function testSafeTransferLibApprove1() public {
         address target = Create2.computeAddress(salt, keccak256(CREATION_CODE), address(0));
         assertEq(target, TARGET);
@@ -29,12 +30,23 @@ contract TestSafeApprove is TestSetupVaults {
     }
 
     // passes
+    // without compute address
     function testSafeTransferLibApprove2() public {
         vm.prank(address(supplier1));
         ERC20(crv).safeApprove(TARGET, 1e8);
     }
 
     // passes
+    // another token
+    function testSafeTransferLibApprove3() public {
+        address target = Create2.computeAddress(salt, keccak256(CREATION_CODE), address(0));
+        assertEq(target, TARGET);
+        vm.prank(address(supplier1));
+        ERC20(dai).safeApprove(target, 1e8);
+    }
+
+    // passes
+    // with SafeERC20
     function testSafeERC20Approve() public {
         address target = Create2.computeAddress(salt, keccak256(CREATION_CODE), address(0));
         assertEq(target, TARGET);
