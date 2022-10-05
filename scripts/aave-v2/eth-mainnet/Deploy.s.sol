@@ -36,6 +36,8 @@ contract Deploy is Script, Config {
     string constant VERSION = "1.1";
 
     function run() external {
+        vm.startBroadcast(DEPLOYER);
+
         address supplyVaultImpl = deploySupplyVaultImplementation();
         deployVaults(aDai, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
         deployVaults(aWeth, supplyVaultImpl, DEFAULT_INITIAL_DEPOSIT);
