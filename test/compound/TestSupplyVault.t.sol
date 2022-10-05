@@ -13,17 +13,15 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(daiSupplyVault.poolToken(), cDai);
         assertEq(daiSupplyVault.asset(), dai);
         assertEq(daiSupplyVault.decimals(), 18);
-        assertFalse(daiSupplyHarvestVault.isEth());
     }
 
     function testCorrectInitialisationUsdc() public {
-        assertEq(daiSupplyVault.owner(), address(this));
-        assertEq(daiSupplyVault.name(), "MorphoCompoundUSDC");
-        assertEq(daiSupplyVault.symbol(), "mcUSDC");
-        assertEq(daiSupplyVault.poolToken(), cUsdc);
-        assertEq(daiSupplyVault.asset(), usdc);
-        assertEq(daiSupplyVault.decimals(), 18);
-        assertFalse(daiSupplyHarvestVault.isEth());
+        assertEq(usdcSupplyVault.owner(), address(this));
+        assertEq(usdcSupplyVault.name(), "MorphoCompoundUSDC");
+        assertEq(usdcSupplyVault.symbol(), "mcUSDC");
+        assertEq(usdcSupplyVault.poolToken(), cUsdc);
+        assertEq(usdcSupplyVault.asset(), usdc);
+        assertEq(usdcSupplyVault.decimals(), 18);
     }
 
     function testShouldDepositAmount() public {

@@ -28,8 +28,8 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(usdcSupplyHarvestVault.decimals(), 18);
         assertFalse(usdcSupplyHarvestVault.isEth());
         assertEq(usdcSupplyHarvestVault.compSwapFee(), 3000);
-        assertEq(usdcSupplyHarvestVault.assetSwapFee(), 500);
-        assertEq(usdcSupplyHarvestVault.harvestingFee(), 100);
+        assertEq(usdcSupplyHarvestVault.assetSwapFee(), 3000);
+        assertEq(usdcSupplyHarvestVault.harvestingFee(), 50);
     }
 
     function testInitializationShouldRevertWithWrongInputs() public {
