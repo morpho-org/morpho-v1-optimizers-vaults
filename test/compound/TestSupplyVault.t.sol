@@ -16,6 +16,16 @@ contract TestSupplyVault is TestSetupVaults {
         assertFalse(daiSupplyHarvestVault.isEth());
     }
 
+    function testCorrectInitialisationUsdc() public {
+        assertEq(daiSupplyVault.owner(), address(this));
+        assertEq(daiSupplyVault.name(), "MorphoCompoundUSDC");
+        assertEq(daiSupplyVault.symbol(), "mcUSDC");
+        assertEq(daiSupplyVault.poolToken(), cUsdc);
+        assertEq(daiSupplyVault.asset(), usdc);
+        assertEq(daiSupplyVault.decimals(), 18);
+        assertFalse(daiSupplyHarvestVault.isEth());
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10_000 ether;
 

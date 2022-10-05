@@ -6,13 +6,31 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyVault is TestSetupVaults {
     using WadRayMath for uint256;
 
-    function testCorrectInitialisation() public {
+    function testCorrectInitialisationWeth() public {
+        assertEq(wNativeSupplyVault.owner(), address(this));
+        assertEq(wNativeSupplyVault.name(), "MorphoAave2WETH");
+        assertEq(wNativeSupplyVault.symbol(), "ma2WETH");
+        assertEq(wNativeSupplyVault.poolToken(), aWeth);
+        assertEq(wNativeSupplyVault.asset(), wEth);
+        assertEq(wNativeSupplyVault.decimals(), 18);
+    }
+
+    function testCorrectInitialisationDai() public {
         assertEq(daiSupplyVault.owner(), address(this));
         assertEq(daiSupplyVault.name(), "MorphoAave2DAI");
         assertEq(daiSupplyVault.symbol(), "ma2DAI");
         assertEq(daiSupplyVault.poolToken(), aDai);
         assertEq(daiSupplyVault.asset(), dai);
         assertEq(daiSupplyVault.decimals(), 18);
+    }
+
+    function testCorrectInitialisationUsdc() public {
+        assertEq(usdcSupplyVault.owner(), address(this));
+        assertEq(usdcSupplyVault.name(), "MorphoAave2USDC");
+        assertEq(usdcSupplyVault.symbol(), "ma2USDC");
+        assertEq(usdcSupplyVault.poolToken(), aUsdc);
+        assertEq(usdcSupplyVault.asset(), usdc);
+        assertEq(usdcSupplyVault.decimals(), 18);
     }
 
     function testShouldDepositAmount() public {

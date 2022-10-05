@@ -6,7 +6,7 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using WadRayMath for uint256;
 
-    function testCorrectInitialisation() public {
+    function testCorrectInitialisationDai() public {
         assertEq(daiSupplyHarvestVault.owner(), address(this));
         assertEq(daiSupplyHarvestVault.name(), "MorphoAaveHarvestDAI");
         assertEq(daiSupplyHarvestVault.symbol(), "mahDAI");
@@ -15,6 +15,17 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(daiSupplyHarvestVault.decimals(), 18);
         assertEq(daiSupplyHarvestVault.harvestingFee(), 50);
         assertEq(address(daiSupplyHarvestVault.swapper()), address(swapper));
+    }
+
+    function testCorrectInitialisationUsdc() public {
+        assertEq(usdcSupplyHarvestVault.owner(), address(this));
+        assertEq(usdcSupplyHarvestVault.name(), "MorphoAaveHarvestUSDC");
+        assertEq(usdcSupplyHarvestVault.symbol(), "mahUSDC");
+        assertEq(usdcSupplyHarvestVault.poolToken(), aUsdc);
+        assertEq(usdcSupplyHarvestVault.asset(), usdc);
+        assertEq(usdcSupplyHarvestVault.decimals(), 18);
+        assertEq(usdcSupplyHarvestVault.harvestingFee(), 50);
+        assertEq(address(usdcSupplyHarvestVault.swapper()), address(swapper));
     }
 
     function testInitializationShouldRevertWithWrongInputs() public {
