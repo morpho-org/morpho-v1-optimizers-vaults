@@ -7,7 +7,7 @@ contract TestEth is TestSetupVaults {
     using PercentageMath for uint256;
     using CompoundMath for uint256;
 
-    function testRightInitialisation() public {
+    function testCorrectInitialisation() public {
         assertEq(wethSupplyHarvestVault.owner(), address(this));
         assertEq(wethSupplyHarvestVault.name(), "MorphoCompoundHarvestWETH");
         assertEq(wethSupplyHarvestVault.symbol(), "mchWETH");

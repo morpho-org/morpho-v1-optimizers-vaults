@@ -6,7 +6,7 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using CompoundMath for uint256;
 
-    function testRightInitialisation() public {
+    function testCorrectInitialisation() public {
         assertEq(daiSupplyHarvestVault.owner(), address(this));
         assertEq(daiSupplyHarvestVault.name(), "MorphoCompoundHarvestDAI");
         assertEq(daiSupplyHarvestVault.symbol(), "mchDAI");

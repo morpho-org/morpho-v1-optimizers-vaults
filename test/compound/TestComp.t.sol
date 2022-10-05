@@ -6,7 +6,7 @@ import "./setup/TestSetupVaults.sol";
 contract TestComp is TestSetupVaults {
     using CompoundMath for uint256;
 
-    function testRightInitialisation() public {
+    function testCorrectInitialisation() public {
         assertEq(compSupplyHarvestVault.owner(), address(this));
         assertEq(compSupplyHarvestVault.name(), "MorphoCompoundHarvestCOMP");
         assertEq(compSupplyHarvestVault.symbol(), "mchCOMP");

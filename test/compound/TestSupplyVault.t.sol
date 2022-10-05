@@ -6,7 +6,7 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyVault is TestSetupVaults {
     using CompoundMath for uint256;
 
-    function testRightInitialisation() public {
+    function testCorrectInitialisation() public {
         assertEq(daiSupplyVault.owner(), address(this));
         assertEq(daiSupplyVault.name(), "MorphoCompoundDAI");
         assertEq(daiSupplyVault.symbol(), "mcDAI");

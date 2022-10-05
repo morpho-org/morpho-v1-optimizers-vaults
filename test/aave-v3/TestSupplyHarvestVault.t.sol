@@ -6,7 +6,7 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using WadRayMath for uint256;
 
-    function testRightInitialisation() public {
+    function testCorrectInitialisation() public {
         assertEq(daiSupplyHarvestVault.owner(), address(this));
         assertEq(daiSupplyHarvestVault.name(), "MorphoAaveHarvestDAI");
         assertEq(daiSupplyHarvestVault.symbol(), "mahDAI");
