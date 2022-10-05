@@ -103,7 +103,6 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         if (_harvestConfig.harvestingFee > MAX_BASIS_POINTS)
             revert ExceedsMaxBasisPoints(_harvestConfig.harvestingFee);
 
-        __Ownable_init();
         isEth = __SupplyVaultBase_init(_poolToken, _name, _symbol, _initialDeposit);
 
         harvestConfig = _harvestConfig;
