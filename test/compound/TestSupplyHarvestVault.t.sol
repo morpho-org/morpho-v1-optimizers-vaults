@@ -6,6 +6,19 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using CompoundMath for uint256;
 
+    function testRightInitialisation() public {
+        assertEq(daiSupplyHarvestVault.owner(), address(this));
+        assertEq(daiSupplyHarvestVault.name(), "MorphoCompoundHarvestDAI");
+        assertEq(daiSupplyHarvestVault.symbol(), "mchDAI");
+        assertEq(daiSupplyHarvestVault.poolToken(), cDai);
+        assertEq(daiSupplyHarvestVault.asset(), dai);
+        assertEq(daiSupplyHarvestVault.decimals(), 18);
+        assertFalse(daiSupplyHarvestVault.isEth());
+        assertEq(daiSupplyHarvestVault.compSwapFee(), 3000);
+        assertEq(daiSupplyHarvestVault.assetSwapFee(), 500);
+        assertEq(daiSupplyHarvestVault.harvestingFee(), 100);
+    }
+
     function testInitializationShouldRevertWithWrongInputs() public {
         SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho));
 

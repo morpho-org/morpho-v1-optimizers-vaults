@@ -6,6 +6,17 @@ import "./setup/TestSetupVaults.sol";
 contract TestWrappedNativeToken is TestSetupVaults {
     using WadRayMath for uint256;
 
+    function testRightInitialisation() public {
+        assertEq(wrappedNativeTokenSupplyHarvestVault.owner(), address(this));
+        assertEq(wrappedNativeTokenSupplyHarvestVault.name(), "MorphoAaveHarvestWNATIVE");
+        assertEq(wrappedNativeTokenSupplyHarvestVault.symbol(), "mahWNATIVE");
+        assertEq(wrappedNativeTokenSupplyHarvestVault.poolToken(), aWrappedNativeToken);
+        assertEq(wrappedNativeTokenSupplyHarvestVault.asset(), wrappedNativeToken);
+        assertEq(wrappedNativeTokenSupplyHarvestVault.decimals(), 18);
+        assertEq(wrappedNativeTokenSupplyHarvestVault.harvestingFee(), 50);
+        assertEq(address(wrappedNativeTokenSupplyHarvestVault.swapper()), address(swapper));
+    }
+
     function testShouldDepositWrappedNativeTokenOnVault() public {
         uint256 amount = 100 ether;
 

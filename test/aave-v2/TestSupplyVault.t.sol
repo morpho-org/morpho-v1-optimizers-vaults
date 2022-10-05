@@ -6,6 +6,15 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyVault is TestSetupVaults {
     using WadRayMath for uint256;
 
+    function testRightInitialisation() public {
+        assertEq(daiSupplyVault.owner(), address(this));
+        assertEq(daiSupplyVault.name(), "MorphoAave2DAI");
+        assertEq(daiSupplyVault.symbol(), "ma2DAI");
+        assertEq(daiSupplyVault.poolToken(), aDai);
+        assertEq(daiSupplyVault.asset(), dai);
+        assertEq(daiSupplyVault.decimals(), 18);
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10_000 ether;
 

@@ -7,6 +7,19 @@ contract TestEth is TestSetupVaults {
     using PercentageMath for uint256;
     using CompoundMath for uint256;
 
+    function testRightInitialisation() public {
+        assertEq(wethSupplyHarvestVault.owner(), address(this));
+        assertEq(wethSupplyHarvestVault.name(), "MorphoCompoundHarvestWETH");
+        assertEq(wethSupplyHarvestVault.symbol(), "mchWETH");
+        assertEq(wethSupplyHarvestVault.poolToken(), cEth);
+        assertEq(wethSupplyHarvestVault.asset(), wEth);
+        assertEq(wethSupplyHarvestVault.decimals(), 18);
+        assertTrue(wethSupplyHarvestVault.isEth());
+        assertEq(wethSupplyHarvestVault.compSwapFee(), 3000);
+        assertEq(wethSupplyHarvestVault.assetSwapFee(), 0);
+        assertEq(wethSupplyHarvestVault.harvestingFee(), 50);
+    }
+
     function testShouldDepositEthOnVault() public {
         uint256 amount = 100 ether;
 

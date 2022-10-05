@@ -6,6 +6,19 @@ import "./setup/TestSetupVaults.sol";
 contract TestComp is TestSetupVaults {
     using CompoundMath for uint256;
 
+    function testRightInitialisation() public {
+        assertEq(compSupplyHarvestVault.owner(), address(this));
+        assertEq(compSupplyHarvestVault.name(), "MorphoCompoundHarvestCOMP");
+        assertEq(compSupplyHarvestVault.symbol(), "mchCOMP");
+        assertEq(compSupplyHarvestVault.poolToken(), cComp);
+        assertEq(compSupplyHarvestVault.asset(), comp);
+        assertEq(compSupplyHarvestVault.decimals(), 18);
+        assertFalse(compSupplyHarvestVault.isEth());
+        assertEq(compSupplyHarvestVault.compSwapFee(), 3000);
+        assertEq(compSupplyHarvestVault.assetSwapFee(), 500);
+        assertEq(compSupplyHarvestVault.harvestingFee(), 100);
+    }
+
     function testShouldDepositCompOnVault() public {
         uint256 amount = 100 ether;
 
