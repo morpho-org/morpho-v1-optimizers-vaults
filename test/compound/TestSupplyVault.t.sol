@@ -6,6 +6,24 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyVault is TestSetupVaults {
     using CompoundMath for uint256;
 
+    function testCorrectInitialisation() public {
+        assertEq(daiSupplyVault.owner(), address(this));
+        assertEq(daiSupplyVault.name(), "MorphoCompoundDAI");
+        assertEq(daiSupplyVault.symbol(), "mcDAI");
+        assertEq(daiSupplyVault.poolToken(), cDai);
+        assertEq(daiSupplyVault.asset(), dai);
+        assertEq(daiSupplyVault.decimals(), 18);
+    }
+
+    function testCorrectInitialisationUsdc() public {
+        assertEq(usdcSupplyVault.owner(), address(this));
+        assertEq(usdcSupplyVault.name(), "MorphoCompoundUSDC");
+        assertEq(usdcSupplyVault.symbol(), "mcUSDC");
+        assertEq(usdcSupplyVault.poolToken(), cUsdc);
+        assertEq(usdcSupplyVault.asset(), usdc);
+        assertEq(usdcSupplyVault.decimals(), 18);
+    }
+
     function testShouldDepositAmount() public {
         uint256 amount = 10_000 ether;
 

@@ -23,18 +23,18 @@ import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransf
 contract Deploy is Script, Config {
     using SafeTransferLib for ERC20;
 
-    address supplyVaultImpl;
-    address supplyHarvestVaultImpl;
+    address public supplyVaultImpl;
+    address public supplyHarvestVaultImpl;
 
-    address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
-    address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
-    address constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
-    address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
-    address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
+    address public constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
+    address public constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address public constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
+    address public constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
+    address public constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
 
-    uint256 constant DEFAULT_INITIAL_DEPOSIT = 1e15;
-    uint256 constant USD_INITIAL_DEPOSIT = 1e8;
-    uint256 constant WBTC_INITIAL_DEPOSIT = 1e6;
+    uint256 public constant DEFAULT_INITIAL_DEPOSIT = 1e15;
+    uint256 public constant USD_INITIAL_DEPOSIT = 1e8;
+    uint256 public constant WBTC_INITIAL_DEPOSIT = 1e6;
 
     function run() external {
         vm.startBroadcast(DEPLOYER);
@@ -245,7 +245,7 @@ contract Deploy is Script, Config {
             )
         );
         console2.log(supplyHarvestVault_);
-        Ownable(supplyHarvestVault_).transferOwnership(DAO_OWNER);
+        Ownable(supplyHarvestVault_).transferOwnership(MORPHO_DAO);
         require(supplyHarvestVault.totalAssets() > 0, "Assets not > 0");
         require(supplyHarvestVault.totalSupply() > 0, "Supply not > 0");
     }

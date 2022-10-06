@@ -82,7 +82,6 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         if (_swapper == address(0)) revert ZeroAddress();
         if (_harvestingFee > MAX_BASIS_POINTS) revert ExceedsMaxBasisPoints(_harvestingFee);
 
-        __Ownable_init();
         __SupplyVaultBase_init(_poolToken, _name, _symbol, _initialDeposit);
 
         harvestingFee = _harvestingFee;

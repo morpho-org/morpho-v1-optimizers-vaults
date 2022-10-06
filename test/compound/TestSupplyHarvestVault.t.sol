@@ -6,6 +6,32 @@ import "./setup/TestSetupVaults.sol";
 contract TestSupplyHarvestVault is TestSetupVaults {
     using CompoundMath for uint256;
 
+    function testCorrectInitialisationDai() public {
+        assertEq(daiSupplyHarvestVault.owner(), address(this));
+        assertEq(daiSupplyHarvestVault.name(), "MorphoCompoundHarvestDAI");
+        assertEq(daiSupplyHarvestVault.symbol(), "mchDAI");
+        assertEq(daiSupplyHarvestVault.poolToken(), cDai);
+        assertEq(daiSupplyHarvestVault.asset(), dai);
+        assertEq(daiSupplyHarvestVault.decimals(), 18);
+        assertFalse(daiSupplyHarvestVault.isEth());
+        assertEq(daiSupplyHarvestVault.compSwapFee(), 3000);
+        assertEq(daiSupplyHarvestVault.assetSwapFee(), 500);
+        assertEq(daiSupplyHarvestVault.harvestingFee(), 100);
+    }
+
+    function testCorrectInitialisationUsdc() public {
+        assertEq(usdcSupplyHarvestVault.owner(), address(this));
+        assertEq(usdcSupplyHarvestVault.name(), "MorphoCompoundHarvestUSDC");
+        assertEq(usdcSupplyHarvestVault.symbol(), "mchUSDC");
+        assertEq(usdcSupplyHarvestVault.poolToken(), cUsdc);
+        assertEq(usdcSupplyHarvestVault.asset(), usdc);
+        assertEq(usdcSupplyHarvestVault.decimals(), 18);
+        assertFalse(usdcSupplyHarvestVault.isEth());
+        assertEq(usdcSupplyHarvestVault.compSwapFee(), 3000);
+        assertEq(usdcSupplyHarvestVault.assetSwapFee(), 3000);
+        assertEq(usdcSupplyHarvestVault.harvestingFee(), 50);
+    }
+
     function testInitializationShouldRevertWithWrongInputs() public {
         SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho));
 
