@@ -23,7 +23,7 @@ contract Deploy is Script, Config {
     using SafeERC20 for IERC20;
 
     address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
-    address constant SAFE = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
     address constant MORPHO = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
     address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
@@ -109,7 +109,7 @@ contract Deploy is Script, Config {
         );
 
         SupplyVault(supplyVault_).initialize(_poolToken, _name, _symbol, _initialDeposit);
-        SupplyVault(supplyVault_).transferOwnership(SAFE);
+        SupplyVault(supplyVault_).transferOwnership(MORPHO_DAO);
         console2.log(
             string(
                 abi.encodePacked(
