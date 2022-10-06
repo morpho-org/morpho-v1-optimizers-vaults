@@ -17,7 +17,6 @@ import "forge-std/console2.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
-import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
 contract Deploy is Script, Config {
     using SafeERC20 for IERC20;
