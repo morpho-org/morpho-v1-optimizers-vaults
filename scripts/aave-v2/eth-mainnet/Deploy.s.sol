@@ -21,17 +21,17 @@ import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
 contract Deploy is Script, Config {
     using SafeERC20 for IERC20;
 
-    address constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
-    address constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
-    address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
-    address constant MORPHO = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
-    address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
-    address constant A_CRV = 0x8dAE6Cb04688C62d939ed9B68d32Bc62e49970b1;
+    address public constant DEPLOYER = 0xD824b88Dd1FD866B766eF80249E4c2f545a68b7f;
+    address public constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address public constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
+    address public constant MORPHO = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
+    address public constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
+    address public constant A_CRV = 0x8dAE6Cb04688C62d939ed9B68d32Bc62e49970b1;
 
-    uint256 constant DEFAULT_INITIAL_DEPOSIT = 1e8;
-    uint256 constant WBTC_INITIAL_DEPOSIT = 1e6;
+    uint256 public constant DEFAULT_INITIAL_DEPOSIT = 1e8;
+    uint256 public constant WBTC_INITIAL_DEPOSIT = 1e6;
 
-    string constant VERSION = "1.1";
+    string public constant VERSION = "1.1";
 
     function run() external {
         vm.startBroadcast(DEPLOYER);
