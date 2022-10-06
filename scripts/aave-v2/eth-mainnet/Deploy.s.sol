@@ -25,7 +25,6 @@ contract Deploy is Script, Config {
     address constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
     address constant MORPHO = 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
-    address constant DAO_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address constant ADMO_DEPLOYER = 0x08072D67a6f158FE2c6f21886B0742736e925536;
     address constant A_CRV = 0x8dAE6Cb04688C62d939ed9B68d32Bc62e49970b1;
 
