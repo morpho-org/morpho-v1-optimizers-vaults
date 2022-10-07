@@ -27,34 +27,23 @@ All audits are stored in the [audits](./audits/)' folder.
 
 #### Supply Vaults
 
-- mcWBTC: [0x9aca9579b797a9fa14656b3234902374c77600d3](https://etherscan.io/address/0x9aca9579b797a9fa14656b3234902374c77600d3)
-- mcWETH: [0x5c17aa0730030ca7d0afc2a472bbd1d7e3ddc72d](https://etherscan.io/address/0x5c17aa0730030ca7d0afc2a472bbd1d7e3ddc72d)
-- mcDAI: [0xdfe7d9322835ebd7317b5947e898780a2f97b636](https://etherscan.io/address/0xdfe7d9322835ebd7317b5947e898780a2f97b636)
-- mcUSDC: [0x125e52e814d1f32d64f62677bffa28225a9283d1](https://etherscan.io/address/0x125e52e814d1f32d64f62677bffa28225a9283d1)
-- mcUSDT​: [0x54dbe0f95df628217c418f423d69aa70227cf9cc](https://etherscan.io/address/0x54dbe0f95df628217c418f423d69aa70227cf9cc)
-- mcCOMP: [0x1744e5d9692d86d29b54d7ac435b665c036739a6](https://etherscan.io/address/0x1744e5d9692d86d29b54d7ac435b665c036739a6)
-- mcUNI: [0x0516cdc8ca5b9af576b5214075ae71914b8a863b](https://etherscan.io/address/0x0516cdc8ca5b9af576b5214075ae71914b8a863b)
+Not deployed yet.
 
 #### Supply Harvest Vaults
 
-- mchWBTC: [0xbb61dce011f8d66bcca212a501eb315a563f965e](https://etherscan.io/address/0xbb61dce011f8d66bcca212a501eb315a563f965e)
-- mchWETH: [0x51bd0aca7bf4c3b4927c794bee338465f3885408](https://etherscan.io/address/0x51bd0aca7bf4c3b4927c794bee338465f3885408)
-- mchDAI: [0xd9b7a4401d4e430ad8b268d72c907a5c7516317f](https://etherscan.io/address/0xd9b7a4401d4e430ad8b268d72c907a5c7516317f)
-- mchUSDC: [0xaf7ddc2e19248fe4e400abc052162f146791745f](https://etherscan.io/address/0xaf7ddc2e19248fe4e400abc052162f146791745f)
-- mchUSDT: [0x182971cd346b87d9f99712e3030290f4ddc664d3](https://etherscan.io/address/0x182971cd346b87d9f99712e3030290f4ddc664d3)
-- mchCOMP: [0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5](https://etherscan.io/address/0x901579c24e0ecfdb41c4b184b2ee3730975b4ad5)
-- mchUNI: [0xafb6d25d2b0e9183fc363aff75e6a107d35bb414](https://etherscan.io/address/0xafb6d25d2b0e9183fc363aff75e6a107d35bb414)
+Not deployed yet.
 
 ### Morpho-Aave-V2 (Ethereum)
 
 #### Supply Vaults
 
-- maWBTC: [0xa59d6996bdbfaef7b64eee436e5326869c9d8399](https://etherscan.io/address/0xa59d6996bdbfaef7b64eee436e5326869c9d8399)
-- maWETH: [0x762fafa0257cd3b697e0d7fd40f1f6c03f07a8ef](https://etherscan.io/address/0x762fafa0257cd3b697e0d7fd40f1f6c03f07a8ef)
-- maDAI: [0x3a91d37bac30c913369e1abc8cad1c13d1ff2e98](https://etherscan.io/address/0x3a91d37bac30c913369e1abc8cad1c13d1ff2e98)
-- maUSDC: [0xd45ef8c9b9431298019fc15753609db2fb101aa5](https://etherscan.io/address/0xd45ef8c9b9431298019fc15753609db2fb101aa5)
-- maUSDT: [0x1926bb3977336fd376be0aee2915406a904e5870](https://etherscan.io/address/0x1926bb3977336fd376be0aee2915406a904e5870)
-- maCRV: [0x963311ebb58043755a33bc3de4be8b492fda66d0](https://etherscan.io/address/0x963311ebb58043755a33bc3de4be8b492fda66d0)
+- maWBTC: [0xd508f85f1511aaec63434e26aeb6d10be0188dc7](https://etherscan.io/address/0xd508f85f1511aaec63434e26aeb6d10be0188dc7)
+- maWETH: [0x490bbbc2485e99989ba39b34802fafa58e26aba4](https://etherscan.io/address/0x490bbbc2485e99989ba39b34802fafa58e26aba4)
+- maDAI: [0x36f8d0d0573ae92326827c4a82fe4ce4c244cab6](https://etherscan.io/address/0x36f8d0d0573ae92326827c4a82fe4ce4c244cab6)
+- maUSDC: [0xa5269a8e31b93ff27b887b56720a25f844db0529](https://etherscan.io/address/0xa5269a8e31b93ff27b887b56720a25f844db0529)
+- maUSDT: [0xafe7131a57e44f832cb2de78ade38cad644aac2f](https://etherscan.io/address/0xafe7131a57e44f832cb2de78ade38cad644aac2f)
+- maCRV: [0x9dc7094530cb1bcf5442c3b9389ee386738a190c](https://etherscan.io/address/0x9dc7094530cb1bcf5442c3b9389ee386738a190c)
+- Implementation: [0x5f52ab9b380fd794c77a575f1f9323dae1bd6157](https://etherscan.io/address/0x5f52ab9b380fd794c77a575f1f9323dae1bd6157)
 
 ### Common Contracts (Ethereum)
 
