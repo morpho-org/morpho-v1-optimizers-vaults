@@ -56,7 +56,7 @@ runs:
       uses: Rubilmax/foundry-gas-diff@v3.9
       with:
         report: ${{ inputs.protocol }}.${{ inputs.network }}.gasreport.ansi
-        ignore: test-foundry/**/*
+        ignore: test/**/*,lib/**/*
         header: |
           # Morpho-${{ inputs.protocol }} gas impacts (${{ inputs.network }})
       id: gas_diff
