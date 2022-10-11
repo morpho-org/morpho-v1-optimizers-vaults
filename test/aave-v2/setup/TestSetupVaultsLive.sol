@@ -15,9 +15,9 @@ contract TestSetupVaultsLive is TestSetup {
 
     SupplyVault internal supplyVaultImplV1;
 
-    address internal constant wNativeVaultAddress = 0x762fafA0257CD3b697e0D7FD40f1f6c03F07A8ef;
-    address internal constant daiVaultAddress = 0x3A91D37BAc30C913369E1ABC8CAd1C13D1ff2e98;
-    address internal constant usdcVaultAddress = 0xd45EF8c9b9431298019FC15753609DB2FB101aa5;
+    address internal constant W_NATIVE_VAULT_ADDRESS = 0x762fafA0257CD3b697e0D7FD40f1f6c03F07A8ef;
+    address internal constant DAI_VAULT_ADDRESS = 0x3A91D37BAc30C913369E1ABC8CAd1C13D1ff2e98;
+    address internal constant USDC_VAULT_ADDRESS = 0xd45EF8c9b9431298019FC15753609DB2FB101aa5;
 
     uint256 internal constant INITIAL_DEPOSIT = 1e8;
 
@@ -27,16 +27,16 @@ contract TestSetupVaultsLive is TestSetup {
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
 
-    ERC20 ma2WNative;
-    ERC20 ma2Dai;
-    ERC20 ma2Usdc;
+    ERC20 internal ma2WNative;
+    ERC20 internal ma2Dai;
+    ERC20 internal ma2Usdc;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;
     VaultUser public vaultSupplier3;
     VaultUser[] public vaultSuppliers;
 
-    uint256 forkId;
+    uint256 internal forkId;
 
     function onSetUp() public override {
         // Fork from latest block
@@ -49,17 +49,17 @@ contract TestSetupVaultsLive is TestSetup {
 
     function initVaultContracts() internal {
         morpho = Morpho(0x777777c9898D384F785Ee44Acfe945efDFf5f3E0);
-        wNativeSupplyVault = SupplyVault(wNativeVaultAddress);
-        daiSupplyVault = SupplyVault(daiVaultAddress);
-        usdcSupplyVault = SupplyVault(usdcVaultAddress);
+        wNativeSupplyVault = SupplyVault(W_NATIVE_VAULT_ADDRESS);
+        daiSupplyVault = SupplyVault(DAI_VAULT_ADDRESS);
+        usdcSupplyVault = SupplyVault(USDC_VAULT_ADDRESS);
 
-        ma2WNative = ERC20(wNativeVaultAddress);
-        ma2Dai = ERC20(daiVaultAddress);
-        ma2Usdc = ERC20(usdcVaultAddress);
+        ma2WNative = ERC20(W_NATIVE_VAULT_ADDRESS);
+        ma2Dai = ERC20(DAI_VAULT_ADDRESS);
+        ma2Usdc = ERC20(USDC_VAULT_ADDRESS);
 
         proxyAdmin = ProxyAdmin(0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8);
 
-        wNativeSupplyVaultProxy = TransparentUpgradeableProxy(payable(wNativeVaultAddress));
+        wNativeSupplyVaultProxy = TransparentUpgradeableProxy(payable(W_NATIVE_VAULT_ADDRESS));
         supplyVaultImplV1 = SupplyVault(0x65663ee4cC7c9C494802e7f10cbBd710d3F1FE95);
     }
 
