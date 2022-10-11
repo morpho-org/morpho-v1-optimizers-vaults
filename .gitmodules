@@ -1,6 +1,3 @@
 [submodule "lib/morpho-contracts"]
 	path = lib/morpho-contracts
 	url = git@github.com:morpho-dao/morpho-v1.git
-[submodule "lib/forge-std"]
-	path = lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
