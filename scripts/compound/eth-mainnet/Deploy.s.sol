@@ -102,7 +102,7 @@ contract Deploy is Script, Config {
             abi.encode(_supplyVaultImpl, PROXY_ADMIN, "")
         );
         bytes32 salt = keccak256(
-            abi.encode("Morpho Supply Vault v1.1", _poolToken, _name, _symbol)
+            abi.encode("Morpho Supply Vault v1.2", _poolToken, _name, _symbol)
         );
 
         supplyVault_ = Create2.computeAddress(salt, keccak256(creationCode), ADMO_DEPLOYER);

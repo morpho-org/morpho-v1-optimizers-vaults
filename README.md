@@ -27,7 +27,14 @@ All audits are stored in the [audits](./audits/)' folder.
 
 #### Supply Vaults
 
-Not deployed yet.
+- mcDAI: [0x8F88EaE3e1c01d60bccdc3DB3CBD5362Dd55d707](https://etherscan.io/address/0x8F88EaE3e1c01d60bccdc3DB3CBD5362Dd55d707)
+- mcWETH: [0x676E1B7d5856f4f69e10399685e17c2299370E95](https://etherscan.io/address/0x676E1B7d5856f4f69e10399685e17c2299370E95)
+- mcCOMP: [0xaA768b85eC827cCc36D882c1814bcd27ec4A8593](https://etherscan.io/address/0xaA768b85eC827cCc36D882c1814bcd27ec4A8593)
+- mcUNI: [0x496da625C736a2fF122638Dc26dCf1bFdEf1778c](https://etherscan.io/address/0x496da625C736a2fF122638Dc26dCf1bFdEf1778c)
+- mcUSDC: [0xba9E3b3b684719F80657af1A19DEbc3C772494a0](https://etherscan.io/address/0xba9E3b3b684719F80657af1A19DEbc3C772494a0)
+- mcUSDT: [0xC2A4fBA93d4120d304c94E4fd986e0f9D213eD8A](https://etherscan.io/address/0xC2A4fBA93d4120d304c94E4fd986e0f9D213eD8A)
+- mcWBTC: [0xF31AC95fe692190b9C67112d8c912bA9973944F2](https://etherscan.io/address/0xF31AC95fe692190b9C67112d8c912bA9973944F2)
+- Implementation: [0x7c24CcA32d6810786EF6700f95322a133f636aFF](https://etherscan.io/address/0x7c24CcA32d6810786EF6700f95322a133f636aFF)
 
 #### Supply Harvest Vaults
 
