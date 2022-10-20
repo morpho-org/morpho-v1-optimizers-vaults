@@ -1,0 +1,46 @@
+name: Storage layout checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - lib/**
+      - src/**
+      - "*.lock"
+      - remappings.txt
+      - .github/workflows/ci-storage-check-compound.yml
+
+jobs:
+  morpho-compound:
+    name: morpho-compound
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.CI_PRIVATE_KEY }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Check SupplyVault storage layout
+        uses: Rubilmax/foundry-storage-check@v2
+        with:
+          contract: src/compound/SupplyVault.sol:SupplyVault
+
+      - name: Check SupplyHarvestVault storage layout
+        uses: Rubilmax/foundry-storage-check@v2
+        with:
+          contract: src/compound/SupplyHarvestVault.sol:SupplyHarvestVault

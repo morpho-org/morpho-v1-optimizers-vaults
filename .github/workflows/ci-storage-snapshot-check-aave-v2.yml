@@ -1,0 +1,41 @@
+name: Storage layout snapshot check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - lib/**
+      - src/**
+      - "*.lock"
+      - remappings.txt
+      - .github/workflows/ci-storage-snapshot-check-aave-v2.yml
+
+jobs:
+  check:
+    name: morpho-aave-v2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.CI_PRIVATE_KEY }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Check storage layout snapshot
+        run: make storage-layout-check-SupplyVault
+        env:
+          PROTOCOL: aave-v2
