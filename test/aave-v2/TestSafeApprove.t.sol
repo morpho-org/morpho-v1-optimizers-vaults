@@ -2,13 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "./setup/TestSetupVaults.sol";
-import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
-// IERC20 is already imported from aave libs
 import {IERC20 as IERC20OZ, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-
-import {IAdmoDeployer} from "@vaults/interfaces/IAdmoDeployer.sol";
 
 contract TestSafeApprove is TestSetupVaults {
     using SafeTransferLib for ERC20;
@@ -43,6 +39,15 @@ contract TestSafeApprove is TestSetupVaults {
         assertEq(target, TARGET);
         vm.prank(address(supplier1));
         ERC20(dai).safeApprove(target, 1e8);
+    }
+
+    // passes
+    // with compute address
+    function testSafeTransferLibApprove4() public {
+        address target = Create2.computeAddress(salt, keccak256(CREATION_CODE), address(0));
+        assertEq(target, TARGET);
+        vm.prank(address(supplier1));
+        ERC20(crv).safeApprove(TARGET, 1e8);
     }
 
     // passes
