@@ -125,11 +125,9 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     {
         address poolTokenMem = poolToken;
 
-        {
-            address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolTokenMem;
-            (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
-        }
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = poolTokenMem;
+        (rewardTokens, rewardsAmounts) = morpho.claimRewards(poolTokens, false);
 
         address assetMem = asset();
         ISwapper swapperMem = swapper;
