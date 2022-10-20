@@ -10,6 +10,7 @@ import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathL
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
+import "forge-std/console.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
@@ -125,33 +126,47 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         view
         returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
-        uint256 supply = totalSupply();
-        if (supply > 0) {
+        uint256[] memory claimableAmounts;
+        console.log("totalSupply()", totalSupply());
+
+        {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
 
-            uint256[] memory claimableAmounts;
+            console.log("poolToken", poolToken);
+
             (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
                 poolTokens,
                 address(this)
             );
+        }
 
-            for (uint256 i; i < rewardTokens.length; ) {
-                address rewardToken = rewardTokens[i];
-                UserRewardsData memory userRewardsData = userRewards[rewardToken][_user];
+        uint256 supply = totalSupply();
 
+        console.log("here0");
+
+        for (uint256 i; i < rewardTokens.length; ) {
+            address rewardToken = rewardTokens[i];
+            UserRewardsData memory userRewardsData = userRewards[rewardToken][_user];
+
+            if (supply > 0)
                 unclaimedAmounts[i] =
                     userRewardsData.unclaimed +
                     balanceOf(_user).mulDivDown(
                         (rewardsIndex[rewardToken] +
-                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) -
-                            userRewardsData.index,
+                            claimableAmounts[i].mulDivDown(SCALE, supply)) - userRewardsData.index,
+                        SCALE
+                    );
+            else
+                unclaimedAmounts[i] =
+                    userRewardsData.unclaimed +
+                    balanceOf(_user).mulDivDown(
+                        rewardsIndex[rewardToken] - userRewardsData.index,
                         SCALE
                     );
 
-                unchecked {
-                    ++i;
-                }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -165,9 +180,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         view
         returns (uint256)
     {
-        uint256 supply = totalSupply();
-        if (supply == 0) return 0;
-
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolToken;
 
@@ -176,16 +188,25 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             address(this),
             _rewardToken
         );
+
+        console.log("here1");
         UserRewardsData memory rewards = userRewards[_rewardToken][_user];
 
-        return
-            rewards.unclaimed +
-            balanceOf(_user).mulDivDown(
-                (rewardsIndex[_rewardToken] +
-                    claimableRewards.mulDivDown(SCALE, totalSupply()) -
-                    rewards.index),
-                SCALE
-            );
+        uint256 supply = totalSupply();
+
+        if (supply > 0)
+            return
+                rewards.unclaimed +
+                balanceOf(_user).mulDivDown(
+                    (rewardsIndex[_rewardToken] +
+                        claimableRewards.mulDivDown(SCALE, totalSupply()) -
+                        rewards.index),
+                    SCALE
+                );
+        else
+            return
+                rewards.unclaimed +
+                balanceOf(_user).mulDivDown((rewardsIndex[_rewardToken] - rewards.index), SCALE);
     }
 
     /// INTERNAL ///
