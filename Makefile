@@ -69,6 +69,12 @@ single-% s-%:
 	@echo Running single test $* of Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test -vvv --match-test $* | tee trace.ansi
 
+storage-layout-gen-%:
+	@./scripts/storage-layout.sh generate snapshots/.storage-layout-${PROTOCOL} $*
+
+storage-layout-check-%:
+	@./scripts/storage-layout.sh check snapshots/.storage-layout-${PROTOCOL} $*
+
 config:
 	@forge config
 
