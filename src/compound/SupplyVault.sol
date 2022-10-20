@@ -41,6 +41,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     uint256 public rewardsIndex; // The vault's rewards index.
     mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.
 
+    uint256 public test;
+
     /// CONSTRUCTOR ///
 
     /// @dev Initializes network-wide immutables.
