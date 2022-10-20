@@ -134,9 +134,8 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         address assetMem = asset();
         ISwapper swapperMem = swapper;
         uint16 harvestingFeeMem = harvestingFee;
-        uint256 nbRewardTokens = rewardTokens.length;
 
-        for (uint256 i; i < nbRewardTokens; ) {
+        for (uint256 i; i < rewardTokens.length; ) {
             uint256 rewardsAmount = rewardsAmounts[i];
 
             if (rewardsAmount > 0) {
