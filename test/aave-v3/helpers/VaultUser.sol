@@ -46,6 +46,15 @@ contract VaultUser is User {
     function redeemVault(
         ERC4626UpgradeableSafe tokenizedVault,
         uint256 _shares,
+        address _receiver,
+        address _owner
+    ) public returns (uint256) {
+        return tokenizedVault.redeem(_shares, _receiver, _owner);
+    }
+
+    function redeemVault(
+        ERC4626UpgradeableSafe tokenizedVault,
+        uint256 _shares,
         address _owner
     ) public returns (uint256) {
         return tokenizedVault.redeem(_shares, address(this), _owner);
