@@ -358,18 +358,17 @@ contract TestSupplyVault is TestSetupVaults {
     function testAccrueRewardsToCorrectUser() public {
         uint256 amount = 1e6 ether;
 
-        vm.startPrank(address(supplier1));
         ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
-        daiSupplyVault.deposit(amount, address(supplier1));
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 1000);
 
-        daiSupplyVault.redeem(
+        vaultSupplier1.redeemVault(
+            daiSupplyVault,
             daiSupplyVault.balanceOf(address(supplier1)),
             address(supplier2),
             address(supplier1)
         );
-        vm.stopPrank();
 
         // Balance of supplier1 is expected to be 0.
         assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
