@@ -121,17 +121,14 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         view
         returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = poolToken;
+
         uint256[] memory claimableAmounts;
-
-        {
-            address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolToken;
-
-            (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
-                poolTokens,
-                address(this)
-            );
-        }
+        (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
+            poolTokens,
+            address(this)
+        );
 
         unclaimedAmounts = new uint256[](claimableAmounts.length);
         uint256 supply = totalSupply();
