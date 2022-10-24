@@ -126,7 +126,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
         unclaimed = userRewardsData.unclaimed;
         if (rewardsIndexDiff > 0) {
-            unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff).safeCastTo128();
+            unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff);
             userRewardsData.unclaimed = unclaimed.safeCastTo128();
         }
 
