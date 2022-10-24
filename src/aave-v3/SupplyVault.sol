@@ -10,7 +10,6 @@ import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathL
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
-import "forge-std/console.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
@@ -127,13 +126,10 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
         uint256[] memory claimableAmounts;
-        console.log("totalSupply()", totalSupply());
 
         {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
-
-            console.log("poolToken", poolToken);
 
             (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
                 poolTokens,
@@ -141,9 +137,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             );
         }
 
+        unclaimedAmounts = new uint256[](claimableAmounts.length);
         uint256 supply = totalSupply();
-
-        console.log("here0");
 
         for (uint256 i; i < rewardTokens.length; ) {
             address rewardToken = rewardTokens[i];
@@ -189,7 +184,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             _rewardToken
         );
 
-        console.log("here1");
         UserRewardsData memory rewards = userRewards[_rewardToken][_user];
 
         uint256 supply = totalSupply();
