@@ -3,20 +3,19 @@ pragma solidity 0.8.13;
 
 import "@config/Config.sol";
 import "@forge-std/Script.sol";
+import "@forge-std/console2.sol";
+
+import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
+import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
+import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
+
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
-import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
-
-import "@forge-std/console2.sol";
-
-import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
-import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
+import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
 
 contract Deploy is Script, Config {
     using SafeERC20 for IERC20;

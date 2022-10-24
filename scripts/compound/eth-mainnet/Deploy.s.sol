@@ -3,22 +3,19 @@ pragma solidity 0.8.13;
 
 import "@config/Config.sol";
 import "@forge-std/Script.sol";
+import "@forge-std/console2.sol";
+
+import {ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
+import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
+import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
+
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-
-import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
-import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
-import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
-import "@forge-std/console2.sol";
-
-import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
-import {ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
 import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 
 contract Deploy is Script, Config {
     using SafeERC20 for IERC20;
