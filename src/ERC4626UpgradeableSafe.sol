@@ -22,7 +22,7 @@ abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
         IERC20MetadataUpgradeable _asset,
         uint256 _initialDeposit
     ) internal onlyInitializing {
-        __ERC4626_init(_asset);
+        __ERC4626_init_unchained(_asset);
         __ERC4626UpgradeableSafe_init_unchained(_initialDeposit);
     }
 
