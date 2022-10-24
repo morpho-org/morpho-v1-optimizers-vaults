@@ -510,9 +510,7 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
 
         // supplier1 must have some rewards to claim.
-        (, uint256[] memory claimedAmounts) = daiSupplyVault.getAllUnclaimedRewards(
-            address(supplier1)
-        );
-        assertGt(claimedAmounts[0], 0);
+        (, uint256[] memory unclaimed) = daiSupplyVault.getAllUnclaimedRewards(address(supplier1));
+        assertGt(unclaimed[0], 0);
     }
 }
