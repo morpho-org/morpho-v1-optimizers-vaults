@@ -184,7 +184,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                 rewards.unclaimed +
                 balanceOf(_user).mulDivDown(
                     (rewardsIndex[_rewardToken] +
-                        claimableRewards.mulDivDown(SCALE, totalSupply()) -
+                        claimableRewards.mulDivDown(SCALE, supply) -
                         rewards.index),
                     SCALE
                 );
