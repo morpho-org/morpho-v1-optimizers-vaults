@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import "@config/Config.sol";
-import "forge-std/Script.sol";
+import "@forge-std/Script.sol";
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
@@ -13,7 +13,7 @@ import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
 import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "forge-std/console2.sol";
+import "@forge-std/console2.sol";
 
 import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 import {ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
