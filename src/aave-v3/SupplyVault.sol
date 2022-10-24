@@ -96,7 +96,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
         claimedAmounts = new uint256[](rewardTokens.length);
 
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
@@ -108,10 +108,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                 ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
                 emit Claimed(rewardToken, _user, unclaimedAmount);
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
@@ -140,7 +136,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         unclaimedAmounts = new uint256[](claimableAmounts.length);
         uint256 supply = totalSupply();
 
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             UserRewardsData memory userRewardsData = userRewards[rewardToken][_user];
 
@@ -159,10 +155,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                         rewardsIndex[rewardToken] - userRewardsData.index,
                         SCALE
                     );
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -185,7 +177,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         );
 
         UserRewardsData memory rewards = userRewards[_rewardToken][_user];
-
         uint256 supply = totalSupply();
 
         if (supply > 0)
@@ -238,7 +229,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         }
 
         uint256 supply = totalSupply();
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
             uint128 rewardsIndexMem = rewardsIndex[rewardToken];
@@ -264,10 +255,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                 userRewardsData.index = rewardsIndexMem;
 
                 emit Accrued(rewardToken, _user, rewardsIndexMem, accruedRewards);
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
