@@ -145,13 +145,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                             claimableAmounts[i].mulDivDown(SCALE, supply)) - userRewardsData.index,
                         SCALE
                     );
-            else
-                unclaimedAmounts[i] =
-                    userRewardsData.unclaimed +
-                    balanceOf(_user).mulDivDown(
-                        rewardsIndex[rewardToken] - userRewardsData.index,
-                        SCALE
-                    );
+            else unclaimedAmounts[i] = userRewardsData.unclaimed;
         }
     }
 
@@ -185,10 +179,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                         rewards.index),
                     SCALE
                 );
-        else
-            return
-                rewards.unclaimed +
-                balanceOf(_user).mulDivDown((rewardsIndex[_rewardToken] - rewards.index), SCALE);
+        return rewards.unclaimed;
     }
 
     /// INTERNAL ///
