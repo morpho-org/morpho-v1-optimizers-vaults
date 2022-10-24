@@ -21,12 +21,15 @@ abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
     function __ERC4626UpgradeableSafe_init(
         IERC20MetadataUpgradeable _asset,
         uint256 _initialDeposit
-    ) internal {
+    ) internal onlyInitializing {
         __ERC4626_init(_asset);
         __ERC4626UpgradeableSafe_init_unchained(_initialDeposit);
     }
 
-    function __ERC4626UpgradeableSafe_init_unchained(uint256 _initialDeposit) internal {
+    function __ERC4626UpgradeableSafe_init_unchained(uint256 _initialDeposit)
+        internal
+        onlyInitializing
+    {
         // Sacrifice an initial seed of shares to ensure a healthy amount of precision in minting shares.
         // Set to 0 at your own risk.
         // Caller must have approved the asset to this contract's address.
