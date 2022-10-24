@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
-import {IAdmoDeployer} from "@vaults/interfaces/IAdmoDeployer.sol";
+import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
 
 import "forge-std/console2.sol";
 

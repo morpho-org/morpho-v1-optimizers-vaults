@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 
 import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 import {SupplyHarvestVault} from "@vaults/compound/SupplyHarvestVault.sol";
-import {IAdmoDeployer} from "@vaults/interfaces/IAdmoDeployer.sol";
+import {IAdmoDeployer} from "scripts/interfaces/IAdmoDeployer.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "forge-std/console2.sol";
