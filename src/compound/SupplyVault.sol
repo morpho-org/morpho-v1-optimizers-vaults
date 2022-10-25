@@ -105,18 +105,16 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
         uint256 supply = totalSupply();
-        uint256 rewardsIndexMem;
+        uint256 rewardsIndexMem = rewardsIndex;
 
         if (supply > 0) {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
-            rewardsIndexMem =
-                rewardsIndex +
-                morpho.claimRewards(poolTokens, false).divWadDown(supply);
-        } else rewardsIndexMem = rewardsIndex;
+            rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
+            rewardsIndex = rewardsIndexMem;
+        }
 
         UserRewardsData storage userRewardsData = userRewards[_user];
-        rewardsIndex = rewardsIndexMem;
         uint256 rewardsIndexDiff;
 
         // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
