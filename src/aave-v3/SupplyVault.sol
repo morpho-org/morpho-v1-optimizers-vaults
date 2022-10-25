@@ -49,7 +49,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     /// STORAGE ///
 
-    uint256 public constant SCALE = 1e36;
+    uint256 public constant SCALE = 1e18;
 
     IRewardsManager public rewardsManager; // Morpho's rewards manager.
 
