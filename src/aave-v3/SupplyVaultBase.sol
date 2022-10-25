@@ -70,7 +70,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     {
         poolToken = _poolToken;
 
-        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS()); // Reverts on zero address so no check for pool token needed
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
