@@ -127,11 +127,10 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     {
         uint256 supply = totalSupply();
         if (supply > 0) {
-            uint256[] memory claimableAmounts;
-
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
 
+            uint256[] memory claimableAmounts;
             (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
                 poolTokens,
                 address(this)
