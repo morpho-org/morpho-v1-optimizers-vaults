@@ -89,7 +89,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @dev The indexes used by this function might not be up-to-date.
     ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
     ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
-    function totalAssets() public view override returns (uint256) {
+    function totalAssets() public view virtual override returns (uint256) {
         address poolTokenMem = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
             poolTokenMem,
