@@ -363,7 +363,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         uint256 _deal,
         uint256 _toTransfer
     ) public {
-        vm.assume(_to != daiSupplyHarvestVault.owner());
+        vm.assume(_to != address(daiSupplyHarvestVault));
         _toTransfer = bound(_toTransfer, 0, _deal);
         deal($token, address(daiSupplyHarvestVault), _deal);
 
