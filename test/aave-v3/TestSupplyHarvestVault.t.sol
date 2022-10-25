@@ -44,7 +44,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         new SupplyHarvestVault(address(0));
 
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
+        vm.expectRevert();
         vault.initialize(address(0), "test", "test", 0, 0, address(swapper));
 
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
