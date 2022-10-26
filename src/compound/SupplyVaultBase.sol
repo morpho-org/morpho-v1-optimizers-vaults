@@ -41,7 +41,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
         morpho = IMorpho(_morpho);
-        wEth = morpho.wEth();
+        wEth = morpho.wEth(); // Reverts if morpho is zero address, so no zero address check is needed.
         comp = ERC20(morpho.comptroller().getCompAddress());
     }
 

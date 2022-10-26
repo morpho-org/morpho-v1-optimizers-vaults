@@ -34,18 +34,18 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// STRUCTS ///
 
     struct UserRewardsData {
-        uint128 index; // User index for the reward token.
+        uint128 index; // Rewards index at the user's last interaction with the vault.
         uint128 unclaimed; // User's unclaimed rewards in underlying reward token.
     }
 
     /// STORAGE ///
 
     uint256 public rewardsIndex; // The vault's rewards index.
-    mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.
+    mapping(address => UserRewardsData) public userRewards; // The rewards data of a user, used to track accrued rewards.
 
     /// CONSTRUCTOR ///
 
-    /// @dev Initializes network-wide immutables.
+    /// @dev Initializes immutable state variables.
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) SupplyVaultBase(_morpho) {}
 

@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
-import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
