@@ -199,7 +199,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         address _receiver,
         uint256 _assets,
         uint256 _shares
-    ) internal virtual override {
+    ) internal override {
         _accrueUnclaimedRewards(_receiver);
         super._deposit(_caller, _receiver, _assets, _shares);
     }
@@ -210,7 +210,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         address _owner,
         uint256 _assets,
         uint256 _shares
-    ) internal virtual override {
+    ) internal override {
         _accrueUnclaimedRewards(_receiver);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
