@@ -18,7 +18,7 @@ contract UniswapV2Swapper is ISwapper {
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     IUniswapV2Router02 public immutable swapRouter;
     address public immutable wrappedNativeToken;

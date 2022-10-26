@@ -65,12 +65,14 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
         uint16 harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     }
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     uint16 public constant MAX_BASIS_POINTS = 100_00; // 100% in basis points.
     uint24 public constant MAX_UNISWAP_FEE = 100_0000; // 100% in UniswapV3 fee units.
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // The address of UniswapV3SwapRouter.
+
+    /// STORAGE ///
 
     bool public isEth; // Whether the underlying asset is WETH.
     HarvestConfig public harvestConfig; // The configuration of the swap on Uniswap V3.

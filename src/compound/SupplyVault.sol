@@ -31,12 +31,14 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @param claimed The amount of rewards claimed.
     event Claimed(address indexed user, uint256 claimed);
 
-    /// STORAGE ///
+    /// STRUCTS ///
 
     struct UserRewardsData {
         uint128 index; // User index for the reward token.
         uint128 unclaimed; // User's unclaimed rewards.
     }
+
+    /// STORAGE ///
 
     uint256 public rewardsIndex; // The vault's rewards index.
     mapping(address => UserRewardsData) public userRewards; // The rewards index of a user, used to track rewards accrued.

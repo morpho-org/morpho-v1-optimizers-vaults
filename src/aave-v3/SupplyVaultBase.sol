@@ -28,9 +28,11 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
+
+    /// STORAGE ///
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 

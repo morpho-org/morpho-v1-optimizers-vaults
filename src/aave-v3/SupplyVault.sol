@@ -47,11 +47,12 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     uint256 public constant SCALE = 1e36;
-
     IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
+
+    /// STORAGE ///
 
     mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
