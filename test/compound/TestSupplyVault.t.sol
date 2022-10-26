@@ -354,4 +354,27 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(token.balanceOf(address(daiSupplyVault)), _deal - _toTransfer);
         assertEq(token.balanceOf(_to), _toTransfer);
     }
+
+    function testAccrueRewardsToCorrectUser() public {
+        uint256 amount = 1e6 ether;
+
+        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        vaultSupplier1.redeemVault(
+            daiSupplyVault,
+            daiSupplyVault.balanceOf(address(supplier1)),
+            address(supplier2),
+            address(supplier1)
+        );
+
+        // Balance of supplier1 is expected to be 0.
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+
+        // supplier1 must have some rewards to claim.
+        (, uint256 unclaimed) = daiSupplyVault.userRewards(address(supplier1));
+        assertGt(unclaimed, 0);
+    }
 }

@@ -99,7 +99,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _assets,
         uint256 _shares
     ) internal virtual override {
-        _accrueUnclaimedRewards(_receiver);
+        _accrueUnclaimedRewards(_owner);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
