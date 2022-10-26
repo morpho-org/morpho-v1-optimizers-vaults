@@ -87,6 +87,10 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// EXTERNAL ///
 
+    /// @dev Token rescue function.
+    /// @param _asset The asset to rescue.
+    /// @param _to The destination address.
+    /// @param _amount The amount of tokens to rescue.
     function transferTokens(
         address _asset,
         address _to,
