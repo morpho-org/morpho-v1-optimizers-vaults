@@ -10,7 +10,6 @@ import {ERC4626Upgradeable, ERC20Upgradeable, IERC20MetadataUpgradeable} from "@
 abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
     /// CONSTRUCTOR ///
 
-    /// @notice Constructs the contract.
     /// @dev The contract automatically disables initializers when deployed so that nobody can highjack the implementation contract.
     constructor() {
         _disableInitializers();
