@@ -35,7 +35,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     struct UserRewardsData {
         uint128 index; // User index for the reward token.
-        uint128 unclaimed; // User's unclaimed rewards.
+        uint128 unclaimed; // User's unclaimed rewards in underlying reward token.
     }
 
     /// STORAGE ///
