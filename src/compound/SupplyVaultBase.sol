@@ -49,8 +49,8 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// @dev Initializes the vault.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    /// @param _name The name of the ERC20 token associated to this tokenized vault.
-    /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
+    /// @param _name The name of this tokenized vault.
+    /// @param _symbol The symbol of this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function __SupplyVaultBase_init(
         address _poolToken,
