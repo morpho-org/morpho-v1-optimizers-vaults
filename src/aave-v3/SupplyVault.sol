@@ -94,10 +94,9 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
         rewardTokens = morpho.rewardsController().getRewardsByAsset(poolToken);
 
-        uint256 nbRewardTokens = rewardTokens.length;
-        claimedAmounts = new uint256[](nbRewardTokens);
+        claimedAmounts = new uint256[](rewardTokens.length);
 
-        for (uint256 i; i < nbRewardTokens; ) {
+        for (uint256 i; i < rewardTokens.length; ) {
             address rewardToken = rewardTokens[i];
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
@@ -128,17 +127,14 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     {
         uint256 supply = totalSupply();
         if (supply > 0) {
+            address[] memory poolTokens = new address[](1);
+            poolTokens[0] = poolToken;
+
             uint256[] memory claimableAmounts;
-
-            {
-                address[] memory poolTokens = new address[](1);
-                poolTokens[0] = poolToken;
-
-                (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
-                    poolTokens,
-                    address(this)
-                );
-            }
+            (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
+                poolTokens,
+                address(this)
+            );
 
             for (uint256 i; i < rewardTokens.length; ) {
                 address rewardToken = rewardTokens[i];
