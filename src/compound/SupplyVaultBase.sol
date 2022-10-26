@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
-import {IComptroller, ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
+import {ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
 import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
