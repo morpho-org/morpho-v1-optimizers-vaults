@@ -6,13 +6,13 @@ import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
 
 interface ISupplyVaultBase is IERC4626Upgradeable {
-    function morpho() external returns (IMorpho);
+    function morpho() external view returns (IMorpho);
 
-    function wEth() external returns (address);
+    function wEth() external view returns (address);
 
-    function comp() external returns (ERC20);
+    function comp() external view returns (ERC20);
 
-    function poolToken() external returns (address);
+    function poolToken() external view returns (address);
 
     function transferTokens(
         address _asset,
