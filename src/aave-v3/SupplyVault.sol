@@ -51,7 +51,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     uint256 public constant SCALE = 1e36;
 
-    IRewardsManager public rewardsManager; // Morpho's rewards manager.
+    IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
 
     mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
@@ -60,7 +60,9 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) SupplyVaultBase(_morpho) {}
+    constructor(address _morpho) SupplyVaultBase(_morpho) {
+        rewardsManager = morpho.rewardsManager();
+    }
 
     /// INITIALIZER ///
 
@@ -76,8 +78,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _initialDeposit
     ) external initializer {
         __SupplyVaultBase_init(_poolToken, _name, _symbol, _initialDeposit);
-
-        rewardsManager = morpho.rewardsManager();
     }
 
     /// EXTERNAL ///
