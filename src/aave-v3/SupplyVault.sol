@@ -134,9 +134,10 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 supply = totalSupply();
 
         for (uint256 i; i < rewardTokens.length; ++i) {
+            address rewardToken = rewardTokens[i];
             unclaimedAmounts[i] =
-                userRewards[rewardTokens[i]][_user].unclaimed +
-                _getUnaccruedReward(_user, rewardTokens[i], claimableAmounts[i], supply);
+                userRewards[rewardToken][_user].unclaimed +
+                _getUnaccruedReward(_user, rewardToken, claimableAmounts[i], supply);
         }
     }
 
