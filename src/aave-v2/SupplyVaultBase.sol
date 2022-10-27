@@ -54,9 +54,10 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     ) internal onlyInitializing {
         ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
 
-        __Ownable_init();
-        __ERC20_init(_name, _symbol);
-        __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
+        __Ownable_init_unchained();
+        __ERC20_init_unchained(_name, _symbol);
+        __ERC4626_init_unchained(ERC20Upgradeable(address(underlyingToken)));
+        __ERC4626UpgradeableSafe_init_unchained(_initialDeposit);
     }
 
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
