@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity >=0.8.0;
+pragma solidity >=0.5.0;
 
-import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import {ISwapper} from "../../interfaces/ISwapper.sol";
+import {ISupplyVaultBase} from "./ISupplyVaultBase.sol";
 
-interface ISupplyHarvestVault is IERC4626Upgradeable {
+interface ISupplyHarvestVault is ISupplyVaultBase {
     function MAX_BASIS_POINTS() external view returns (uint16);
 
     function MAX_UNISWAP_FEE() external view returns (uint24);
 
     function SWAP_ROUTER() external view returns (ISwapRouter);
-
-    function isEth() external view returns (bool);
 
     function harvestConfig()
         external
