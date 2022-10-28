@@ -87,10 +87,6 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// EXTERNAL ///
 
-    /// @dev Vaults are not intended to hold ERC20 tokens, so this only owner function transfers a specified asset to a recipient.
-    /// @param _asset The asset to rescue.
-    /// @param _to The destination address.
-    /// @param _amount The amount of tokens to rescue.
     function transferTokens(
         address _asset,
         address _to,
