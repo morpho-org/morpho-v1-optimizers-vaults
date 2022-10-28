@@ -23,7 +23,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// EVENTS ///
 
-    /// @notice Emitted when a new rewards `recipient` is set.
+    /// @notice Emitted when MORPHO rewards are transferred to `recipient`.
     /// @param recipient The recipient of the rewards.
     event RewardsRecipientSet(address recipient);
 
@@ -34,7 +34,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// ERRORS ///
 
-    /// @notice Thrown when the zero address is passed as input.
+    /// @notice Thrown when the zero address is passed as input or is the recipient address when calling `transferRewards`.
     error ZeroAddress();
 
     /// CONSTANTS AND IMMUTABLES ///
