@@ -33,7 +33,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     }
 
     function testInitializationShouldRevertWithWrongInputs() public {
-        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho));
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(
+            address(morpho),
+            MORPHO_TOKEN
+        );
 
         SupplyHarvestVault vault = SupplyHarvestVault(
             address(
@@ -46,7 +49,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         vm.expectRevert();
-        new SupplyHarvestVault(address(0));
+        new SupplyHarvestVault(address(0), MORPHO_TOKEN);
 
         // TODO: Fix this test. Test is failing with:
         // FAIL. Reason: Error != expected error: Contract 0x0000000000000000000000000000000000000000 does not exist and is not marked as persistent, see `vm.makePersistent()` != 0xd92e233d

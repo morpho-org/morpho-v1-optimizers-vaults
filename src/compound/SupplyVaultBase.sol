@@ -37,11 +37,10 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// CONSTANTS AND IMMUTABLES ///
 
-    ERC20 public constant MORPHO = ERC20(0x9994E35Db50125E0DF82e4c2dde62496CE330999);
-
     IMorpho public immutable morpho; // The main Morpho contract.
     address public immutable wEth; // The address of WETH token.
     ERC20 public immutable comp; // The COMP token.
+    ERC20 public immutable morphoToken; // The address of the Morpho Token.
 
     /// STORAGE ///
 
@@ -52,10 +51,13 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) {
+    /// @param _morphoToken The address of the Morpho Token.
+    constructor(address _morpho, address _morphoToken) {
+        if (_morphoToken == address(0)) revert ZeroAddress();
         morpho = IMorpho(_morpho);
         wEth = morpho.wEth();
         comp = ERC20(morpho.comptroller().getCompAddress());
+        morphoToken = ERC20(_morphoToken);
     }
 
     /// INITIALIZER ///
@@ -111,8 +113,8 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @dev Anybody can trigger this function. This offloads the DAO to do it.
     function transferRewards() external {
         if (recipient == address(0)) revert ZeroAddress();
-        uint256 amount = MORPHO.balanceOf(address(this));
-        MORPHO.safeTransfer(recipient, amount);
+        uint256 amount = morphoToken.balanceOf(address(this));
+        morphoToken.safeTransfer(recipient, amount);
         emit RewardsTransferred(recipient, amount);
     }
 
