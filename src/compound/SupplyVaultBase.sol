@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.13;
 
-import {ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
+import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
+import {IComptroller, ICToken} from "@contracts/compound/interfaces/compound/ICompound.sol";
 import {IMorpho} from "@contracts/compound/interfaces/IMorpho.sol";
 import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
@@ -125,7 +126,12 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Deposits an amount of assets into the vault and receive vault shares.
     /// @param assets The amount of assets to deposit.
     /// @param receiver The recipient of the vault shares.
-    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateP2PIndexes(poolToken);
         return super.deposit(assets, receiver);
@@ -134,7 +140,12 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Mints shares of the vault and transfers assets to the vault.
     /// @param shares The number of shares to mint.
     /// @param receiver The recipient of the vault shares.
-    function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
+    function mint(uint256 shares, address receiver)
+        public
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateP2PIndexes(poolToken);
         return super.mint(shares, receiver);

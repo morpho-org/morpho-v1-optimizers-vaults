@@ -121,7 +121,12 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Deposits an amount of assets into the vault and receive vault shares.
     /// @param assets The amount of assets to deposit.
     /// @param receiver The recipient of the vault shares.
-    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateIndexes(poolToken);
         return super.deposit(assets, receiver);
@@ -130,7 +135,12 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Mints shares of the vault and transfers assets to the vault.
     /// @param shares The number of shares to mint.
     /// @param receiver The recipient of the vault shares.
-    function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
+    function mint(uint256 shares, address receiver)
+        public
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateIndexes(poolToken);
         return super.mint(shares, receiver);
