@@ -60,7 +60,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) SupplyVaultBase(_morpho) {
+    /// @param _morphoToken The address of the Morpho Token.
+    constructor(address _morpho, address _morphoToken) SupplyVaultBase(_morpho, _morphoToken) {
         rewardsManager = morpho.rewardsManager();
     }
 
