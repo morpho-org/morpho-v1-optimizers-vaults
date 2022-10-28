@@ -6,11 +6,16 @@ import "@tests/aave-v2/setup/TestSetup.sol";
 import {SupplyVaultBase} from "@vaults/aave-v2/SupplyVaultBase.sol";
 import {SupplyVault} from "@vaults/aave-v2/SupplyVault.sol";
 
+import "../../helpers/interfaces/IRolesAuthority.sol";
 import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
+import "../helpers/SupplyVaultBaseMock.sol";
 
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
+
+    address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
 
     TransparentUpgradeableProxy internal wNativeSupplyVaultProxy;
 
@@ -19,6 +24,7 @@ contract TestSetupVaults is TestSetup {
     SupplyVault internal wNativeSupplyVault;
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
+    SupplyVaultBase internal supplyVaultBase;
 
     ERC20 internal ma2WNative;
     ERC20 internal ma2Dai;
@@ -42,6 +48,16 @@ contract TestSetupVaults is TestSetup {
 
     function initVaultContracts() internal {
         supplyVaultImplV1 = new SupplyVault(address(morpho));
+
+        supplyVaultBase = SupplyVaultBase(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new SupplyVaultBaseMock(address(morpho))),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
 
         wNativeSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
