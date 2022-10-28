@@ -38,19 +38,23 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// CONSTANTS AND IMMUTABLES ///
 
-    ERC20 public constant MORPHO = ERC20(0x9994E35Db50125E0DF82e4c2dde62496CE330999);
-
     IMorpho public immutable morpho; // The main Morpho contract.
+    ERC20 public immutable morphoToken; // The address of the Morpho Token.
+
+    /// STORAGE ///
+
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     address public recipient; // The recipient of the rewards that will redistribute them to vault's users.
 
     /// CONSTRUCTOR ///
 
-    /// @dev Initializes network-wide immutables
+    /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) {
-        if (_morpho == address(0)) revert ZeroAddress();
+    /// @param _morphoToken The address of the Morpho Token.
+    constructor(address _morpho, address _morphoToken) {
+        if (_morpho == address(0) || _morphoToken == address(0)) revert ZeroAddress();
         morpho = IMorpho(_morpho);
+        morphoToken = ERC20(_morphoToken);
     }
 
     /// INITIALIZER ///
@@ -81,11 +85,9 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         onlyInitializing
         returns (ERC20 underlyingToken)
     {
-        if (_poolToken == address(0)) revert ZeroAddress();
-
         poolToken = _poolToken;
 
-        underlyingToken = ERC20(IAToken(_poolToken).UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = ERC20(IAToken(_poolToken).UNDERLYING_ASSET_ADDRESS()); // Reverts on zero address so no check for pool token needed.
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
@@ -103,8 +105,8 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @dev Anybody can trigger this function. This offloads the DAO to do it.
     function transferRewards() external {
         if (recipient == address(0)) revert ZeroAddress();
-        uint256 amount = MORPHO.balanceOf(address(this));
-        MORPHO.safeTransfer(recipient, amount);
+        uint256 amount = morphoToken.balanceOf(address(this));
+        morphoToken.safeTransfer(recipient, amount);
         emit RewardsTransferred(recipient, amount);
     }
 

@@ -47,12 +47,12 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        supplyVaultImplV1 = new SupplyVault(address(morpho));
+        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN);
 
         supplyVaultBase = SupplyVaultBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new SupplyVaultBaseMock(address(morpho))),
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN)),
                     address(proxyAdmin),
                     ""
                 )

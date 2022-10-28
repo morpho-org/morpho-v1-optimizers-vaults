@@ -40,14 +40,16 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// CONSTANTS AND IMMUTABLES ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
-    ERC20 public immutable morphoToken;
+    ERC20 public immutable morphoToken; // The address of the Morpho Token.
+
+    /// STORAGE ///
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
     address public recipient; // The recipient of the rewards that will redistribute them to vault's users.
 
     /// CONSTRUCTOR ///
 
-    /// @dev Initializes network-wide immutables
+    /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _morphoToken The address of the Morpho Token.
     constructor(address _morpho, address _morphoToken) {
@@ -86,7 +88,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     {
         poolToken = _poolToken;
 
-        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS()); // Reverts on zero address so no check for pool token needed
+        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS()); // Reverts on zero address so no check for pool token needed.
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
