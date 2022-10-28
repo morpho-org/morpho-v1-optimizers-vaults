@@ -19,18 +19,34 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     using CompoundMath for uint256;
     using SafeTransferLib for ERC20;
 
+    /// EVENTS ///
+
+    /// @notice Emitted when a new rewards `recipient` is set.
+    /// @param recipient The recipient of the rewards.
+    event RecipientSet(address recipient);
+
+    /// @notice Emitted when rewards rewards are transferred to `recipient`.
+    /// @param recipient The recipient of the rewards.
+    /// @param amount The amount of rewards transferred.
+    event RewardsTransferred(address recipient, uint256 amount);
+
     /// ERRORS ///
 
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
+
+    ERC20 public constant MORPHO = ERC20(0x9994E35Db50125E0DF82e4c2dde62496CE330999);
 
     IMorpho public immutable morpho; // The main Morpho contract.
     address public immutable wEth; // The address of WETH token.
     ERC20 public immutable comp; // The COMP token.
 
+    /// STORAGE ///
+
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    address public recipient; // The recipient of the rewards that will redistribute them to vault's users.
 
     /// CONSTRUCTOR ///
 
@@ -83,12 +99,17 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// EXTERNAL ///
 
-    function transferTokens(
-        address _asset,
-        address _to,
-        uint256 _amount
-    ) external onlyOwner {
-        ERC20(_asset).safeTransfer(_to, _amount);
+    function setRecipient(address _recipient) external onlyOwner() {
+        if (_recipient == address(0)) revert ZeroAddress();
+        recipient = _recipient;
+        emit RecipientSet(_recipient);
+    }
+
+    function transferRewards() external {
+        if (recipient == address(0)) revert ZeroAddress();
+        uint256 amount = MORPHO.balanceOf(address(this));
+        MORPHO.safeTransfer(recipient, amount);
+        emit RewardsTransferred(recipient, amount);
     }
 
     /// PUBLIC ///
@@ -166,5 +187,5 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @dev This empty reserved space is put in place to allow future versions to add new
     /// variables without shifting down storage in the inheritance chain.
     /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }

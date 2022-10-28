@@ -9,11 +9,15 @@ import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 
 import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
+import "../../helpers/interfaces/IRolesAuthority.sol";
 import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
 
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
+
+    address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
 
     TransparentUpgradeableProxy internal wethSupplyVaultProxy;
     TransparentUpgradeableProxy internal wethSupplyHarvestVaultProxy;

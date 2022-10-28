@@ -11,10 +11,7 @@ FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
 
 ifeq (${NETWORK}, eth-mainnet)
   FOUNDRY_CHAIN_ID=1
-  FOUNDRY_FORK_BLOCK_NUMBER=14292587
-  ifeq (${PROTOCOL}, aave-v2)
-    FOUNDRY_FORK_BLOCK_NUMBER=15485110
-  endif
+  FOUNDRY_FORK_BLOCK_NUMBER=15485110
 endif
 
 ifeq (${NETWORK}, polygon-mainnet)
