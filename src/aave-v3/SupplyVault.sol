@@ -213,7 +213,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             if (rewardsIndexMem > userRewardsData.index) {
-                uint128 accruedReward = _getUnaccruedRewardFromUnaccruedRewardIndex(
+                uint128 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
                     balanceOf(_user),
                     rewardsIndexMem - userRewardsData.index
                 );
@@ -231,7 +231,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _claimableReward,
         uint256 _totalSupply
     ) internal view returns (uint128 unaccruedReward) {
-        unaccruedReward = _getUnaccruedRewardFromUnaccruedRewardIndex(
+        unaccruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
             balanceOf(_user),
             _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
                 rewardsIndex[_rewardToken] -
@@ -239,7 +239,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         );
     }
 
-    function _getUnaccruedRewardFromUnaccruedRewardIndex(
+    function _getUnaccruedRewardsFromRewardsIndexAccrual(
         uint256 _userBalance,
         uint128 _unaccruedRewardIndex
     ) internal pure returns (uint128 unaccruedReward) {
