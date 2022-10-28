@@ -29,7 +29,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     }
 
     function testInitializationShouldRevertWithWrongInputs() public {
-        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho));
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(
+            address(morpho),
+            MORPHO_TOKEN
+        );
 
         SupplyHarvestVault vault = SupplyHarvestVault(
             address(
@@ -42,7 +45,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
-        new SupplyHarvestVault(address(0));
+        new SupplyHarvestVault(address(0), address(0));
 
         vm.expectRevert();
         vault.initialize(address(0), "test", "test", 0, 0, address(swapper));
@@ -333,28 +336,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         daiSupplyHarvestVault.setSwapper(address(1));
         assertEq(address(daiSupplyHarvestVault.swapper()), address(1));
-    }
-
-    function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
-        vm.prank(address(1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyVault.transferTokens($token, address(2), _amount);
-    }
-
-    function testOwnerShouldTransferTokens(
-        address _to,
-        uint256 _deal,
-        uint256 _toTransfer
-    ) public {
-        vm.assume(_to != address(daiSupplyHarvestVault));
-        _toTransfer = bound(_toTransfer, 0, _deal);
-        deal($token, address(daiSupplyHarvestVault), _deal);
-
-        vm.prank(daiSupplyHarvestVault.owner());
-        daiSupplyHarvestVault.transferTokens($token, _to, _toTransfer);
-
-        assertEq(token.balanceOf(address(daiSupplyHarvestVault)), _deal - _toTransfer);
-        assertEq(token.balanceOf(_to), _toTransfer);
     }
 
     /// SETTERS ///

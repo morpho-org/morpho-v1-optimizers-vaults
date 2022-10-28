@@ -12,9 +12,12 @@ import {UniswapV3Swapper} from "@vaults/UniswapV3Swapper.sol";
 
 import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
+import "../helpers/SupplyVaultBaseMock.sol";
 
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
+
+    address internal MORPHO_TOKEN = address(new FakeToken("Morpho Token", "MORPHO"));
 
     TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
     TransparentUpgradeableProxy internal wrappedNativeTokenSupplyHarvestVaultProxy;
@@ -28,6 +31,7 @@ contract TestSetupVaults is TestSetup {
     SupplyHarvestVault internal wrappedNativeTokenSupplyHarvestVault;
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
+    SupplyVaultBase internal supplyVaultBase;
 
     ISwapper internal swapper;
 
@@ -64,8 +68,18 @@ contract TestSetupVaults is TestSetup {
 
         createMarket(aWrappedNativeToken);
 
-        supplyVaultImplV1 = new SupplyVault(address(morpho));
-        supplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho));
+        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN);
+        supplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho), MORPHO_TOKEN);
+
+        supplyVaultBase = SupplyVaultBase(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN)),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
 
         wrappedNativeTokenSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
             address(supplyHarvestVaultImplV1),
