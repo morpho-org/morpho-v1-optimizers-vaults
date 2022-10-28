@@ -15,11 +15,6 @@ contract TestSupplyVaultBase is TestSetupVaults {
         assertEq(daiSupplyVault.recipient(), address(1));
     }
 
-    function testCannotSetRecipientToZeroAddress() public {
-        vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
-        daiSupplyVault.setRewardsRecipient(address(0));
-    }
-
     function testCannotTransferRewardsToNotSetZeroAddress() public {
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
         daiSupplyVault.transferRewards();

@@ -104,7 +104,6 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// @notice Sets the rewards recipient.
     /// @param _recipient The new rewards recipient.
     function setRewardsRecipient(address _recipient) external onlyOwner {
-        if (_recipient == address(0)) revert ZeroAddress();
         recipient = _recipient;
         emit RewardsRecipientSet(_recipient);
     }
