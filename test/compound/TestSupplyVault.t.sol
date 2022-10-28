@@ -370,15 +370,17 @@ contract TestSupplyVault is TestSetupVaults {
 
         // Should update the unclaimed amount
         vaultSupplier2.depositVault(daiSupplyVault, amount, address(vaultSupplier1));
-        (, uint128 userReward1) = daiSupplyVault.userRewards(address(vaultSupplier1));
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(address(vaultSupplier1));
 
         vm.roll(block.number + 100);
 
         (uint128 index2, uint128 userReward2) = daiSupplyVault.userRewards(address(vaultSupplier2));
+        uint256 userReward1_2 = daiSupplyVault.claimRewards(address(vaultSupplier1));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
-        assertGt(uint256(userReward1), 0);
-        assertApproxEqAbs(uint256(userReward1), expectedTotalRewardsAmount, 10000);
+        assertGt(uint256(userReward1_1), 0);
+        assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(uint256(userReward1_1) * 3, userReward1_2, userReward1_2 / 1000);
     }
 
     function testRewardsShouldAccrueWhenMintingOnBehalf() public {
@@ -401,15 +403,17 @@ contract TestSupplyVault is TestSetupVaults {
             daiSupplyVault.previewMint(amount),
             address(vaultSupplier1)
         );
-        (, uint128 userReward1) = daiSupplyVault.userRewards(address(vaultSupplier1));
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(address(vaultSupplier1));
 
         vm.roll(block.number + 100);
 
         (uint128 index2, uint128 userReward2) = daiSupplyVault.userRewards(address(vaultSupplier2));
+        uint256 userReward1_2 = daiSupplyVault.claimRewards(address(vaultSupplier1));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
-        assertGt(uint256(userReward1), 0);
-        assertApproxEqAbs(uint256(userReward1), expectedTotalRewardsAmount, 10000);
+        assertGt(uint256(userReward1_1), 0);
+        assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(uint256(userReward1_1) * 3, userReward1_2, userReward1_2 / 1000);
     }
 
     function testRewardsShouldAccrueWhenRedeemingToReceiver() public {
@@ -433,15 +437,19 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier2),
             address(vaultSupplier1)
         );
-        (, uint128 userReward1) = daiSupplyVault.userRewards(address(vaultSupplier1));
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(address(vaultSupplier1));
 
         vm.roll(block.number + 100);
 
-        (uint128 index2, uint128 userReward2) = daiSupplyVault.userRewards(address(vaultSupplier2));
+        uint256 userReward1_2 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+
+        (uint128 index2, ) = daiSupplyVault.userRewards(address(vaultSupplier2));
+        uint256 userReward2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
-        assertGt(uint256(userReward1), 0);
-        assertApproxEqAbs(uint256(userReward1), expectedTotalRewardsAmount, 10000);
+        assertGt(uint256(userReward1_1), 0);
+        assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
     }
 
     function testRewardsShouldAccrueWhenWithdrawingToReceiver() public {
@@ -465,14 +473,18 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier2),
             address(vaultSupplier1)
         );
-        (, uint128 userReward1) = daiSupplyVault.userRewards(address(vaultSupplier1));
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(address(vaultSupplier1));
 
         vm.roll(block.number + 100);
 
-        (uint128 index2, uint128 userReward2) = daiSupplyVault.userRewards(address(vaultSupplier2));
+        uint256 userReward1_2 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+
+        (uint128 index2, ) = daiSupplyVault.userRewards(address(vaultSupplier2));
+        uint256 userReward2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
-        assertGt(uint256(userReward1), 0);
-        assertApproxEqAbs(uint256(userReward1), expectedTotalRewardsAmount, 10000);
+        assertGt(uint256(userReward1_1), 0);
+        assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
     }
 }
