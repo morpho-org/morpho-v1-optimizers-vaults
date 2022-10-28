@@ -336,17 +336,17 @@ contract TestSupplyVault is TestSetupVaults {
     function testNotOwnerShouldNotSetRecipient() public {
         vm.prank(address(1));
         vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyVault.setRecipient(address(1));
+        daiSupplyVault.setRewardsRecipient(address(1));
     }
 
     function testOwnerShouldSetRecipient() public {
-        daiSupplyVault.setRecipient(address(1));
+        daiSupplyVault.setRewardsRecipient(address(1));
         assertEq(daiSupplyVault.recipient(), address(1));
     }
 
     function testCannotSetRecipientToZeroAddress() public {
         vm.expectRevert(abi.encodeWithSelector(SupplyVaultBase.ZeroAddress.selector));
-        daiSupplyVault.setRecipient(address(0));
+        daiSupplyVault.setRewardsRecipient(address(0));
     }
 
     function testCannotTransferRewardsToNotSetZeroAddress() public {
@@ -357,7 +357,7 @@ contract TestSupplyVault is TestSetupVaults {
     function testEverybodyCanTransferRewardsToRecipient(uint256 _amount) public {
         vm.assume(_amount > 0);
 
-        daiSupplyVault.setRecipient(address(1));
+        daiSupplyVault.setRewardsRecipient(address(1));
         assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(1)), 0);
 
         deal(MORPHO_TOKEN, address(daiSupplyVault), _amount);
