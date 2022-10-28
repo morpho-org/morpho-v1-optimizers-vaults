@@ -241,9 +241,9 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     function _getUnaccruedRewardsFromRewardsIndexAccrual(
         uint256 _userBalance,
-        uint128 _unaccruedRewardIndex
+        uint128 _indexAccrual
     ) internal pure returns (uint128 unaccruedReward) {
-        unaccruedReward = _userBalance.mulDivDown(_unaccruedRewardIndex, SCALE).safeCastTo128();
+        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, SCALE).safeCastTo128();
     }
 
     function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
