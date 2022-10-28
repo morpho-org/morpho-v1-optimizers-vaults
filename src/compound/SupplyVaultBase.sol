@@ -99,12 +99,16 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// EXTERNAL ///
 
+    /// @notice Sets the rewards recipient.
+    /// @param _recipient The new rewards recipient.
     function setRewardsRecipient(address _recipient) external onlyOwner {
         if (_recipient == address(0)) revert ZeroAddress();
         recipient = _recipient;
         emit RewardsRecipientSet(_recipient);
     }
 
+    /// @notice Transfers the MORPHO rewards to the rewards recipient.
+    /// @dev Anybody can trigger this function. This offloads the DAO to do it.
     function transferRewards() external {
         if (recipient == address(0)) revert ZeroAddress();
         uint256 amount = MORPHO.balanceOf(address(this));
