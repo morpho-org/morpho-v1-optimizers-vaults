@@ -230,13 +230,14 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _claimableReward,
         uint256 _totalSupply
     ) internal view returns (uint128 unclaimed) {
+        UserRewardsData memory userRewardsData = userRewards[_rewardToken][_user];
         unclaimed =
-            userRewards[_rewardToken][_user].unclaimed +
+            userRewardsData.unclaimed +
             _getUnaccruedRewardsFromRewardsIndexAccrual(
                 balanceOf(_user),
                 _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
                     rewardsIndex[_rewardToken] -
-                    userRewards[_rewardToken][_user].index // The difference between the current reward index and the user's index
+                    userRewardsData.index // The difference between the current reward index and the user's index
             );
     }
 
