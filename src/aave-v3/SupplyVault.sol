@@ -135,9 +135,12 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
         for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
-            unclaimedAmounts[i] =
-                userRewards[rewardToken][_user].unclaimed +
-                _getUnaccruedReward(_user, rewardToken, claimableAmounts[i], supply);
+            unclaimedAmounts[i] = _getUpdatedUnclaimedReward(
+                _user,
+                rewardToken,
+                claimableAmounts[i],
+                supply
+            );
         }
     }
 
@@ -159,11 +162,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             _rewardToken
         );
 
-        UserRewardsData memory rewards = userRewards[_rewardToken][_user];
-
-        return
-            rewards.unclaimed +
-            _getUnaccruedReward(_user, _rewardToken, claimableRewards, totalSupply());
+        return _getUpdatedUnclaimedReward(_user, _rewardToken, claimableRewards, totalSupply());
     }
 
     /// INTERNAL ///
@@ -225,18 +224,20 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         }
     }
 
-    function _getUnaccruedReward(
+    function _getUpdatedUnclaimedReward(
         address _user,
         address _rewardToken,
         uint256 _claimableReward,
         uint256 _totalSupply
-    ) internal view returns (uint128 unaccruedReward) {
-        unaccruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
-            balanceOf(_user),
-            _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
-                rewardsIndex[_rewardToken] -
-                userRewards[_rewardToken][_user].index // The difference between the current reward index and the user's index
-        );
+    ) internal view returns (uint128 unclaimed) {
+        unclaimed =
+            userRewards[_rewardToken][_user].unclaimed +
+            _getUnaccruedRewardsFromRewardsIndexAccrual(
+                balanceOf(_user),
+                _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
+                    rewardsIndex[_rewardToken] -
+                    userRewards[_rewardToken][_user].index // The difference between the current reward index and the user's index
+            );
     }
 
     function _getUnaccruedRewardsFromRewardsIndexAccrual(
