@@ -21,11 +21,11 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
 
     /// EVENTS ///
 
-    /// @notice Emitted when MORPHO rewards are transferred to `recipient`.
+    /// @notice Emitted when the `recipient` of MORPHO rewards is set.
     /// @param recipient The recipient of the rewards.
     event RewardsRecipientSet(address recipient);
 
-    /// @notice Emitted when rewards rewards are transferred to `recipient`.
+    /// @notice Emitted when MORPHO rewards are transferred to `recipient`.
     /// @param recipient The recipient of the rewards.
     /// @param amount The amount of rewards transferred.
     event RewardsTransferred(address recipient, uint256 amount);
@@ -102,6 +102,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     /// EXTERNAL ///
 
     /// @notice Sets the rewards recipient.
+    /// @dev Sets to address(0) to prevent MORPHO rewards from being transferred.
     /// @param _recipient The new rewards recipient.
     function setRewardsRecipient(address _recipient) external onlyOwner {
         recipient = _recipient;
