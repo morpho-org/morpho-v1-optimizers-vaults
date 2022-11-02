@@ -50,9 +50,11 @@ contract SupplyHarvestVault is ISupplyHarvestVault, SupplyVaultBase {
     /// @param _value The value exceeding the threshold.
     error ExceedsMaxBasisPoints(uint16 _value);
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     uint16 public constant MAX_BASIS_POINTS = 100_00; // 100% in basis points.
+
+    /// STORAGE ///
 
     uint16 public harvestingFee; // The fee taken by the claimer when harvesting the vault (in bps).
     ISwapper public swapper; // Swapper contract to swap reward tokens for underlying asset.

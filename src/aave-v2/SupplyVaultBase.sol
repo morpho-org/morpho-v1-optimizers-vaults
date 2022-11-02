@@ -27,9 +27,12 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
+
+    /// STORAGE ///
+
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
     /// CONSTRUCTOR ///
@@ -89,6 +92,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// PUBLIC ///
 
+    /// @notice The amount of assets in the vault.
     /// @dev The indexes used by this function might not be up-to-date.
     ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
     ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
@@ -110,6 +114,9 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
             supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenMem));
     }
 
+    /// @notice Deposits an amount of assets into the vault and receive vault shares.
+    /// @param assets The amount of assets to deposit.
+    /// @param receiver The recipient of the vault shares.
     function deposit(uint256 assets, address receiver)
         public
         virtual
@@ -121,6 +128,9 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         return super.deposit(assets, receiver);
     }
 
+    /// @notice Mints shares of the vault and transfers assets to the vault.
+    /// @param shares The number of shares to mint.
+    /// @param receiver The recipient of the vault shares.
     function mint(uint256 shares, address receiver)
         public
         virtual
@@ -132,6 +142,10 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         return super.mint(shares, receiver);
     }
 
+    /// @notice Withdraws an amount of assets from the vault and burn an owner's shares.
+    /// @param assets The number of assets to withdraw.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The owner of the vault shares.
     function withdraw(
         uint256 assets,
         address receiver,
@@ -142,6 +156,10 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         return super.withdraw(assets, receiver, owner);
     }
 
+    /// @notice Burn an amount of shares and receive assets.
+    /// @param shares The number of shares to burn.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The owner of the assets.
     function redeem(
         uint256 shares,
         address receiver,

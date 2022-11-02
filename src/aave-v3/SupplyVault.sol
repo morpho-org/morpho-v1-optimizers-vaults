@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
-import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
@@ -47,11 +46,12 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     uint256 public constant SCALE = 1e36;
-
     IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
+
+    /// STORAGE ///
 
     mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.

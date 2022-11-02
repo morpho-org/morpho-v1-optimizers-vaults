@@ -26,11 +26,13 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
     address public immutable wEth; // The address of WETH token.
     ERC20 public immutable comp; // The COMP token.
+
+    /// STORAGE ///
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
@@ -40,7 +42,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @param _morpho The address of the main Morpho contract.
     constructor(address _morpho) {
         morpho = IMorpho(_morpho);
-        wEth = morpho.wEth();
+        wEth = morpho.wEth(); // Reverts if morpho is zero address, so no zero address check is needed.
         comp = ERC20(morpho.comptroller().getCompAddress());
     }
 
@@ -48,8 +50,8 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// @dev Initializes the vault.
     /// @param _poolToken The address of the pool token corresponding to the market to supply through this vault.
-    /// @param _name The name of the ERC20 token associated to this tokenized vault.
-    /// @param _symbol The symbol of the ERC20 token associated to this tokenized vault.
+    /// @param _name The name of this tokenized vault.
+    /// @param _symbol The symbol of this tokenized vault.
     /// @param _initialDeposit The amount of the initial deposit used to prevent pricePerShare manipulation.
     function __SupplyVaultBase_init(
         address _poolToken,
@@ -95,6 +97,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// PUBLIC ///
 
+    /// @notice The amount of assets in the vault.
     /// @dev The indexes used by this function might not be up-to-date.
     ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
     ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
@@ -116,6 +119,9 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
             supplyBalance.inP2P.mul(morpho.p2pSupplyIndex(poolTokenMem));
     }
 
+    /// @notice Deposits an amount of assets into the vault and receive vault shares.
+    /// @param assets The amount of assets to deposit.
+    /// @param receiver The recipient of the vault shares.
     function deposit(uint256 assets, address receiver)
         public
         virtual
@@ -127,6 +133,9 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         return super.deposit(assets, receiver);
     }
 
+    /// @notice Mints shares of the vault and transfers assets to the vault.
+    /// @param shares The number of shares to mint.
+    /// @param receiver The recipient of the vault shares.
     function mint(uint256 shares, address receiver)
         public
         virtual
@@ -138,6 +147,10 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         return super.mint(shares, receiver);
     }
 
+    /// @notice Withdraws an amount of assets from the vault and burn an owner's shares.
+    /// @param assets The number of assets to withdraw.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The owner of the vault shares.
     function withdraw(
         uint256 assets,
         address receiver,
@@ -148,6 +161,10 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         return super.withdraw(assets, receiver, owner);
     }
 
+    /// @notice Burn an amount of shares and receive assets.
+    /// @param shares The number of shares to burn.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The owner of the assets.
     function redeem(
         uint256 shares,
         address receiver,

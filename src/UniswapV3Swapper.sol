@@ -31,13 +31,15 @@ contract UniswapV3Swapper is ISwapper, Ownable {
     /// @notice Thrown when the zero address is passed as input.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     ISwapRouter public constant SWAP_ROUTER =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
     uint24 public constant MAX_UNISWAP_FEE = 100_0000; // 100% in UniswapV3 fee units.
 
     address public immutable wrappedNativeToken;
+
+    /// STORAGE ///
 
     mapping(address => uint24) public swapFee; // The fee taken by the selected UniswapV3Pool for the pair asset / wrapped native token (in UniswapV3 fee unit).
 
