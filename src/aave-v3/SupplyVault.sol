@@ -135,17 +135,12 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
         for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
-            UserRewardsData memory userRewardsData = userRewards[rewardToken][_user];
-
-            if (supply > 0)
-                unclaimedAmounts[i] =
-                    userRewardsData.unclaimed +
-                    balanceOf(_user).mulDivDown(
-                        (rewardsIndex[rewardToken] +
-                            claimableAmounts[i].mulDivDown(SCALE, supply)) - userRewardsData.index,
-                        SCALE
-                    );
-            else unclaimedAmounts[i] = userRewardsData.unclaimed;
+            unclaimedAmounts[i] = _getUpdatedUnclaimedReward(
+                _user,
+                rewardToken,
+                claimableAmounts[i],
+                supply
+            );
         }
     }
 
@@ -167,19 +162,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             _rewardToken
         );
 
-        UserRewardsData memory rewards = userRewards[_rewardToken][_user];
-        uint256 supply = totalSupply();
-
-        if (supply > 0)
-            return
-                rewards.unclaimed +
-                balanceOf(_user).mulDivDown(
-                    (rewardsIndex[_rewardToken] +
-                        claimableRewards.mulDivDown(SCALE, supply) -
-                        rewards.index),
-                    SCALE
-                );
-        return rewards.unclaimed;
+        return _getUpdatedUnclaimedReward(_user, _rewardToken, claimableRewards, totalSupply());
     }
 
     /// INTERNAL ///
@@ -223,27 +206,54 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             uint128 rewardsIndexMem = rewardsIndex[rewardToken];
 
             if (supply > 0 && claimedAmount > 0) {
-                rewardsIndexMem += claimedAmount.mulDivDown(SCALE, supply).safeCastTo128();
+                rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
                 rewardsIndex[rewardToken] = rewardsIndexMem;
             }
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
-            uint256 rewardsIndexDiff;
-
-            // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
-            unchecked {
-                rewardsIndexDiff = rewardsIndexMem - userRewardsData.index;
-            }
-
-            if (rewardsIndexDiff > 0) {
-                uint128 accruedRewards = balanceOf(_user)
-                .mulDivDown(rewardsIndexDiff, SCALE)
-                .safeCastTo128();
-                userRewardsData.unclaimed += accruedRewards;
+            if (rewardsIndexMem > userRewardsData.index) {
+                uint128 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
+                    balanceOf(_user),
+                    rewardsIndexMem - userRewardsData.index
+                );
+                userRewardsData.unclaimed += accruedReward;
                 userRewardsData.index = rewardsIndexMem;
 
-                emit Accrued(rewardToken, _user, rewardsIndexMem, accruedRewards);
+                emit Accrued(rewardToken, _user, rewardsIndexMem, accruedReward);
             }
         }
+    }
+
+    function _getUpdatedUnclaimedReward(
+        address _user,
+        address _rewardToken,
+        uint256 _claimableReward,
+        uint256 _totalSupply
+    ) internal view returns (uint128 unclaimed) {
+        UserRewardsData memory userRewardsData = userRewards[_rewardToken][_user];
+        unclaimed =
+            userRewardsData.unclaimed +
+            _getUnaccruedRewardsFromRewardsIndexAccrual(
+                balanceOf(_user),
+                _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
+                    rewardsIndex[_rewardToken] -
+                    userRewardsData.index // The difference between the current reward index and the user's index
+            );
+    }
+
+    function _getUnaccruedRewardsFromRewardsIndexAccrual(
+        uint256 _userBalance,
+        uint128 _indexAccrual
+    ) internal pure returns (uint128 unaccruedReward) {
+        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, SCALE).safeCastTo128();
+    }
+
+    function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
+        internal
+        pure
+        returns (uint128 unaccruedRewardIndex)
+    {
+        if (_totalSupply > 0)
+            unaccruedRewardIndex = _claimableReward.mulDivDown(SCALE, _totalSupply).safeCastTo128();
     }
 }
