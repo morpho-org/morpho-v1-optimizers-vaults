@@ -377,4 +377,37 @@ contract TestSupplyVault is TestSetupVaults {
         (, uint256 unclaimed) = daiSupplyVault.userRewards(address(supplier1));
         assertGt(unclaimed, 0);
     }
+
+    function testTransfer() public {
+        uint256 amount = 1e6 ether;
+
+        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.startPrank(address(supplier1));
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+    }
+
+    function testTransferAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        vm.startPrank(address(supplier1));
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        vm.roll(block.number + 1000);
+
+        (uint256 index, uint256 unclaimed) = daiSupplyVault.userRewards(address(supplier2));
+        assertGt(index, 0);
+        assertEq(unclaimed, 0);
+    }
 }
