@@ -361,7 +361,6 @@ contract TestSupplyVault is TestSetupVaults {
     function testAccrueRewardsToCorrectUser() public {
         uint256 amount = 1e6 ether;
 
-        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 1000);
@@ -384,7 +383,6 @@ contract TestSupplyVault is TestSetupVaults {
     function testTransfer() public {
         uint256 amount = 1e6 ether;
 
-        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
@@ -398,7 +396,6 @@ contract TestSupplyVault is TestSetupVaults {
     function testTransferFrom() public {
         uint256 amount = 1e6 ether;
 
-        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
@@ -415,7 +412,6 @@ contract TestSupplyVault is TestSetupVaults {
     function testTransferAccrueRewards() public {
         uint256 amount = 1e6 ether;
 
-        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 1000);
@@ -442,7 +438,6 @@ contract TestSupplyVault is TestSetupVaults {
     function testTransferFromAccrueRewards() public {
         uint256 amount = 1e6 ether;
 
-        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 1000);
@@ -471,5 +466,29 @@ contract TestSupplyVault is TestSetupVaults {
         (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(address(supplier3));
         assertEq(index3, 0);
         assertEq(unclaimed3, 0);
+    }
+
+    function testTransferAndClaimRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        vaultSupplier2.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        vm.roll(block.number + 1000);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+
+        assertGt(rewardsAmount1, 0);
+        assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, 1e15);
     }
 }
