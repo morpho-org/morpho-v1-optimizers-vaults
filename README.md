@@ -34,7 +34,7 @@ All audits are stored in the [audits](./audits/)' folder.
 - mcUSDC: [0xba9E3b3b684719F80657af1A19DEbc3C772494a0](https://etherscan.io/address/0xba9E3b3b684719F80657af1A19DEbc3C772494a0)
 - mcUSDT: [0xC2A4fBA93d4120d304c94E4fd986e0f9D213eD8A](https://etherscan.io/address/0xC2A4fBA93d4120d304c94E4fd986e0f9D213eD8A)
 - mcWBTC: [0xF31AC95fe692190b9C67112d8c912bA9973944F2](https://etherscan.io/address/0xF31AC95fe692190b9C67112d8c912bA9973944F2)
-- Implementation: [0x7c24CcA32d6810786EF6700f95322a133f636aFF](https://etherscan.io/address/0x7c24CcA32d6810786EF6700f95322a133f636aFF)
+- Implementation: [0xbc49c0f652dac4dbc90ee97d71b66a1bf228f66f](https://etherscan.io/address/0xbc49c0f652dac4dbc90ee97d71b66a1bf228f66f)
 
 #### Supply Harvest Vaults
 
