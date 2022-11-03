@@ -433,6 +433,11 @@ contract TestSupplyVault is TestSetupVaults {
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        assertGt(rewardsAmount1, 0);
+        assertEq(rewardsAmount2, 0);
     }
 
     function testTransferFromAccrueRewards() public {
@@ -466,6 +471,13 @@ contract TestSupplyVault is TestSetupVaults {
         (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(address(supplier3));
         assertEq(index3, 0);
         assertEq(unclaimed3, 0);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        uint256 rewardsAmount3 = daiSupplyVault.claimRewards(address(vaultSupplier3));
+        assertGt(rewardsAmount1, 0);
+        assertEq(rewardsAmount2, 0);
+        assertEq(rewardsAmount3, 0);
     }
 
     function testTransferAndClaimRewards() public {
@@ -490,5 +502,10 @@ contract TestSupplyVault is TestSetupVaults {
 
         assertGt(rewardsAmount1, 0);
         assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, 1e15);
+        // Why rewardsAmount1 is 2/3 of rewardsAmount2 can be explained as follows:
+        // supplier1 first gets X rewards corresponding to amount over one period of time
+        // supplier1 then and supplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
+        // supplier2 then gets 2 * X rewards
+        // In the end, supplier1 got 2 * X rewards while supplier2 got 3 * X
     }
 }
