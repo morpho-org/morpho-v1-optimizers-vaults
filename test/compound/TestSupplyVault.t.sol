@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
+import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+
 import "./setup/TestSetupVaults.sol";
 
 contract TestSupplyVault is TestSetupVaults {
+    using FixedPointMathLib for uint256;
     using CompoundMath for uint256;
 
     function testCorrectInitialisation() public {
@@ -421,13 +424,18 @@ contract TestSupplyVault is TestSetupVaults {
         vm.prank(address(supplier1));
         daiSupplyVault.transfer(address(supplier2), balance);
 
-        vm.roll(block.number + 1000);
+        uint256 expectedIndex = ERC20(comp).balanceOf(address(daiSupplyVault)).divWadDown(
+            daiSupplyVault.totalSupply()
+        );
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex();
+        assertEq(expectedIndex, rewardsIndex);
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(supplier1));
-        assertGt(index1, 0);
+        assertEq(index1, rewardsIndex);
         assertGt(unclaimed1, 0);
+
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
-        assertGt(index2, 0);
+        assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
     }
 
@@ -446,14 +454,20 @@ contract TestSupplyVault is TestSetupVaults {
         vm.prank(address(supplier3));
         daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
 
-        vm.roll(block.number + 1000);
+        uint256 expectedIndex = ERC20(comp).balanceOf(address(daiSupplyVault)).divWadDown(
+            daiSupplyVault.totalSupply()
+        );
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex();
+        assertEq(rewardsIndex, expectedIndex);
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(supplier1));
-        assertGt(index1, 0);
+        assertEq(index1, rewardsIndex);
         assertGt(unclaimed1, 0);
+
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
-        assertGt(index2, 0);
+        assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
+
         (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(address(supplier3));
         assertEq(index3, 0);
         assertEq(unclaimed3, 0);
