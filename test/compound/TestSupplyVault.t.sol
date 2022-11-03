@@ -384,9 +384,26 @@ contract TestSupplyVault is TestSetupVaults {
         ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        vm.startPrank(address(supplier1));
         uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
         daiSupplyVault.transfer(address(supplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+    }
+
+    function testTransferFrom() public {
+        uint256 amount = 1e6 ether;
+
+        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.approve(address(supplier3), balance);
+
+        vm.prank(address(supplier3));
+        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
 
         assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
         assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
@@ -400,14 +417,45 @@ contract TestSupplyVault is TestSetupVaults {
 
         vm.roll(block.number + 1000);
 
-        vm.startPrank(address(supplier1));
         uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
         daiSupplyVault.transfer(address(supplier2), balance);
 
         vm.roll(block.number + 1000);
 
-        (uint256 index, uint256 unclaimed) = daiSupplyVault.userRewards(address(supplier2));
-        assertGt(index, 0);
-        assertEq(unclaimed, 0);
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(supplier1));
+        assertGt(index1, 0);
+        assertGt(unclaimed1, 0);
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
+        assertGt(index2, 0);
+        assertEq(unclaimed2, 0);
+    }
+
+    function testTransferFromAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.approve(address(supplier3), balance);
+
+        vm.prank(address(supplier3));
+        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+
+        vm.roll(block.number + 1000);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(supplier1));
+        assertGt(index1, 0);
+        assertGt(unclaimed1, 0);
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
+        assertGt(index2, 0);
+        assertEq(unclaimed2, 0);
+        (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(address(supplier3));
+        assertEq(index3, 0);
+        assertEq(unclaimed3, 0);
     }
 }
