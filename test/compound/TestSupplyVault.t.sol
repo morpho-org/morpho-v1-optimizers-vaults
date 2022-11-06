@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
+import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+
 import "./setup/TestSetupVaults.sol";
 
 contract TestSupplyVault is TestSetupVaults {
+    using FixedPointMathLib for uint256;
     using CompoundMath for uint256;
 
     function testCorrectInitialisation() public {
@@ -358,7 +361,6 @@ contract TestSupplyVault is TestSetupVaults {
     function testAccrueRewardsToCorrectUser() public {
         uint256 amount = 1e6 ether;
 
-        ERC20(dai).approve(address(daiSupplyVault), type(uint256).max);
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
         vm.roll(block.number + 1000);
@@ -376,5 +378,134 @@ contract TestSupplyVault is TestSetupVaults {
         // supplier1 must have some rewards to claim.
         (, uint256 unclaimed) = daiSupplyVault.userRewards(address(supplier1));
         assertGt(unclaimed, 0);
+    }
+
+    function testTransfer() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+    }
+
+    function testTransferFrom() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.approve(address(supplier3), balance);
+
+        vm.prank(address(supplier3));
+        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+    }
+
+    function testTransferAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        uint256 expectedIndex = ERC20(comp).balanceOf(address(daiSupplyVault)).divWadDown(
+            daiSupplyVault.totalSupply()
+        );
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex();
+        assertEq(expectedIndex, rewardsIndex);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(supplier1));
+        assertEq(index1, rewardsIndex);
+        assertGt(unclaimed1, 0);
+
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
+        assertEq(index2, rewardsIndex);
+        assertEq(unclaimed2, 0);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        assertGt(rewardsAmount1, 0);
+        assertEq(rewardsAmount2, 0);
+    }
+
+    function testTransferFromAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.approve(address(supplier3), balance);
+
+        vm.prank(address(supplier3));
+        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+
+        uint256 expectedIndex = ERC20(comp).balanceOf(address(daiSupplyVault)).divWadDown(
+            daiSupplyVault.totalSupply()
+        );
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex();
+        assertEq(rewardsIndex, expectedIndex);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(supplier1));
+        assertEq(index1, rewardsIndex);
+        assertGt(unclaimed1, 0);
+
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
+        assertEq(index2, rewardsIndex);
+        assertEq(unclaimed2, 0);
+
+        (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(address(supplier3));
+        assertEq(index3, 0);
+        assertEq(unclaimed3, 0);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        uint256 rewardsAmount3 = daiSupplyVault.claimRewards(address(vaultSupplier3));
+        assertGt(rewardsAmount1, 0);
+        assertEq(rewardsAmount2, 0);
+        assertEq(rewardsAmount3, 0);
+    }
+
+    function testTransferAndClaimRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        vaultSupplier2.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 1000);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        vm.roll(block.number + 1000);
+
+        uint256 rewardsAmount1 = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        uint256 rewardsAmount2 = daiSupplyVault.claimRewards(address(vaultSupplier2));
+
+        assertGt(rewardsAmount1, 0);
+        assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, 1e15);
+        // Why rewardsAmount1 is 2/3 of rewardsAmount2 can be explained as follows:
+        // supplier1 first gets X rewards corresponding to amount over one period of time
+        // supplier1 then and supplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
+        // supplier2 then gets 2 * X rewards
+        // In the end, supplier1 got 2 * X rewards while supplier2 got 3 * X
     }
 }
