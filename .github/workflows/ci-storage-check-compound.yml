@@ -36,11 +36,11 @@ jobs:
           version: nightly
 
       - name: Check SupplyVault storage layout
-        uses: Rubilmax/foundry-storage-check@v2
+        uses: Rubilmax/foundry-storage-check@v2.1
         with:
           contract: src/compound/SupplyVault.sol:SupplyVault
 
       - name: Check SupplyHarvestVault storage layout
-        uses: Rubilmax/foundry-storage-check@v2
+        uses: Rubilmax/foundry-storage-check@v2.1
         with:
           contract: src/compound/SupplyHarvestVault.sol:SupplyHarvestVault
