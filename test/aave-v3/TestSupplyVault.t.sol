@@ -667,4 +667,39 @@ contract TestSupplyVault is TestSetupVaults {
         assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
         assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
     }
+
+    function testTransferAndClaimRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        vaultSupplier2.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 rewardsAmount1 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+        uint256 rewardsAmount2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier2),
+            rewardToken
+        );
+
+        assertGt(rewardsAmount1, 0);
+        assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, rewardsAmount1 / 100);
+        // Why rewardsAmount1 is 2/3 of rewardsAmount2 can be explained as follows:
+        // supplier1 first gets X rewards corresponding to amount over one period of time
+        // supplier1 then and supplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
+        // supplier2 then gets 2 * X rewards
+        // In the end, supplier1 got 2 * X rewards while supplier2 got 3 * X
+    }
 }

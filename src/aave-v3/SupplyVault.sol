@@ -188,6 +188,15 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
+    function _beforeTokenTransfer(
+        address _from,
+        address _to,
+        uint256
+    ) internal virtual override {
+        _accrueUnclaimedRewards(_from);
+        _accrueUnclaimedRewards(_to);
+    }
+
     function _accrueUnclaimedRewards(address _user) internal {
         address[] memory rewardTokens;
         uint256[] memory claimedAmounts;
