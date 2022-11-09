@@ -110,8 +110,7 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     }
 
     /// @notice Transfers the MORPHO rewards to the rewards recipient.
-    /// @dev Anybody can trigger this function. This offloads the DAO to do it.
-    function transferRewards() external {
+    function transferRewards() external onlyOwner {
         if (recipient == address(0)) revert ZeroAddress();
         uint256 amount = morphoToken.balanceOf(address(this));
         morphoToken.safeTransfer(recipient, amount);
