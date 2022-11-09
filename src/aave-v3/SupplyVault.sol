@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol";
-import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
 import {ISupplyVault} from "./interfaces/ISupplyVault.sol";
 
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
@@ -47,11 +46,12 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
-    /// STORAGE ///
+    /// CONSTANTS AND IMMUTABLES ///
 
     uint256 public constant SCALE = 1e36;
-
     IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
+
+    /// STORAGE ///
 
     mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
@@ -97,7 +97,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
         claimedAmounts = new uint256[](rewardTokens.length);
 
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
@@ -109,10 +109,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                 ERC20(rewardToken).safeTransfer(_user, unclaimedAmount);
 
                 emit Claimed(rewardToken, _user, unclaimedAmount);
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
@@ -126,34 +122,26 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         view
         returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = poolToken;
+
+        uint256[] memory claimableAmounts;
+        (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
+            poolTokens,
+            address(this)
+        );
+
+        unclaimedAmounts = new uint256[](claimableAmounts.length);
         uint256 supply = totalSupply();
-        if (supply > 0) {
-            address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolToken;
 
-            uint256[] memory claimableAmounts;
-            (rewardTokens, claimableAmounts) = rewardsManager.getAllUserRewards(
-                poolTokens,
-                address(this)
+        for (uint256 i; i < rewardTokens.length; ++i) {
+            address rewardToken = rewardTokens[i];
+            unclaimedAmounts[i] = _getUpdatedUnclaimedReward(
+                _user,
+                rewardToken,
+                claimableAmounts[i],
+                supply
             );
-
-            for (uint256 i; i < rewardTokens.length; ) {
-                address rewardToken = rewardTokens[i];
-                UserRewardsData memory userRewardsData = userRewards[rewardToken][_user];
-
-                unclaimedAmounts[i] =
-                    userRewardsData.unclaimed +
-                    balanceOf(_user).mulDivDown(
-                        (rewardsIndex[rewardToken] +
-                            claimableAmounts[i].mulDivDown(SCALE, totalSupply())) -
-                            userRewardsData.index,
-                        SCALE
-                    );
-
-                unchecked {
-                    ++i;
-                }
-            }
         }
     }
 
@@ -166,9 +154,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         view
         returns (uint256)
     {
-        uint256 supply = totalSupply();
-        if (supply == 0) return 0;
-
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolToken;
 
@@ -177,16 +162,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             address(this),
             _rewardToken
         );
-        UserRewardsData memory rewards = userRewards[_rewardToken][_user];
 
-        return
-            rewards.unclaimed +
-            balanceOf(_user).mulDivDown(
-                (rewardsIndex[_rewardToken] +
-                    claimableRewards.mulDivDown(SCALE, totalSupply()) -
-                    rewards.index),
-                SCALE
-            );
+        return _getUpdatedUnclaimedReward(_user, _rewardToken, claimableRewards, totalSupply());
     }
 
     /// INTERNAL ///
@@ -208,7 +185,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _assets,
         uint256 _shares
     ) internal override {
-        _accrueUnclaimedRewards(_receiver);
+        _accrueUnclaimedRewards(_owner);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
@@ -224,37 +201,60 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         }
 
         uint256 supply = totalSupply();
-        for (uint256 i; i < rewardTokens.length; ) {
+        for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
             uint128 rewardsIndexMem = rewardsIndex[rewardToken];
 
             if (supply > 0 && claimedAmount > 0) {
-                rewardsIndexMem += claimedAmount.mulDivDown(SCALE, supply).safeCastTo128();
+                rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
                 rewardsIndex[rewardToken] = rewardsIndexMem;
             }
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
-            uint256 rewardsIndexDiff;
-
-            // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
-            unchecked {
-                rewardsIndexDiff = rewardsIndexMem - userRewardsData.index;
-            }
-
-            if (rewardsIndexDiff > 0) {
-                uint128 accruedRewards = balanceOf(_user)
-                .mulDivDown(rewardsIndexDiff, SCALE)
-                .safeCastTo128();
-                userRewardsData.unclaimed += accruedRewards;
+            if (rewardsIndexMem > userRewardsData.index) {
+                uint128 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
+                    balanceOf(_user),
+                    rewardsIndexMem - userRewardsData.index
+                );
+                userRewardsData.unclaimed += accruedReward;
                 userRewardsData.index = rewardsIndexMem;
 
-                emit Accrued(rewardToken, _user, rewardsIndexMem, accruedRewards);
-            }
-
-            unchecked {
-                ++i;
+                emit Accrued(rewardToken, _user, rewardsIndexMem, accruedReward);
             }
         }
+    }
+
+    function _getUpdatedUnclaimedReward(
+        address _user,
+        address _rewardToken,
+        uint256 _claimableReward,
+        uint256 _totalSupply
+    ) internal view returns (uint128 unclaimed) {
+        UserRewardsData memory userRewardsData = userRewards[_rewardToken][_user];
+        unclaimed =
+            userRewardsData.unclaimed +
+            _getUnaccruedRewardsFromRewardsIndexAccrual(
+                balanceOf(_user),
+                _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
+                    rewardsIndex[_rewardToken] -
+                    userRewardsData.index // The difference between the current reward index and the user's index
+            );
+    }
+
+    function _getUnaccruedRewardsFromRewardsIndexAccrual(
+        uint256 _userBalance,
+        uint128 _indexAccrual
+    ) internal pure returns (uint128 unaccruedReward) {
+        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, SCALE).safeCastTo128();
+    }
+
+    function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
+        internal
+        pure
+        returns (uint128 unaccruedRewardIndex)
+    {
+        if (_totalSupply > 0)
+            unaccruedRewardIndex = _claimableReward.mulDivDown(SCALE, _totalSupply).safeCastTo128();
     }
 }

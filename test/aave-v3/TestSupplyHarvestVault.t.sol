@@ -321,6 +321,83 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         assertEq(ERC20(dai).balanceOf(address(1)), totalRewardsFee, "unexpected fee collected");
     }
 
+    // TODO: fix this test by using updated indexes in previewMint
+    // function testShouldMintCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+    //     uint256 amount = 10_000 ether;
+
+    //     vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
+
+    //     vm.roll(block.number + 100_000);
+    //     vm.warp(block.timestamp + 1_000_000);
+
+    //     uint256 assets = vaultSupplier2.mintVault(daiSupplyHarvestVault, amount);
+    //     uint256 shares = vaultSupplier2.withdrawVault(daiSupplyHarvestVault, assets);
+
+    //     assertEq(shares, amount, "unexpected redeemed shares");
+    // }
+
+    function testShouldDepositCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 shares = vaultSupplier2.depositVault(daiSupplyHarvestVault, amount);
+        uint256 assets = vaultSupplier2.redeemVault(daiSupplyHarvestVault, shares);
+
+        assertApproxEqAbs(assets, amount, 1, "unexpected withdrawn assets");
+    }
+
+    function testShouldRedeemAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 assets = vaultSupplier1.redeemVault(daiSupplyHarvestVault, shares);
+
+        assertEq(
+            assets,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai)),
+            "unexpected withdrawn assets"
+        );
+    }
+
+    function testShouldWithdrawAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        vaultSupplier1.depositVault(daiSupplyHarvestVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        vaultSupplier1.withdrawVault(
+            daiSupplyHarvestVault,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai))
+        );
+
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            address(aUsdc),
+            address(daiSupplyHarvestVault)
+        );
+
+        assertEq(
+            daiSupplyHarvestVault.balanceOf(address(vaultSupplier1)),
+            0,
+            "mcUSDT balance not zero"
+        );
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
+    }
+
     /// GOVERNANCE ///
 
     function testOnlyOwnerShouldSetHarvestingFee() public {

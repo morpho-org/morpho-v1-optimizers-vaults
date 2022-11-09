@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity >=0.8.0;
+pragma solidity >=0.5.0;
 
-import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
+import {ISupplyVaultBase} from "./ISupplyVaultBase.sol";
 
-interface ISupplyVault is IERC4626Upgradeable {
+interface ISupplyVault is ISupplyVaultBase {
     function rewardsIndex() external view returns (uint256);
 
     function userRewards(address _user) external view returns (uint128, uint128);
