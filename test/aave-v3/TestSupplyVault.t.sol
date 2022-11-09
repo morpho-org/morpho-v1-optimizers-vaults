@@ -169,7 +169,7 @@ contract TestSupplyVault is TestSetupVaults {
         uint256 balanceBefore = vaultSupplier1.balanceOf(rewardToken);
 
         (address[] memory rewardTokens, uint256[] memory claimedAmounts) = daiSupplyVault
-        .claimRewards(address(vaultSupplier1));
+            .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens.length, 1);
         assertEq(rewardTokens[0], rewardToken);
@@ -213,14 +213,14 @@ contract TestSupplyVault is TestSetupVaults {
         );
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-        .claimRewards(address(vaultSupplier1));
+            .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-        .claimRewards(address(vaultSupplier2));
+            .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
@@ -272,14 +272,14 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-        .claimRewards(address(vaultSupplier1));
+            .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-        .claimRewards(address(vaultSupplier2));
+            .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
@@ -338,14 +338,14 @@ contract TestSupplyVault is TestSetupVaults {
         );
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-        .claimRewards(address(vaultSupplier1));
+            .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-        .claimRewards(address(vaultSupplier2));
+            .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
@@ -418,21 +418,21 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-        .claimRewards(address(vaultSupplier1));
+            .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-        .claimRewards(address(vaultSupplier2));
+            .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
         assertEq(claimedAmounts2.length, 1);
 
         (address[] memory rewardTokens3, uint256[] memory claimedAmounts3) = daiSupplyVault
-        .claimRewards(address(vaultSupplier3));
+            .claimRewards(address(vaultSupplier3));
 
         assertEq(rewardTokens3.length, 1);
         assertEq(rewardTokens3[0], rewardToken);
@@ -666,5 +666,78 @@ contract TestSupplyVault is TestSetupVaults {
         assertGt(uint256(userReward1_1), 0);
         assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
         assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
+    }
+
+    // TODO: fix this test by using updated indexes in previewMint
+    // function testShouldMintCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+    //     uint256 amount = 10_000 ether;
+
+    //     vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+    //     vm.roll(block.number + 100_000);
+    //     vm.warp(block.timestamp + 1_000_000);
+
+    //     uint256 assets = vaultSupplier2.mintVault(daiSupplyVault, amount);
+    //     uint256 shares = vaultSupplier2.withdrawVault(daiSupplyVault, assets);
+
+    //     assertEq(shares, amount, "unexpected redeemed shares");
+    // }
+
+    function testShouldDepositCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 shares = vaultSupplier2.depositVault(daiSupplyVault, amount);
+        uint256 assets = vaultSupplier2.redeemVault(daiSupplyVault, shares);
+
+        assertApproxEqAbs(assets, amount, 1, "unexpected withdrawn assets");
+    }
+
+    function testShouldRedeemAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 assets = vaultSupplier1.redeemVault(daiSupplyVault, shares);
+
+        assertEq(
+            assets,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai)),
+            "unexpected withdrawn assets"
+        );
+    }
+
+    function testShouldWithdrawAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        vaultSupplier1.withdrawVault(
+            daiSupplyVault,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai))
+        );
+
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            address(aUsdc),
+            address(daiSupplyVault)
+        );
+
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcUSDT balance not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
 }
