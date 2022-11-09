@@ -20,19 +20,34 @@ contract TestSupplyVaultBase is TestSetupVaults {
         daiSupplyVault.transferRewards();
     }
 
-    function testShouldTransferRewardsToRecipient(uint256 _amount) public {
+    function testNotOwnerShouldNotTransferRewardsToRecipient(uint256 _amount) public {
         vm.assume(_amount > 0);
+        _prepareTransfer(_amount);
 
+        vm.startPrank(address(2));
+        vm.expectRevert("Ownable: caller is not the owner");
+        daiSupplyVault.transferRewards();
+    }
+
+    function testOwnerShouldTransferRewardsToRecipient(uint256 _amount) public {
+        vm.assume(_amount > 0);
+        _prepareTransfer(_amount);
+
+        daiSupplyVault.transferRewards();
+
+        assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(daiSupplyVault)), 0);
+        assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(1)), _amount);
+    }
+
+    function _prepareTransfer(uint256 _amount) internal {
         daiSupplyVault.setRewardsRecipient(address(1));
         assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(1)), 0);
 
         deal(MORPHO_TOKEN, address(daiSupplyVault), _amount);
         assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(daiSupplyVault)), _amount);
 
-        vm.startPrank(address(2));
-        daiSupplyVault.transferRewards();
-
-        assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(daiSupplyVault)), 0);
-        assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(1)), _amount);
+        // Allow the vault to transfer rewards.
+        vm.prank(MORPHO_DAO);
+        IRolesAuthority(MORPHO_TOKEN).setUserRole(address(daiSupplyVault), 0, true);
     }
 }
