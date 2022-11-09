@@ -45,9 +45,5 @@ contract TestSupplyVaultBase is TestSetupVaults {
 
         deal(MORPHO_TOKEN, address(daiSupplyVault), _amount);
         assertEq(ERC20(MORPHO_TOKEN).balanceOf(address(daiSupplyVault)), _amount);
-
-        // Allow the vault to transfer rewards.
-        vm.prank(MORPHO_DAO);
-        IRolesAuthority(MORPHO_TOKEN).setUserRole(address(daiSupplyVault), 0, true);
     }
 }
