@@ -39,7 +39,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @param rewardToken The address of the reward token.
     /// @param user The address of the user that rewards are claimed on behalf of.
     /// @param claimedRewards The amount of rewards claimed.
-    event Claimed(address indexed rewardToken, address indexed user, uint128 claimedRewards);
+    event Claimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
 
     /// STRUCTS ///
 
