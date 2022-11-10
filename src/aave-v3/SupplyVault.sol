@@ -9,6 +9,7 @@ import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathL
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
+import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
@@ -18,6 +19,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     using FixedPointMathLib for uint256;
     using SafeCastLib for uint256;
     using SafeTransferLib for ERC20;
+    using WadRayMath for uint256;
 
     /// EVENTS ///
 
@@ -29,31 +31,30 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     event Accrued(
         address indexed rewardToken,
         address indexed user,
-        uint256 rewardsIndex,
-        uint256 accruedRewards
+        uint128 rewardsIndex,
+        uint128 accruedRewards
     );
 
     /// @notice Emitted when rewards of an asset are claimed on behalf of a user.
     /// @param rewardToken The address of the reward token.
     /// @param user The address of the user that rewards are claimed on behalf of.
     /// @param claimedRewards The amount of rewards claimed.
-    event Claimed(address indexed rewardToken, address indexed user, uint256 claimedRewards);
+    event Claimed(address indexed rewardToken, address indexed user, uint128 claimedRewards);
 
     /// STRUCTS ///
 
     struct UserRewardsData {
-        uint256 index; // User rewards index for a given reward token (in ray).
-        uint256 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
+        uint128 index; // User rewards index for a given reward token (in ray).
+        uint128 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
     /// CONSTANTS AND IMMUTABLES ///
 
-    uint256 public constant SCALE = 1e36; // A ray.
     IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
 
     /// STORAGE ///
 
-    mapping(address => uint256) public rewardsIndex; // The current reward index for the given reward token.
+    mapping(address => uint128) public rewardsIndex; // The current reward index for the given reward token.
     mapping(address => mapping(address => UserRewardsData)) public userRewards; // User rewards data. rewardToken -> user -> userRewards.
 
     /// CONSTRUCTOR ///
@@ -100,7 +101,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             address rewardToken = rewardTokens[i];
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
-            uint256 unclaimedAmount = userRewardsData.unclaimed;
+            uint128 unclaimedAmount = userRewardsData.unclaimed;
             if (unclaimedAmount > 0) {
                 claimedAmounts[i] = unclaimedAmount;
                 userRewardsData.unclaimed = 0;
@@ -203,7 +204,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
-            uint256 rewardsIndexMem = rewardsIndex[rewardToken];
+            uint128 rewardsIndexMem = rewardsIndex[rewardToken];
 
             if (supply > 0 && claimedAmount > 0) {
                 rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
@@ -212,7 +213,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             if (rewardsIndexMem > userRewardsData.index) {
-                uint256 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
+                uint128 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
                     balanceOf(_user),
                     rewardsIndexMem - userRewardsData.index
                 );
@@ -229,7 +230,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         address _rewardToken,
         uint256 _claimableReward,
         uint256 _totalSupply
-    ) internal view returns (uint256 unclaimed) {
+    ) internal view returns (uint128 unclaimed) {
         UserRewardsData memory userRewardsData = userRewards[_rewardToken][_user];
         unclaimed =
             userRewardsData.unclaimed +
@@ -243,17 +244,17 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     function _getUnaccruedRewardsFromRewardsIndexAccrual(
         uint256 _userBalance,
-        uint256 _indexAccrual
-    ) internal pure returns (uint256 unaccruedReward) {
-        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, SCALE);
+        uint128 _indexAccrual
+    ) internal pure returns (uint128 unaccruedReward) {
+        unaccruedReward = _userBalance.rayMul(_indexAccrual).safeCastTo128();
     }
 
     function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
         internal
         pure
-        returns (uint256 unaccruedRewardIndex)
+        returns (uint128 unaccruedRewardIndex)
     {
         if (_totalSupply > 0)
-            unaccruedRewardIndex = _claimableReward.mulDivDown(SCALE, _totalSupply);
+            unaccruedRewardIndex = _claimableReward.rayDiv(_totalSupply).safeCastTo128();
     }
 }

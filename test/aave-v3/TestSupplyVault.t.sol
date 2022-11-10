@@ -232,7 +232,7 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertLt(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
+        assertLe(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
         assertApproxEqAbs(
             claimedAmounts1[0],
             2 * claimedAmounts2[0],
@@ -357,7 +357,7 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertGt(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
+        assertGe(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
         assertApproxEqAbs(
             claimedAmounts1[0],
             claimedAmounts2[0],
@@ -597,7 +597,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier2),
             address(vaultSupplier1)
         );
-        (, uint256 userReward1_1) = daiSupplyVault.userRewards(
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(
             rewardToken,
             address(vaultSupplier1)
         );
@@ -613,7 +613,7 @@ contract TestSupplyVault is TestSetupVaults {
             rewardToken
         );
 
-        (uint256 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
+        (uint128 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
         assertGt(uint256(userReward1_1), 0);
@@ -644,7 +644,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier1)
         );
 
-        (, uint256 userReward1_1) = daiSupplyVault.userRewards(
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(
             rewardToken,
             address(vaultSupplier1)
         );
@@ -660,7 +660,7 @@ contract TestSupplyVault is TestSetupVaults {
             rewardToken
         );
 
-        (uint256 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
+        (uint128 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
         assertGt(uint256(userReward1_1), 0);

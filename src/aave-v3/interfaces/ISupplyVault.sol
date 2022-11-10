@@ -5,16 +5,14 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {ISupplyVaultBase} from "./ISupplyVaultBase.sol";
 
 interface ISupplyVault is ISupplyVaultBase {
-    function SCALE() external view returns (uint256);
-
     function rewardsManager() external view returns (IRewardsManager);
 
-    function rewardsIndex(address _rewardToken) external view returns (uint256);
+    function rewardsIndex(address _rewardToken) external view returns (uint128);
 
     function userRewards(address _rewardToken, address _user)
         external
         view
-        returns (uint256, uint256);
+        returns (uint128, uint128);
 
     function getAllUnclaimedRewards(address _user)
         external
