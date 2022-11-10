@@ -42,13 +42,13 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// STRUCTS ///
 
     struct UserRewardsData {
-        uint256 index; // User rewards index for a given reward token (in wad).
+        uint256 index; // User rewards index for a given reward token (in ray).
         uint256 unclaimed; // Unclaimed amount for a given reward token (in reward tokens).
     }
 
     /// CONSTANTS AND IMMUTABLES ///
 
-    uint256 public constant SCALE = 1e36;
+    uint256 public constant SCALE = 1e36; // A ray.
     IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
 
     /// STORAGE ///
