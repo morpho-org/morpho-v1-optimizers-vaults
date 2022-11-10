@@ -597,7 +597,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier2),
             address(vaultSupplier1)
         );
-        (, uint128 userReward1_1) = daiSupplyVault.userRewards(
+        (, uint256 userReward1_1) = daiSupplyVault.userRewards(
             rewardToken,
             address(vaultSupplier1)
         );
@@ -613,7 +613,7 @@ contract TestSupplyVault is TestSetupVaults {
             rewardToken
         );
 
-        (uint128 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
+        (uint256 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
         assertGt(uint256(userReward1_1), 0);
@@ -644,7 +644,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier1)
         );
 
-        (, uint128 userReward1_1) = daiSupplyVault.userRewards(
+        (, uint256 userReward1_1) = daiSupplyVault.userRewards(
             rewardToken,
             address(vaultSupplier1)
         );
@@ -660,7 +660,7 @@ contract TestSupplyVault is TestSetupVaults {
             rewardToken
         );
 
-        (uint128 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
+        (uint256 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
         assertEq(index2, 0);
         assertEq(userReward2, 0);
         assertGt(uint256(userReward1_1), 0);

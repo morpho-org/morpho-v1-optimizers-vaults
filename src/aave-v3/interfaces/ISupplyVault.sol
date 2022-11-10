@@ -9,12 +9,12 @@ interface ISupplyVault is ISupplyVaultBase {
 
     function rewardsManager() external view returns (IRewardsManager);
 
-    function rewardsIndex(address _rewardToken) external view returns (uint128);
+    function rewardsIndex(address _rewardToken) external view returns (uint256);
 
     function userRewards(address _rewardToken, address _user)
         external
         view
-        returns (uint128, uint128);
+        returns (uint256, uint256);
 
     function getAllUnclaimedRewards(address _user)
         external
