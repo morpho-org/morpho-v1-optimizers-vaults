@@ -7,7 +7,10 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     using CompoundMath for uint256;
 
     function testUpgradeSupplyHarvestVault() public {
-        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
+        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(
+            address(morpho),
+            MORPHO_TOKEN
+        );
 
         vm.record();
         vm.prank(PROXY_ADMIN_OWNER);
@@ -26,7 +29,10 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyHarvestVault() public {
-        SupplyHarvestVault supplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
+        SupplyHarvestVault supplyHarvestVaultImplV2 = new SupplyHarvestVault(
+            address(morpho),
+            MORPHO_TOKEN
+        );
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -37,7 +43,10 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyHarvestVault() public {
-        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
+        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(
+            address(morpho),
+            MORPHO_TOKEN
+        );
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -70,7 +79,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testUpgradeSupplyVault() public {
-        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN);
 
         vm.record();
         vm.prank(PROXY_ADMIN_OWNER);
@@ -89,7 +98,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
-        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN);
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -100,7 +109,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
-        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN);
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
