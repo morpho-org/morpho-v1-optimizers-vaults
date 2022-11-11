@@ -169,7 +169,7 @@ contract TestSupplyVault is TestSetupVaults {
         uint256 balanceBefore = vaultSupplier1.balanceOf(rewardToken);
 
         (address[] memory rewardTokens, uint256[] memory claimedAmounts) = daiSupplyVault
-            .claimRewards(address(vaultSupplier1));
+        .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens.length, 1);
         assertEq(rewardTokens[0], rewardToken);
@@ -213,14 +213,14 @@ contract TestSupplyVault is TestSetupVaults {
         );
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-            .claimRewards(address(vaultSupplier1));
+        .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-            .claimRewards(address(vaultSupplier2));
+        .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
@@ -272,14 +272,14 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier2.redeemVault(daiSupplyVault, shares2 / 2);
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-            .claimRewards(address(vaultSupplier1));
+        .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-            .claimRewards(address(vaultSupplier2));
+        .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
@@ -338,14 +338,14 @@ contract TestSupplyVault is TestSetupVaults {
         );
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-            .claimRewards(address(vaultSupplier1));
+        .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-            .claimRewards(address(vaultSupplier2));
+        .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
@@ -418,21 +418,21 @@ contract TestSupplyVault is TestSetupVaults {
         vaultSupplier3.redeemVault(daiSupplyVault, shares3 / 2);
 
         (address[] memory rewardTokens1, uint256[] memory claimedAmounts1) = daiSupplyVault
-            .claimRewards(address(vaultSupplier1));
+        .claimRewards(address(vaultSupplier1));
 
         assertEq(rewardTokens1.length, 1);
         assertEq(rewardTokens1[0], rewardToken);
         assertEq(claimedAmounts1.length, 1);
 
         (address[] memory rewardTokens2, uint256[] memory claimedAmounts2) = daiSupplyVault
-            .claimRewards(address(vaultSupplier2));
+        .claimRewards(address(vaultSupplier2));
 
         assertEq(rewardTokens2.length, 1);
         assertEq(rewardTokens2[0], rewardToken);
         assertEq(claimedAmounts2.length, 1);
 
         (address[] memory rewardTokens3, uint256[] memory claimedAmounts3) = daiSupplyVault
-            .claimRewards(address(vaultSupplier3));
+        .claimRewards(address(vaultSupplier3));
 
         assertEq(rewardTokens3.length, 1);
         assertEq(rewardTokens3[0], rewardToken);
@@ -466,28 +466,6 @@ contract TestSupplyVault is TestSetupVaults {
             1e15,
             "unexpected rewards amount 2-3"
         ); // not exact because of rewardTokenounded interests
-    }
-
-    function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
-        vm.prank(address(1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyVault.transferTokens($token, address(2), _amount);
-    }
-
-    function testOwnerShouldTransferTokens(
-        address _to,
-        uint256 _deal,
-        uint256 _toTransfer
-    ) public {
-        vm.assume(_to != address(daiSupplyVault));
-        _toTransfer = bound(_toTransfer, 0, _deal);
-        deal($token, address(daiSupplyVault), _deal);
-
-        vm.prank(daiSupplyVault.owner());
-        daiSupplyVault.transferTokens($token, _to, _toTransfer);
-
-        assertEq(token.balanceOf(address(daiSupplyVault)), _deal - _toTransfer);
-        assertEq(token.balanceOf(_to), _toTransfer);
     }
 
     function testRewardsShouldAccrueWhenDepositingOnBehalf() public {

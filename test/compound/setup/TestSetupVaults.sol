@@ -9,11 +9,16 @@ import {SupplyVault} from "@vaults/compound/SupplyVault.sol";
 
 import "@morpho-labs/morpho-utils/math/PercentageMath.sol";
 
+import "../../helpers/interfaces/IRolesAuthority.sol";
 import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
+import "../helpers/SupplyVaultBaseMock.sol";
 
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
+
+    address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
 
     TransparentUpgradeableProxy internal wethSupplyVaultProxy;
     TransparentUpgradeableProxy internal wethSupplyHarvestVaultProxy;
@@ -28,6 +33,7 @@ contract TestSetupVaults is TestSetup {
     SupplyHarvestVault internal daiSupplyHarvestVault;
     SupplyHarvestVault internal usdcSupplyHarvestVault;
     SupplyHarvestVault internal compSupplyHarvestVault;
+    SupplyVaultBase internal supplyVaultBase;
 
     ERC20 internal mcWeth;
     ERC20 internal mcDai;
@@ -55,8 +61,18 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        supplyVaultImplV1 = new SupplyVault(address(morpho));
-        supplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho));
+        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN);
+        supplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho), MORPHO_TOKEN);
+
+        supplyVaultBase = SupplyVaultBase(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN)),
+                    address(proxyAdmin),
+                    ""
+                )
+            )
+        );
 
         wethSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
             address(supplyHarvestVaultImplV1),

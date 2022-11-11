@@ -33,7 +33,10 @@ contract TestSupplyHarvestVault is TestSetupVaults {
     }
 
     function testInitializationShouldRevertWithWrongInputs() public {
-        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(address(morpho));
+        SupplyHarvestVault supplyHarvestVaultImpl = new SupplyHarvestVault(
+            address(morpho),
+            MORPHO_TOKEN
+        );
 
         SupplyHarvestVault vault = SupplyHarvestVault(
             address(
@@ -46,7 +49,7 @@ contract TestSupplyHarvestVault is TestSetupVaults {
         );
 
         vm.expectRevert();
-        new SupplyHarvestVault(address(0));
+        new SupplyHarvestVault(address(0), MORPHO_TOKEN);
 
         // TODO: Fix this test. Test is failing with:
         // FAIL. Reason: Error != expected error: Contract 0x0000000000000000000000000000000000000000 does not exist and is not marked as persistent, see `vm.makePersistent()` != 0xd92e233d
@@ -427,28 +430,6 @@ contract TestSupplyHarvestVault is TestSetupVaults {
 
         daiSupplyHarvestVault.setHarvestingFee(1);
         assertEq(daiSupplyHarvestVault.harvestingFee(), 1);
-    }
-
-    function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
-        vm.prank(address(1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyHarvestVault.transferTokens($token, address(2), _amount);
-    }
-
-    function testOwnerShouldTransferTokens(
-        address _to,
-        uint256 _deal,
-        uint256 _toTransfer
-    ) public {
-        vm.assume(_to != address(daiSupplyHarvestVault));
-        _toTransfer = bound(_toTransfer, 0, _deal);
-        deal($token, address(daiSupplyHarvestVault), _deal);
-
-        vm.prank(daiSupplyHarvestVault.owner());
-        daiSupplyHarvestVault.transferTokens($token, _to, _toTransfer);
-
-        assertEq(token.balanceOf(address(daiSupplyHarvestVault)), _deal - _toTransfer);
-        assertEq(token.balanceOf(_to), _toTransfer);
     }
 
     /// SETTERS ///

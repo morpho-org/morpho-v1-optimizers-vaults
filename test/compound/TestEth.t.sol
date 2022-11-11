@@ -40,7 +40,7 @@ contract TestEth is TestSetupVaults {
         );
     }
 
-    function testShouldWithdrawethOnVault() public {
+    function testShouldWithdraWethOnVault() public {
         uint256 amount = 1 ether;
 
         uint256 poolSupplyIndex = ICToken(cEth).exchangeRateCurrent();
