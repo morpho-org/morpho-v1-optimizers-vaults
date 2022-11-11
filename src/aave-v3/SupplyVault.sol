@@ -9,7 +9,6 @@ import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathL
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
-import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
@@ -19,7 +18,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     using FixedPointMathLib for uint256;
     using SafeCastLib for uint256;
     using SafeTransferLib for ERC20;
-    using WadRayMath for uint256;
 
     /// EVENTS ///
 
@@ -51,6 +49,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// CONSTANTS AND IMMUTABLES ///
 
     IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
+    uint256 constant RAY = 1e27;
 
     /// STORAGE ///
 
@@ -246,7 +245,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256 _userBalance,
         uint256 _indexAccrual
     ) internal pure returns (uint256 unaccruedReward) {
-        unaccruedReward = _userBalance.rayMul(_indexAccrual);
+        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, RAY); // Equivalent to rayMul rounded down
     }
 
     function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
@@ -254,6 +253,6 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         pure
         returns (uint256 unaccruedRewardIndex)
     {
-        if (_totalSupply > 0) unaccruedRewardIndex = _claimableReward.rayDiv(_totalSupply);
+        if (_totalSupply > 0) unaccruedRewardIndex = _claimableReward.mulDivDown(RAY, _totalSupply); // Equivalent to rayDiv rounded down
     }
 }
