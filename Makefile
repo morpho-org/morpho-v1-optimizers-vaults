@@ -58,6 +58,14 @@ gas-report:
 	@echo Creating gas report for Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test --no-match-path **/live/** --gas-report
 
+coverage:
+	@echo Create lcov coverage report for Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
+	@forge coverage --report lcov
+
+lcov-html:
+	@echo Transforming the lcov coverage report into html
+	@genhtml lcov.info -o coverage
+
 contract-% c-%:
 	@echo Running tests for contract $* of Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test -vvv --match-contract $* | tee trace.ansi
@@ -66,7 +74,13 @@ single-% s-%:
 	@echo Running single test $* of Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test -vvv --match-test $* | tee trace.ansi
 
+storage-layout-gen-%:
+	@./scripts/storage-layout.sh generate snapshots/.storage-layout-${PROTOCOL} $*
+
+storage-layout-check-%:
+	@./scripts/storage-layout.sh check snapshots/.storage-layout-${PROTOCOL} $*
+
 config:
 	@forge config
 
-.PHONY: test config common foundry
+.PHONY: test config common foundry coverage
