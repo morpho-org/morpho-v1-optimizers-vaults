@@ -31,8 +31,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     event Accrued(
         address indexed rewardToken,
         address indexed user,
-        uint128 rewardsIndex,
-        uint128 accruedRewards
+        uint256 rewardsIndex,
+        uint256 accruedRewards
     );
 
     /// @notice Emitted when rewards of an asset are claimed on behalf of a user.
@@ -101,7 +101,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             address rewardToken = rewardTokens[i];
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
-            uint128 unclaimedAmount = userRewardsData.unclaimed;
+            uint256 unclaimedAmount = userRewardsData.unclaimed;
             if (unclaimedAmount > 0) {
                 claimedAmounts[i] = unclaimedAmount;
                 userRewardsData.unclaimed = 0;
@@ -204,21 +204,21 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
-            uint128 rewardsIndexMem = rewardsIndex[rewardToken];
+            uint256 rewardsIndexMem = rewardsIndex[rewardToken];
 
             if (supply > 0 && claimedAmount > 0) {
                 rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
-                rewardsIndex[rewardToken] = rewardsIndexMem;
+                rewardsIndex[rewardToken] = rewardsIndexMem.safeCastTo128();
             }
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             if (rewardsIndexMem > userRewardsData.index) {
-                uint128 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
+                uint256 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
                     balanceOf(_user),
                     rewardsIndexMem - userRewardsData.index
                 );
-                userRewardsData.unclaimed += accruedReward;
-                userRewardsData.index = rewardsIndexMem;
+                userRewardsData.unclaimed += accruedReward.safeCastTo128();
+                userRewardsData.index = rewardsIndexMem.safeCastTo128();
 
                 emit Accrued(rewardToken, _user, rewardsIndexMem, accruedReward);
             }
@@ -230,7 +230,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         address _rewardToken,
         uint256 _claimableReward,
         uint256 _totalSupply
-    ) internal view returns (uint128 unclaimed) {
+    ) internal view returns (uint256 unclaimed) {
         UserRewardsData memory userRewardsData = userRewards[_rewardToken][_user];
         unclaimed =
             userRewardsData.unclaimed +
@@ -244,17 +244,16 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     function _getUnaccruedRewardsFromRewardsIndexAccrual(
         uint256 _userBalance,
-        uint128 _indexAccrual
-    ) internal pure returns (uint128 unaccruedReward) {
-        unaccruedReward = _userBalance.rayMul(_indexAccrual).safeCastTo128();
+        uint256 _indexAccrual
+    ) internal pure returns (uint256 unaccruedReward) {
+        unaccruedReward = _userBalance.rayMul(_indexAccrual);
     }
 
     function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
         internal
         pure
-        returns (uint128 unaccruedRewardIndex)
+        returns (uint256 unaccruedRewardIndex)
     {
-        if (_totalSupply > 0)
-            unaccruedRewardIndex = _claimableReward.rayDiv(_totalSupply).safeCastTo128();
+        if (_totalSupply > 0) unaccruedRewardIndex = _claimableReward.rayDiv(_totalSupply);
     }
 }
