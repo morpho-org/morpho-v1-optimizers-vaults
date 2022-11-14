@@ -26,6 +26,7 @@ contract TestSetupVaultsLive is TestSetup {
 
     address internal constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
     address internal constant LENS = 0x930f1b46e1D081Ec1524efD95752bE3eCe51EF67;
+    address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
 
     TransparentUpgradeableProxy internal wethSupplyVaultProxy;
 
