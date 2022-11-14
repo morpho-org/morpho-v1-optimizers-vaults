@@ -36,10 +36,6 @@ All audits are stored in the [audits](./audits/)' folder.
 - mcWBTC: [0xF31AC95fe692190b9C67112d8c912bA9973944F2](https://etherscan.io/address/0xF31AC95fe692190b9C67112d8c912bA9973944F2)
 - Implementation: [0xbc49c0f652dac4dbc90ee97d71b66a1bf228f66f](https://etherscan.io/address/0xbc49c0f652dac4dbc90ee97d71b66a1bf228f66f)
 
-#### Supply Harvest Vaults
-
-Not deployed yet.
-
 ### Morpho-Aave-V2 (Ethereum)
 
 #### Supply Vaults
