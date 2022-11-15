@@ -14,9 +14,7 @@ interface ISupplyVaultBase is IERC4626Upgradeable {
 
     function poolToken() external view returns (address);
 
-    function transferTokens(
-        address _asset,
-        address _to,
-        uint256 _amount
-    ) external;
+    function setRewardsRecipient(address _recipient) external;
+
+    function transferRewards() external;
 }

@@ -47,7 +47,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     /// @dev Initializes immutable state variables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) SupplyVaultBase(_morpho) {}
+    /// @param _morphoToken The address of the Morpho Token.
+    constructor(address _morpho, address _morphoToken) SupplyVaultBase(_morpho, _morphoToken) {}
 
     /// INITIALIZER ///
 
@@ -103,6 +104,15 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     ) internal override {
         _accrueUnclaimedRewards(_owner);
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256
+    ) internal override {
+        _accrueUnclaimedRewards(from);
+        _accrueUnclaimedRewards(to);
     }
 
     function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {

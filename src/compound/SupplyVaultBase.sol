@@ -21,9 +21,20 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     using CompoundMath for uint256;
     using SafeTransferLib for ERC20;
 
+    /// EVENTS ///
+
+    /// @notice Emitted when the `recipient` of MORPHO rewards is set.
+    /// @param recipient The recipient of the rewards.
+    event RewardsRecipientSet(address recipient);
+
+    /// @notice Emitted when MORPHO rewards are transferred to `recipient`.
+    /// @param recipient The recipient of the rewards.
+    /// @param amount The amount of rewards transferred.
+    event RewardsTransferred(address recipient, uint256 amount);
+
     /// ERRORS ///
 
-    /// @notice Thrown when the zero address is passed as input.
+    /// @notice Thrown when the zero address is passed as input or is the recipient address when calling `transferRewards`.
     error ZeroAddress();
 
     /// CONSTANTS AND IMMUTABLES ///
@@ -31,19 +42,26 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     IMorpho public immutable morpho; // The main Morpho contract.
     address public immutable wEth; // The address of WETH token.
     ERC20 public immutable comp; // The COMP token.
+    ERC20 public immutable morphoToken; // The address of the Morpho Token.
+
+    /// STORAGE ///
 
     /// STORAGE ///
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
+    address public recipient; // The recipient of the rewards that will redistribute them to vault's users.
 
     /// CONSTRUCTOR ///
 
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) {
+    /// @param _morphoToken The address of the Morpho Token.
+    constructor(address _morpho, address _morphoToken) {
+        if (_morphoToken == address(0)) revert ZeroAddress();
         morpho = IMorpho(_morpho);
         wEth = morpho.wEth(); // Reverts if morpho is zero address, so no zero address check is needed.
         comp = ERC20(morpho.comptroller().getCompAddress());
+        morphoToken = ERC20(_morphoToken);
     }
 
     /// INITIALIZER ///
@@ -87,12 +105,20 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     /// EXTERNAL ///
 
-    function transferTokens(
-        address _asset,
-        address _to,
-        uint256 _amount
-    ) external onlyOwner {
-        ERC20(_asset).safeTransfer(_to, _amount);
+    /// @notice Sets the rewards recipient.
+    /// @dev Sets to address(0) to prevent MORPHO rewards from being transferred.
+    /// @param _recipient The new rewards recipient.
+    function setRewardsRecipient(address _recipient) external onlyOwner {
+        recipient = _recipient;
+        emit RewardsRecipientSet(_recipient);
+    }
+
+    /// @notice Transfers the MORPHO rewards to the rewards recipient.
+    function transferRewards() external onlyOwner {
+        if (recipient == address(0)) revert ZeroAddress();
+        uint256 amount = morphoToken.balanceOf(address(this));
+        morphoToken.safeTransfer(recipient, amount);
+        emit RewardsTransferred(recipient, amount);
     }
 
     /// PUBLIC ///
@@ -201,5 +227,5 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @dev This empty reserved space is put in place to allow future versions to add new
     /// variables without shifting down storage in the inheritance chain.
     /// See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }
