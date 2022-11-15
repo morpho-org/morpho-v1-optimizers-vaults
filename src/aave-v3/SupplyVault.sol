@@ -48,8 +48,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
 
     /// CONSTANTS AND IMMUTABLES ///
 
-    IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
     uint256 public constant RAY = 1e27;
+    IRewardsManager public immutable rewardsManager; // Morpho's rewards manager.
 
     /// STORAGE ///
 
