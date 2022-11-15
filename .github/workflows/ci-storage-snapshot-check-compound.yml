@@ -36,6 +36,6 @@ jobs:
           version: nightly
 
       - name: Check storage layout snapshot
-        run: make storage-layout-check-"SupplyVault SupplyHarvestVault"
+        run: make storage-layout-check-SupplyVault
         env:
           PROTOCOL: compound

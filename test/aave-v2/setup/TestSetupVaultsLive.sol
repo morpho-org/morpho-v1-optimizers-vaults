@@ -18,6 +18,7 @@ contract TestSetupVaultsLive is TestSetup {
     address internal constant W_NATIVE_VAULT_ADDRESS = 0x762fafA0257CD3b697e0D7FD40f1f6c03F07A8ef;
     address internal constant DAI_VAULT_ADDRESS = 0x3A91D37BAc30C913369E1ABC8CAd1C13D1ff2e98;
     address internal constant USDC_VAULT_ADDRESS = 0xd45EF8c9b9431298019FC15753609DB2FB101aa5;
+    address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
 
     uint256 internal constant INITIAL_DEPOSIT = 1e8;
 
