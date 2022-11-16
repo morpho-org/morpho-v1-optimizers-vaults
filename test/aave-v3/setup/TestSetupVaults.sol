@@ -13,6 +13,7 @@ contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
 
     address internal MORPHO_TOKEN = address(new FakeToken("Morpho Token", "MORPHO"));
+    address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
 
     TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
 
