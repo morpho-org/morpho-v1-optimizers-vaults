@@ -697,7 +697,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(supplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertGt(unclaimed1, 0);
+        assertEq(unclaimed1, 0);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
@@ -708,7 +708,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         (, uint256[] memory rewardsAmount1) = daiSupplyVault.claimRewards(address(vaultSupplier1));
         (, uint256[] memory rewardsAmount2) = daiSupplyVault.claimRewards(address(vaultSupplier2));
-        assertGt(rewardsAmount1[0], 0);
+        assertGt(rewardsAmount1[0], 0, "rewardsAmount1");
         assertEq(rewardsAmount2[0], 0);
     }
 
@@ -737,7 +737,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(supplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertGt(unclaimed1, 0);
+        assertEq(unclaimed1, 0);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
@@ -756,7 +756,7 @@ contract TestSupplyVault is TestSetupVaults {
         (, uint256[] memory rewardsAmount1) = daiSupplyVault.claimRewards(address(vaultSupplier1));
         (, uint256[] memory rewardsAmount2) = daiSupplyVault.claimRewards(address(vaultSupplier2));
         (, uint256[] memory rewardsAmount3) = daiSupplyVault.claimRewards(address(vaultSupplier3));
-        assertGt(rewardsAmount1[0], 0);
+        assertGt(rewardsAmount1[0], 0, "rewardsAmount1");
         assertEq(rewardsAmount2[0], 0);
         assertEq(rewardsAmount3[0], 0);
     }
