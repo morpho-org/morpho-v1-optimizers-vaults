@@ -646,6 +646,121 @@ contract TestSupplyVault is TestSetupVaults {
         assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
     }
 
+    function testTransfer() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+    }
+
+    function testTransferFrom() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.approve(address(supplier3), balance);
+
+        vm.prank(address(supplier3));
+        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+    }
+
+    function testTransferAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.transfer(address(supplier2), balance);
+
+        uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
+            daiSupplyVault.totalSupply()
+        );
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
+        assertEq(expectedIndex, rewardsIndex);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(supplier1)
+        );
+        assertEq(index1, rewardsIndex);
+        assertGt(unclaimed1, 0);
+
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(supplier2)
+        );
+        assertEq(index2, rewardsIndex);
+        assertEq(unclaimed2, 0);
+
+        (, uint256[] memory rewardsAmount1) = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        (, uint256[] memory rewardsAmount2) = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        assertGt(rewardsAmount1[0], 0);
+        assertEq(rewardsAmount2[0], 0);
+    }
+
+    function testTransferFromAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
+        vm.prank(address(supplier1));
+        daiSupplyVault.approve(address(supplier3), balance);
+
+        vm.prank(address(supplier3));
+        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+
+        uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
+            daiSupplyVault.totalSupply()
+        );
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
+        assertEq(rewardsIndex, expectedIndex);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(supplier1)
+        );
+        assertEq(index1, rewardsIndex);
+        assertGt(unclaimed1, 0);
+
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(supplier2)
+        );
+        assertEq(index2, rewardsIndex);
+        assertEq(unclaimed2, 0);
+
+        (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(supplier3)
+        );
+        assertEq(index3, 0);
+        assertEq(unclaimed3, 0);
+
+        (, uint256[] memory rewardsAmount1) = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        (, uint256[] memory rewardsAmount2) = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        (, uint256[] memory rewardsAmount3) = daiSupplyVault.claimRewards(address(vaultSupplier3));
+        assertGt(rewardsAmount1[0], 0);
+        assertEq(rewardsAmount2[0], 0);
+        assertEq(rewardsAmount3[0], 0);
+    }
+
     function testTransferAndClaimRewards() public {
         uint256 amount = 1e6 ether;
 
