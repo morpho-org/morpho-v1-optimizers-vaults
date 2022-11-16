@@ -5,7 +5,7 @@ import {IRewardsManager} from "@contracts/aave-v3/interfaces/IRewardsManager.sol
 import {ISupplyVaultBase} from "./ISupplyVaultBase.sol";
 
 interface ISupplyVault is ISupplyVaultBase {
-    function SCALE() external view returns (uint256);
+    function RAY() external view returns (uint256);
 
     function rewardsManager() external view returns (IRewardsManager);
 

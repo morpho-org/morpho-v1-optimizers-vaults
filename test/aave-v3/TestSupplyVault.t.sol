@@ -232,7 +232,7 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertLt(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
+        assertLe(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
         assertApproxEqAbs(
             claimedAmounts1[0],
             2 * claimedAmounts2[0],
@@ -357,7 +357,7 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertGt(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
+        assertGe(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
         assertApproxEqAbs(
             claimedAmounts1[0],
             claimedAmounts2[0],
