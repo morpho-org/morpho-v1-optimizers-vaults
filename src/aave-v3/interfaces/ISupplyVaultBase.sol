@@ -8,4 +8,8 @@ interface ISupplyVaultBase is IERC4626Upgradeable {
     function morpho() external view returns (IMorpho);
 
     function poolToken() external view returns (address);
+
+    function setRewardsRecipient(address _recipient) external;
+
+    function transferRewards() external;
 }

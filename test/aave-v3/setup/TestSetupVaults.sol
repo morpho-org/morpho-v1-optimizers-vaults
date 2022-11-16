@@ -1,42 +1,31 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import {ISwapper} from "@vaults/interfaces/ISwapper.sol";
-
 import "@tests/aave-v3/setup/TestSetup.sol";
 import {SupplyVaultBase} from "@vaults/aave-v3/SupplyVaultBase.sol";
-import {SupplyHarvestVault} from "@vaults/aave-v3/SupplyHarvestVault.sol";
 import {SupplyVault} from "@vaults/aave-v3/SupplyVault.sol";
-import {UniswapV2Swapper} from "@vaults/UniswapV2Swapper.sol";
-import {UniswapV3Swapper} from "@vaults/UniswapV3Swapper.sol";
 
 import "../../helpers/FakeToken.sol";
 import "../helpers/VaultUser.sol";
+import "../helpers/SupplyVaultBaseMock.sol";
 
 contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
 
+    address internal MORPHO_TOKEN = address(new FakeToken("Morpho Token", "MORPHO"));
+
     TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
-    TransparentUpgradeableProxy internal wrappedNativeTokenSupplyHarvestVaultProxy;
 
     SupplyVault internal supplyVaultImplV1;
-    SupplyHarvestVault internal supplyHarvestVaultImplV1;
 
     SupplyVault internal wrappedNativeTokenSupplyVault;
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;
-    SupplyHarvestVault internal wrappedNativeTokenSupplyHarvestVault;
-    SupplyHarvestVault internal daiSupplyHarvestVault;
-    SupplyHarvestVault internal usdcSupplyHarvestVault;
-
-    ISwapper internal swapper;
+    SupplyVaultBase internal supplyVaultBase;
 
     ERC20 internal maWrappedNativeToken;
     ERC20 internal maDai;
     ERC20 internal maUsdc;
-    ERC20 internal mahWrappedNativeToken;
-    ERC20 internal mahDai;
-    ERC20 internal mahUsdc;
 
     VaultUser public vaultSupplier1;
     VaultUser public vaultSupplier2;
@@ -56,73 +45,18 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        if (block.chainid == Chains.AVALANCHE_MAINNET) {
-            swapper = new UniswapV2Swapper(0x60aE616a2155Ee3d9A68541Ba4544862310933d4, wavax);
-            vm.label(0x60aE616a2155Ee3d9A68541Ba4544862310933d4, "Uniswap V2");
-            vm.label(address(swapper), "Swapper");
-        }
-
         createMarket(aWrappedNativeToken);
 
-        supplyVaultImplV1 = new SupplyVault(address(morpho));
-        supplyHarvestVaultImplV1 = new SupplyHarvestVault(address(morpho));
-
-        wrappedNativeTokenSupplyHarvestVaultProxy = new TransparentUpgradeableProxy(
-            address(supplyHarvestVaultImplV1),
-            address(proxyAdmin),
-            ""
-        );
-        wrappedNativeTokenSupplyHarvestVault = SupplyHarvestVault(
-            address(wrappedNativeTokenSupplyHarvestVaultProxy)
-        );
-        wrappedNativeTokenSupplyHarvestVault.initialize(
-            aWrappedNativeToken,
-            "MorphoAaveHarvestWNATIVE",
-            "mahWNATIVE",
-            0,
-            50,
-            address(swapper)
-        );
-        mahWrappedNativeToken = ERC20(address(wrappedNativeTokenSupplyHarvestVault));
-
-        daiSupplyHarvestVault = SupplyHarvestVault(
+        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN);
+        supplyVaultBase = SupplyVaultBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(supplyHarvestVaultImplV1),
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN)),
                     address(proxyAdmin),
                     ""
                 )
             )
         );
-        daiSupplyHarvestVault.initialize(
-            aDai,
-            "MorphoAaveHarvestDAI",
-            "mahDAI",
-            0,
-            50,
-            address(swapper)
-        );
-        mahDai = ERC20(address(daiSupplyHarvestVault));
-
-        usdcSupplyHarvestVault = SupplyHarvestVault(
-            address(
-                new TransparentUpgradeableProxy(
-                    address(supplyHarvestVaultImplV1),
-                    address(proxyAdmin),
-                    ""
-                )
-            )
-        );
-
-        usdcSupplyHarvestVault.initialize(
-            aUsdc,
-            "MorphoAaveHarvestUSDC",
-            "mahUSDC",
-            0,
-            50,
-            address(swapper)
-        );
-        mahUsdc = ERC20(address(usdcSupplyHarvestVault));
 
         wrappedNativeTokenSupplyVaultProxy = new TransparentUpgradeableProxy(
             address(supplyVaultImplV1),
@@ -174,9 +108,8 @@ contract TestSetupVaults is TestSetup {
     }
 
     function setVaultContractsLabels() internal {
-        vm.label(address(supplyHarvestVaultImplV1), "SupplyHarvestVaultImplV1");
-        vm.label(address(wrappedNativeTokenSupplyHarvestVault), "SupplyHarvestVault (wNATIVE)");
-        vm.label(address(daiSupplyHarvestVault), "SupplyHarvestVault (DAI)");
-        vm.label(address(usdcSupplyHarvestVault), "SupplyHarvestVault (USDC)");
+        vm.label(address(wrappedNativeTokenSupplyVault), "SupplyVault (WNATIVE)");
+        vm.label(address(usdcSupplyVault), "SupplyVault (USDC)");
+        vm.label(address(daiSupplyVault), "SupplyVault (DAI)");
     }
 }
