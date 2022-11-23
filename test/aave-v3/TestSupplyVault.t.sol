@@ -651,12 +651,12 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
-        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
-        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
     }
 
     function testTransferFrom() public {
@@ -664,15 +664,15 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.approve(address(supplier3), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.approve(address(vaultSupplier3), balance);
 
-        vm.prank(address(supplier3));
-        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+        vm.prank(address(vaultSupplier3));
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
-        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
-        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
     }
 
     function testTransferAccrueRewards() public {
@@ -682,26 +682,25 @@ contract TestSupplyVault is TestSetupVaults {
 
         vm.warp(block.timestamp + 10 days);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
-        uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
-            daiSupplyVault.totalSupply()
-        );
+        uint256 rewardAmount = ERC20(rewardToken).balanceOf(address(daiSupplyVault));
+        uint256 expectedIndex = rewardAmount.rayDiv(daiSupplyVault.totalSupply());
         uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
         assertEq(expectedIndex, rewardsIndex);
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier1)
+            address(vaultSupplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertEq(unclaimed1, 0);
+        assertEq(unclaimed1, rewardAmount);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier2)
+            address(vaultSupplier2)
         );
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
@@ -719,36 +718,35 @@ contract TestSupplyVault is TestSetupVaults {
 
         vm.warp(block.timestamp + 10 days);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.approve(address(supplier3), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.approve(address(vaultSupplier3), balance);
 
-        vm.prank(address(supplier3));
-        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+        vm.prank(address(vaultSupplier3));
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
-        uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
-            daiSupplyVault.totalSupply()
-        );
+        uint256 rewardAmount = ERC20(rewardToken).balanceOf(address(daiSupplyVault));
+        uint256 expectedIndex = rewardAmount.rayDiv(daiSupplyVault.totalSupply());
         uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
         assertEq(rewardsIndex, expectedIndex);
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier1)
+            address(vaultSupplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertEq(unclaimed1, 0);
+        assertEq(unclaimed1, rewardAmount);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier2)
+            address(vaultSupplier2)
         );
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
 
         (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier3)
+            address(vaultSupplier3)
         );
         assertEq(index3, 0);
         assertEq(unclaimed3, 0);
@@ -790,10 +788,10 @@ contract TestSupplyVault is TestSetupVaults {
         assertGt(rewardsAmount1, 0);
         assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, rewardsAmount1 / 100);
         // Why rewardsAmount1 is 2/3 of rewardsAmount2 can be explained as follows:
-        // supplier1 first gets X rewards corresponding to amount over one period of time
-        // supplier1 then and supplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
-        // supplier2 then gets 2 * X rewards
-        // In the end, supplier1 got 2 * X rewards while supplier2 got 3 * X
+        // vaultSupplier1 first gets X rewards corresponding to amount over one period of time
+        // vaultSupplier1 then and vaultSupplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
+        // vaultSupplier2 then gets 2 * X rewards
+        // In the end, vaultSupplier1 got 2 * X rewards while vaultSupplier2 got 3 * X
     }
 
     // TODO: fix this test by using updated indexes in previewMint

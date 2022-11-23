@@ -215,7 +215,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             uint256 claimedAmount = claimedAmounts[i];
             uint256 rewardsIndexMem = rewardsIndex[rewardToken];
 
-            if (supply > 0 && claimedAmount > 0) {
+            if (claimedAmount > 0) {
                 rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
                 rewardsIndex[rewardToken] = rewardsIndexMem.safeCastTo128();
             }
@@ -223,7 +223,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             if (rewardsIndexMem > userRewardsData.index) {
                 uint256 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
-                    balanceOf(_user),
+                    _user,
                     rewardsIndexMem - userRewardsData.index
                 );
                 userRewardsData.unclaimed += accruedReward.safeCastTo128();
@@ -244,18 +244,19 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         unclaimed =
             userRewardsData.unclaimed +
             _getUnaccruedRewardsFromRewardsIndexAccrual(
-                balanceOf(_user),
+                _user,
                 _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
                     rewardsIndex[_rewardToken] -
                     userRewardsData.index // The difference between the current reward index and the user's index
             );
     }
 
-    function _getUnaccruedRewardsFromRewardsIndexAccrual(
-        uint256 _userBalance,
-        uint256 _indexAccrual
-    ) internal pure returns (uint256 unaccruedReward) {
-        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, RAY); // Equivalent to rayMul rounded down
+    function _getUnaccruedRewardsFromRewardsIndexAccrual(address _user, uint256 _indexAccrual)
+        internal
+        view
+        returns (uint256 unaccruedReward)
+    {
+        unaccruedReward = balanceOf(_user).mulDivDown(_indexAccrual, RAY); // Equivalent to rayMul rounded down
     }
 
     function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)
