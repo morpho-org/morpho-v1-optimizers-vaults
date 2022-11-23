@@ -589,7 +589,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(vaultSupplier1));
         assertEq(index1, rewardsIndex);
-        assertGt(unclaimed1, rewardAmount);
+        assertApproxEqAbs(unclaimed1, rewardAmount, 1e6);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
         assertEq(index2, rewardsIndex);
@@ -622,7 +622,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(address(vaultSupplier1));
         assertEq(index1, rewardsIndex);
-        assertGt(unclaimed1, rewardAmount);
+        assertApproxEqAbs(unclaimed1, rewardAmount, 1e6);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
         assertEq(index2, rewardsIndex);
