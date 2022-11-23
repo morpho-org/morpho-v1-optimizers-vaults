@@ -24,28 +24,3 @@
 | __gap         | uint256[48]                                            | 253  | 0      | 1536  | src/compound/SupplyVault.sol:SupplyVault |
 | rewardsIndex  | uint256                                                | 301  | 0      | 32    | src/compound/SupplyVault.sol:SupplyVault |
 | userRewards   | mapping(address => struct SupplyVault.UserRewardsData) | 302  | 0      | 32    | src/compound/SupplyVault.sol:SupplyVault |
-
-=======================
-➡ SupplyHarvestVault
-=======================
-
-| Name          | Type                                            | Slot | Offset | Bytes | Contract                                               |
-|---------------|-------------------------------------------------|------|--------|-------|--------------------------------------------------------|
-| _initialized  | uint8                                           | 0    | 0      | 1     | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _initializing | bool                                            | 0    | 1      | 1     | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| __gap         | uint256[50]                                     | 1    | 0      | 1600  | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _balances     | mapping(address => uint256)                     | 51   | 0      | 32    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _allowances   | mapping(address => mapping(address => uint256)) | 52   | 0      | 32    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _totalSupply  | uint256                                         | 53   | 0      | 32    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _name         | string                                          | 54   | 0      | 32    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _symbol       | string                                          | 55   | 0      | 32    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| __gap         | uint256[45]                                     | 56   | 0      | 1440  | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _asset        | contract IERC20MetadataUpgradeable              | 101  | 0      | 20    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| __gap         | uint256[49]                                     | 102  | 0      | 1568  | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| __gap         | uint256[50]                                     | 151  | 0      | 1600  | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| _owner        | address                                         | 201  | 0      | 20    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| __gap         | uint256[49]                                     | 202  | 0      | 1568  | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| poolToken     | address                                         | 251  | 0      | 20    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| __gap         | uint256[49]                                     | 252  | 0      | 1568  | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| isEth         | bool                                            | 301  | 0      | 1     | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
-| harvestConfig | struct SupplyHarvestVault.HarvestConfig         | 302  | 0      | 32    | src/compound/SupplyHarvestVault.sol:SupplyHarvestVault |
