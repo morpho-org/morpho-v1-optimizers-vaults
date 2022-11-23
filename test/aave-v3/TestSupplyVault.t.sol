@@ -651,12 +651,12 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
-        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
-        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
     }
 
     function testTransferFrom() public {
@@ -664,15 +664,15 @@ contract TestSupplyVault is TestSetupVaults {
 
         vaultSupplier1.depositVault(daiSupplyVault, amount);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.approve(address(supplier3), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.approve(address(vaultSupplier3), balance);
 
-        vm.prank(address(supplier3));
-        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+        vm.prank(address(vaultSupplier3));
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
-        assertEq(daiSupplyVault.balanceOf(address(supplier1)), 0);
-        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
     }
 
     function testTransferAccrueRewards() public {
@@ -682,9 +682,9 @@ contract TestSupplyVault is TestSetupVaults {
 
         vm.warp(block.timestamp + 10 days);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
         uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
             daiSupplyVault.totalSupply()
@@ -694,14 +694,14 @@ contract TestSupplyVault is TestSetupVaults {
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier1)
+            address(vaultSupplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertEq(unclaimed1, 0);
+        assertGt(unclaimed1, 0);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier2)
+            address(vaultSupplier2)
         );
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
@@ -719,12 +719,12 @@ contract TestSupplyVault is TestSetupVaults {
 
         vm.warp(block.timestamp + 10 days);
 
-        uint256 balance = daiSupplyVault.balanceOf(address(supplier1));
-        vm.prank(address(supplier1));
-        daiSupplyVault.approve(address(supplier3), balance);
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.approve(address(vaultSupplier3), balance);
 
-        vm.prank(address(supplier3));
-        daiSupplyVault.transferFrom(address(supplier1), address(supplier2), balance);
+        vm.prank(address(vaultSupplier3));
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
         uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
             daiSupplyVault.totalSupply()
@@ -734,21 +734,21 @@ contract TestSupplyVault is TestSetupVaults {
 
         (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier1)
+            address(vaultSupplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertEq(unclaimed1, 0);
+        assertGt(unclaimed1, 0);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier2)
+            address(vaultSupplier2)
         );
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
 
         (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(
             rewardToken,
-            address(supplier3)
+            address(vaultSupplier3)
         );
         assertEq(index3, 0);
         assertEq(unclaimed3, 0);

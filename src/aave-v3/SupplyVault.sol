@@ -192,10 +192,11 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     function _beforeTokenTransfer(
         address _from,
         address _to,
-        uint256
+        uint256 _amount
     ) internal virtual override {
         _accrueUnclaimedRewards(_from);
         _accrueUnclaimedRewards(_to);
+        super._beforeTokenTransfer(_from, _to, _amount);
     }
 
     function _accrueUnclaimedRewards(address _user) internal {
