@@ -583,6 +583,8 @@ contract TestSupplyVault is TestSetupVaults {
         daiSupplyVault.transfer(address(supplier2), balance);
 
         uint256 rewardAmount = ERC20(comp).balanceOf(address(daiSupplyVault));
+        assertGt(rewardAmount, 0);
+
         uint256 expectedIndex = rewardAmount.divWadDown(daiSupplyVault.totalSupply());
         uint256 rewardsIndex = daiSupplyVault.rewardsIndex();
         assertEq(expectedIndex, rewardsIndex);
@@ -616,6 +618,8 @@ contract TestSupplyVault is TestSetupVaults {
         daiSupplyVault.transferFrom(address(vaultSupplier1), address(supplier2), balance);
 
         uint256 rewardAmount = ERC20(comp).balanceOf(address(daiSupplyVault));
+        assertGt(rewardAmount, 0);
+
         uint256 expectedIndex = rewardAmount.divWadDown(daiSupplyVault.totalSupply());
         uint256 rewardsIndex = daiSupplyVault.rewardsIndex();
         assertEq(rewardsIndex, expectedIndex);
