@@ -27,7 +27,7 @@ contract TestUpgradeable is TestSetupVaults {
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
         SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN);
 
-        vm.prank(address(supplier1));
+        vm.prank(address(vaultSupplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
 
@@ -37,7 +37,7 @@ contract TestUpgradeable is TestSetupVaults {
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
         SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN);
 
-        vm.prank(address(supplier1));
+        vm.prank(address(vaultSupplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgradeAndCall(
             wNativeSupplyVaultProxy,

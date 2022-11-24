@@ -549,10 +549,10 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
         vm.prank(address(vaultSupplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
         assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
-        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
     }
 
     function testTransferFrom() public {
@@ -565,10 +565,10 @@ contract TestSupplyVault is TestSetupVaults {
         daiSupplyVault.approve(address(vaultSupplier3), balance);
 
         vm.prank(address(vaultSupplier3));
-        daiSupplyVault.transferFrom(address(vaultSupplier1), address(supplier2), balance);
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
         assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
-        assertEq(daiSupplyVault.balanceOf(address(supplier2)), balance);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
     }
 
     function testTransferAccrueRewards() public {
@@ -580,7 +580,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
         vm.prank(address(vaultSupplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
         uint256 rewardAmount = ERC20(comp).balanceOf(address(daiSupplyVault));
         assertGt(rewardAmount, 0);
@@ -593,7 +593,7 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(index1, rewardsIndex);
         assertApproxEqAbs(unclaimed1, rewardAmount, 1e6);
 
-        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(vaultSupplier2));
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
 
@@ -615,7 +615,7 @@ contract TestSupplyVault is TestSetupVaults {
         daiSupplyVault.approve(address(vaultSupplier3), balance);
 
         vm.prank(address(vaultSupplier3));
-        daiSupplyVault.transferFrom(address(vaultSupplier1), address(supplier2), balance);
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
         uint256 rewardAmount = ERC20(comp).balanceOf(address(daiSupplyVault));
         assertGt(rewardAmount, 0);
@@ -628,7 +628,7 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(index1, rewardsIndex);
         assertApproxEqAbs(unclaimed1, rewardAmount, 1e6);
 
-        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(supplier2));
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(address(vaultSupplier2));
         assertEq(index2, rewardsIndex);
         assertEq(unclaimed2, 0);
 
@@ -657,7 +657,7 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
         vm.prank(address(vaultSupplier1));
-        daiSupplyVault.transfer(address(supplier2), balance);
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
         vm.roll(block.number + 1000);
 
