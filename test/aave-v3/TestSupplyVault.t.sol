@@ -686,9 +686,10 @@ contract TestSupplyVault is TestSetupVaults {
         vm.prank(address(vaultSupplier1));
         daiSupplyVault.transfer(address(vaultSupplier2), balance);
 
-        uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
-            daiSupplyVault.totalSupply()
-        );
+        uint256 rewardAmount = ERC20(rewardToken).balanceOf(address(daiSupplyVault));
+        assertGt(rewardAmount, 0);
+
+        uint256 expectedIndex = rewardAmount.rayDiv(daiSupplyVault.totalSupply());
         uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
         assertEq(expectedIndex, rewardsIndex);
 
@@ -697,7 +698,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertGt(unclaimed1, 0);
+        assertEq(unclaimed1, rewardAmount);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
@@ -726,9 +727,10 @@ contract TestSupplyVault is TestSetupVaults {
         vm.prank(address(vaultSupplier3));
         daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
 
-        uint256 expectedIndex = ERC20(rewardToken).balanceOf(address(daiSupplyVault)).rayDiv(
-            daiSupplyVault.totalSupply()
-        );
+        uint256 rewardAmount = ERC20(rewardToken).balanceOf(address(daiSupplyVault));
+        assertGt(rewardAmount, 0);
+
+        uint256 expectedIndex = rewardAmount.rayDiv(daiSupplyVault.totalSupply());
         uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
         assertEq(rewardsIndex, expectedIndex);
 
@@ -737,7 +739,7 @@ contract TestSupplyVault is TestSetupVaults {
             address(vaultSupplier1)
         );
         assertEq(index1, rewardsIndex);
-        assertGt(unclaimed1, 0);
+        assertEq(unclaimed1, rewardAmount);
 
         (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
             rewardToken,
@@ -790,10 +792,10 @@ contract TestSupplyVault is TestSetupVaults {
         assertGt(rewardsAmount1, 0);
         assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, rewardsAmount1 / 100);
         // Why rewardsAmount1 is 2/3 of rewardsAmount2 can be explained as follows:
-        // supplier1 first gets X rewards corresponding to amount over one period of time
-        // supplier1 then and supplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
-        // supplier2 then gets 2 * X rewards
-        // In the end, supplier1 got 2 * X rewards while supplier2 got 3 * X
+        // vaultSupplier1 first gets X rewards corresponding to amount over one period of time
+        // vaultSupplier1 then and vaultSupplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
+        // vaultSupplier2 then gets 2 * X rewards
+        // In the end, vaultSupplier1 got 2 * X rewards while vaultSupplier2 got 3 * X
     }
 
     // TODO: fix this test by using updated indexes in previewMint
