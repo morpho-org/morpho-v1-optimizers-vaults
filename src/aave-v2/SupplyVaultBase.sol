@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
 import {IAToken} from "@contracts/aave-v2/interfaces/aave/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v2/interfaces/IMorpho.sol";
+import {ILens} from "@contracts/aave-v2/interfaces/ILens.sol";
 import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -42,6 +43,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     IMorpho public immutable morpho; // The main Morpho contract.
     ERC20 public immutable morphoToken; // The address of the Morpho Token.
+    ILens public immutable lens; // The address of the Morpho Lens.
 
     /// STORAGE ///
 
@@ -53,10 +55,15 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _morphoToken The address of the Morpho Token.
-    constructor(address _morpho, address _morphoToken) {
+    constructor(
+        address _morpho,
+        address _morphoToken,
+        address _lens
+    ) {
         if (_morpho == address(0) || _morphoToken == address(0)) revert ZeroAddress();
         morpho = IMorpho(_morpho);
         morphoToken = ERC20(_morphoToken);
+        lens = ILens(_lens);
     }
 
     /// INITIALIZER ///
@@ -124,15 +131,8 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         override(IERC4626Upgradeable, ERC4626Upgradeable)
         returns (uint256)
     {
-        address poolTokenMem = poolToken;
-        Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
-            poolTokenMem,
-            address(this)
-        );
-
-        return
-            supplyBalance.onPool.rayMul(morpho.poolIndexes(poolTokenMem).poolSupplyIndex) +
-            supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenMem));
+        (, , uint256 totalBalance) = lens.getCurrentSupplyBalanceInOf(poolToken, address(this));
+        return totalBalance;
     }
 
     /// @notice Deposits an amount of assets into the vault and receive vault shares.
