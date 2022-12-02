@@ -7,7 +7,11 @@ contract TestUpgradeable is TestSetupVaults {
     using WadRayMath for uint256;
 
     function testUpgradeSupplyVault() public {
-        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN, LENS);
+        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens)
+        );
 
         vm.record();
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(wNativeSupplyVaultImplV2));
@@ -25,7 +29,11 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
-        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN, LENS);
+        SupplyVault supplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens)
+        );
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -35,7 +43,11 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
-        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho), MORPHO_TOKEN, LENS);
+        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens)
+        );
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
