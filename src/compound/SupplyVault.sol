@@ -117,6 +117,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     ) internal override {
         _accrueUnclaimedRewards(from);
         _accrueUnclaimedRewards(to);
+        super._beforeTokenTransfer(from, to, 0);
     }
 
     function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
