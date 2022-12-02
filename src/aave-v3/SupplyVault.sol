@@ -210,14 +210,13 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             (rewardTokens, claimedAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
-        uint256 supply = totalSupply();
         for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
             uint256 rewardsIndexMem = rewardsIndex[rewardToken];
 
             if (claimedAmount > 0) {
-                rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
+                rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, totalSupply());
                 rewardsIndex[rewardToken] = rewardsIndexMem.safeCastTo128();
             }
 
