@@ -671,7 +671,24 @@ contract TestSupplyVault is TestSetupVaults {
         // In the end, supplier1 got 2 * X rewards while supplier2 got 3 * X
     }
 
-    function testShouldHaveSamePreviewMintIfMorphoNotUpdated() public {
+    function testPreviewMint() public {
+        uint256 amount = 1e5 ether;
+
+        uint256 balanceBefore1 = ERC20(dai).balanceOf(address(vaultSupplier1));
+        uint256 balanceBefore2 = ERC20(dai).balanceOf(address(vaultSupplier2));
+
+        // This should use predicted update indexes.
+        uint256 preview1 = daiSupplyVault.previewMint(amount);
+        vaultSupplier1.mintVault(daiSupplyVault, amount);
+        assertEq(preview1, balanceBefore1 - ERC20(dai).balanceOf(address(vaultSupplier1)));
+
+        // The indexes should be the same as before this call.
+        uint256 preview2 = daiSupplyVault.previewMint(amount);
+        vaultSupplier2.mintVault(daiSupplyVault, amount);
+        assertEq(preview2, balanceBefore2 - ERC20(dai).balanceOf(address(vaultSupplier1)));
+    }
+
+    function testPreviewDeposit() public {
         uint256 amount = 1e5 ether;
 
         // This should use predicted update indexes.
