@@ -18,7 +18,6 @@ contract TestSetupVaults is TestSetup {
 
     address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
     address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
-    address internal constant LENS = 0x930f1b46e1D081Ec1524efD95752bE3eCe51EF67;
 
     TransparentUpgradeableProxy internal wethSupplyVaultProxy;
 
@@ -51,12 +50,12 @@ contract TestSetupVaults is TestSetup {
     }
 
     function initVaultContracts() internal {
-        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN, LENS);
+        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN, address(lens));
 
         supplyVaultBase = SupplyVaultBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN, LENS)),
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN, address(lens))),
                     address(proxyAdmin),
                     ""
                 )
