@@ -48,6 +48,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @dev Initializes immutable state variables.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _morphoToken The address of the Morpho Token.
+    /// @param _lens The address of the Morpho Lens.
     constructor(
         address _morpho,
         address _morphoToken,
