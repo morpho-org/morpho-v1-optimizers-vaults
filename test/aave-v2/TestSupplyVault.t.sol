@@ -255,7 +255,7 @@ contract TestSupplyVault is TestSetupVaults {
         // The indexes should be the same as before this call.
         uint256 preview2 = daiSupplyVault.previewMint(amount);
         vaultSupplier2.mintVault(daiSupplyVault, amount);
-        assertEq(preview2, balanceBefore2 - ERC20(dai).balanceOf(address(vaultSupplier1)));
+        assertEq(preview2, balanceBefore2 - ERC20(dai).balanceOf(address(vaultSupplier2)));
     }
 
     function testPreviewDeposit() public {
