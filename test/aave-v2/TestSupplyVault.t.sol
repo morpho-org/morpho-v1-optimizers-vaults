@@ -240,4 +240,18 @@ contract TestSupplyVault is TestSetupVaults {
         assertEq(balanceOnPool, 0, "onPool amount not zero");
         assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
+
+    function testShouldHaveSamePreviewMintIfMorphoNotUpdated() public {
+        uint256 amount = 1e5 ether;
+
+        // This should use predicted update indexes.
+        uint256 previewBefore = daiSupplyVault.previewDeposit(amount);
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), previewBefore, "before");
+
+        // The indexes should be the same as before this call.
+        uint256 previewAfter = daiSupplyVault.previewDeposit(amount);
+        vaultSupplier2.depositVault(daiSupplyVault, amount);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), previewAfter, "after");
+    }
 }
