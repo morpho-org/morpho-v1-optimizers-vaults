@@ -189,6 +189,16 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
 
+    function _beforeTokenTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal virtual override {
+        _accrueUnclaimedRewards(_from);
+        _accrueUnclaimedRewards(_to);
+        super._beforeTokenTransfer(_from, _to, _amount);
+    }
+
     function _accrueUnclaimedRewards(address _user) internal {
         address[] memory rewardTokens;
         uint256[] memory claimedAmounts;
@@ -200,21 +210,20 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             (rewardTokens, claimedAmounts) = morpho.claimRewards(poolTokens, false);
         }
 
-        uint256 supply = totalSupply();
         for (uint256 i; i < rewardTokens.length; ++i) {
             address rewardToken = rewardTokens[i];
             uint256 claimedAmount = claimedAmounts[i];
             uint256 rewardsIndexMem = rewardsIndex[rewardToken];
 
-            if (supply > 0 && claimedAmount > 0) {
-                rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, supply);
+            if (claimedAmount > 0) {
+                rewardsIndexMem += _getUnaccruedRewardIndex(claimedAmount, totalSupply());
                 rewardsIndex[rewardToken] = rewardsIndexMem.safeCastTo128();
             }
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
             if (rewardsIndexMem > userRewardsData.index) {
                 uint256 accruedReward = _getUnaccruedRewardsFromRewardsIndexAccrual(
-                    balanceOf(_user),
+                    _user,
                     rewardsIndexMem - userRewardsData.index
                 );
                 userRewardsData.unclaimed += accruedReward.safeCastTo128();
@@ -235,18 +244,19 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         unclaimed =
             userRewardsData.unclaimed +
             _getUnaccruedRewardsFromRewardsIndexAccrual(
-                balanceOf(_user),
+                _user,
                 _getUnaccruedRewardIndex(_claimableReward, _totalSupply) + // The unaccrued reward index
                     rewardsIndex[_rewardToken] -
                     userRewardsData.index // The difference between the current reward index and the user's index
             );
     }
 
-    function _getUnaccruedRewardsFromRewardsIndexAccrual(
-        uint256 _userBalance,
-        uint256 _indexAccrual
-    ) internal pure returns (uint256 unaccruedReward) {
-        unaccruedReward = _userBalance.mulDivDown(_indexAccrual, RAY); // Equivalent to rayMul rounded down
+    function _getUnaccruedRewardsFromRewardsIndexAccrual(address _user, uint256 _indexAccrual)
+        internal
+        view
+        returns (uint256 unaccruedReward)
+    {
+        unaccruedReward = balanceOf(_user).mulDivDown(_indexAccrual, RAY); // Equivalent to rayMul rounded down
     }
 
     function _getUnaccruedRewardIndex(uint256 _claimableReward, uint256 _totalSupply)

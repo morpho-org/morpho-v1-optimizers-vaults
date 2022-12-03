@@ -13,6 +13,7 @@ contract TestSetupVaults is TestSetup {
     using SafeTransferLib for ERC20;
 
     address internal MORPHO_TOKEN = address(new FakeToken("Morpho Token", "MORPHO"));
+    address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
 
     TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
 
@@ -101,6 +102,10 @@ contract TestSetupVaults is TestSetup {
                 string(abi.encodePacked("VaultSupplier", Strings.toString(i + 1)))
             );
         }
+
+        supplier1 = suppliers[0];
+        supplier2 = suppliers[1];
+        supplier3 = suppliers[2];
 
         vaultSupplier1 = VaultUser(payable(suppliers[0]));
         vaultSupplier2 = VaultUser(payable(suppliers[1]));
