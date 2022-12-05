@@ -283,7 +283,7 @@ contract TestSupplyVault is TestSetupVaults {
         uint256 balanceBefore1 = daiSupplyVault.balanceOf(address(vaultSupplier1));
         uint256 balanceBefore2 = daiSupplyVault.balanceOf(address(vaultSupplier2));
 
-        vm.roll(block.number + 100);
+        vm.warp(block.timestamp + 1000);
 
         // This should test that using the lens' predicted indexes is the correct amount to use.
         uint256 preview1 = daiSupplyVault.previewWithdraw(amount);
@@ -305,6 +305,8 @@ contract TestSupplyVault is TestSetupVaults {
 
         uint256 balanceBefore1 = ERC20(dai).balanceOf(address(vaultSupplier1));
         uint256 balanceBefore2 = ERC20(dai).balanceOf(address(vaultSupplier2));
+
+        vm.warp(block.timestamp + 1000);
 
         // This should test that using the lens' predicted indexes is the correct amount to use.
         uint256 preview1 = daiSupplyVault.previewRedeem(amount);
