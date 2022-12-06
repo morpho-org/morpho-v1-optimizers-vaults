@@ -58,12 +58,14 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
     /// @param _morphoToken The address of the Morpho Token.
+    /// @param _lens The address of the Morpho Lens.
     constructor(
         address _morpho,
         address _morphoToken,
         address _lens
     ) {
-        if (_morphoToken == address(0)) revert ZeroAddress();
+        if (_morpho == address(0) || _morphoToken == address(0) || _lens == address(0))
+            revert ZeroAddress();
         morpho = IMorpho(_morpho);
         wEth = morpho.wEth(); // Reverts if morpho is zero address, so no zero address check is needed.
         comp = ERC20(morpho.comptroller().getCompAddress());
