@@ -134,7 +134,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         if (rewardsIndexDiff > 0) {
             unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff);
             userRewardsData.unclaimed = unclaimed.safeCastTo128();
-            userRewardsData.index = _newRewardsIndex.safeCastTo128(); // TODO: why was this line outside the if?
+            userRewardsData.index = _newRewardsIndex.safeCastTo128();
 
             emit Accrued(_user, _newRewardsIndex, unclaimed);
         }
