@@ -122,6 +122,8 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         internal
         returns (uint256 unclaimed)
     {
+        if (_user == address(0)) return unclaimed;
+
         UserRewardsData storage userRewardsData = userRewards[_user];
         uint256 rewardsIndexDiff;
 

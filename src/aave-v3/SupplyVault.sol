@@ -9,7 +9,6 @@ import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathL
 import {SafeCastLib} from "@rari-capital/solmate/src/utils/SafeCastLib.sol";
 
 import {SupplyVaultBase} from "./SupplyVaultBase.sol";
-import "@forge-std/console.sol";
 
 /// @title SupplyVault.
 /// @author Morpho Labs.
@@ -167,16 +166,16 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         address _to,
         uint256 _amount
     ) internal virtual override {
-        (address[] memory rewardTokens, uint256[] memory newRewardsIndexes) = _claimVaultRewards();
-        _accrueUnclaimedRewardsFromRewardsIndexes(_from, rewardTokens, newRewardsIndexes);
-        _accrueUnclaimedRewardsFromRewardsIndexes(_to, rewardTokens, newRewardsIndexes);
+        (address[] memory rewardTokens, uint256[] memory rewardsIndexes) = _claimVaultRewards();
+        _accrueUnclaimedRewardsFromRewardIndexes(_from, rewardTokens, rewardsIndexes);
+        _accrueUnclaimedRewardsFromRewardIndexes(_to, rewardTokens, rewardsIndexes);
 
         super._beforeTokenTransfer(_from, _to, _amount);
     }
 
     function _claimVaultRewards()
         internal
-        returns (address[] memory rewardTokens, uint256[] memory newRewardsIndexes)
+        returns (address[] memory rewardTokens, uint256[] memory rewardsIndexes)
     {
         address[] memory poolTokens = new address[](1);
         poolTokens[0] = poolToken;
@@ -184,7 +183,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         uint256[] memory claimedAmounts;
         (rewardTokens, claimedAmounts) = morpho.claimRewards(poolTokens, false);
 
-        newRewardsIndexes = new uint256[](rewardTokens.length);
+        rewardsIndexes = new uint256[](rewardTokens.length);
 
         uint256 supply = totalSupply();
         for (uint256 i; i < rewardTokens.length; ++i) {
@@ -192,7 +191,7 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
             uint256 newRewardIndex = rewardsIndex[rewardToken] +
                 _getUnaccruedRewardIndex(claimedAmounts[i], supply);
 
-            newRewardsIndexes[i] = newRewardIndex;
+            rewardsIndexes[i] = newRewardIndex;
             rewardsIndex[rewardToken] = newRewardIndex.safeCastTo128();
         }
     }
@@ -201,33 +200,35 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         internal
         returns (address[] memory rewardTokens, uint256[] memory unclaimedAmounts)
     {
-        uint256[] memory newRewardsIndexes;
-        (rewardTokens, newRewardsIndexes) = _claimVaultRewards();
+        uint256[] memory rewardsIndexes;
+        (rewardTokens, rewardsIndexes) = _claimVaultRewards();
 
-        unclaimedAmounts = _accrueUnclaimedRewardsFromRewardsIndexes(
+        unclaimedAmounts = _accrueUnclaimedRewardsFromRewardIndexes(
             _user,
             rewardTokens,
-            newRewardsIndexes
+            rewardsIndexes
         );
     }
 
-    function _accrueUnclaimedRewardsFromRewardsIndexes(
+    function _accrueUnclaimedRewardsFromRewardIndexes(
         address _user,
         address[] memory _rewardTokens,
-        uint256[] memory _newRewardsIndexes
+        uint256[] memory _rewardIndexes
     ) internal returns (uint256[] memory unclaimedAmounts) {
+        if (_user == address(0)) return unclaimedAmounts;
+
         unclaimedAmounts = new uint256[](_rewardTokens.length);
 
         for (uint256 i; i < _rewardTokens.length; ++i) {
             address rewardToken = _rewardTokens[i];
-            uint256 newRewardsIndex = _newRewardsIndexes[i];
+            uint256 rewardIndex = _rewardIndexes[i];
 
             UserRewardsData storage userRewardsData = userRewards[rewardToken][_user];
 
             // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
             uint256 rewardsIndexDiff;
             unchecked {
-                rewardsIndexDiff = newRewardsIndex - userRewardsData.index;
+                rewardsIndexDiff = rewardIndex - userRewardsData.index;
             }
 
             uint256 unclaimedAmount = userRewardsData.unclaimed;
@@ -237,9 +238,9 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
                     rewardsIndexDiff
                 );
                 userRewardsData.unclaimed = unclaimedAmount.safeCastTo128();
-                userRewardsData.index = newRewardsIndex.safeCastTo128();
+                userRewardsData.index = rewardIndex.safeCastTo128();
 
-                emit Accrued(rewardToken, _user, newRewardsIndex, unclaimedAmount);
+                emit Accrued(rewardToken, _user, rewardIndex, unclaimedAmount);
             }
 
             unclaimedAmounts[i] = unclaimedAmount;
