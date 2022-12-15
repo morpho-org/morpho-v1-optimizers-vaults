@@ -36,6 +36,6 @@ jobs:
           version: nightly
 
       - name: Check SupplyVault storage layout
-        uses: Rubilmax/foundry-storage-check@v2.1
+        uses: Rubilmax/foundry-storage-check@v2.1.2
         with:
           contract: src/compound/SupplyVault.sol:SupplyVault
