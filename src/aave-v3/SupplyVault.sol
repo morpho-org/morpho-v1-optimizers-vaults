@@ -194,25 +194,37 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
         address _to,
         uint256 _amount
     ) internal virtual override {
-        _accrueUnclaimedRewards(_from);
-        _accrueUnclaimedRewards(_to);
+        (address[] memory rewardTokens, uint256[] memory claimedAmounts) = _claimRewards();
+        _accrueUnclaimedRewardsFromClaimedRewards(_from, rewardTokens, claimedAmounts);
+        _accrueUnclaimedRewardsFromClaimedRewards(_to, rewardTokens, claimedAmounts);
+
         super._beforeTokenTransfer(_from, _to, _amount);
     }
 
+    function _claimRewards()
+        internal
+        returns (address[] memory rewardTokens, uint256[] memory claimedAmounts)
+    {
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = poolToken;
+
+        (rewardTokens, claimedAmounts) = morpho.claimRewards(poolTokens, false);
+    }
+
     function _accrueUnclaimedRewards(address _user) internal {
-        address[] memory rewardTokens;
-        uint256[] memory claimedAmounts;
+        (address[] memory rewardTokens, uint256[] memory claimedAmounts) = _claimRewards();
 
-        {
-            address[] memory poolTokens = new address[](1);
-            poolTokens[0] = poolToken;
+        _accrueUnclaimedRewardsFromClaimedRewards(_user, rewardTokens, claimedAmounts);
+    }
 
-            (rewardTokens, claimedAmounts) = morpho.claimRewards(poolTokens, false);
-        }
-
-        for (uint256 i; i < rewardTokens.length; ++i) {
-            address rewardToken = rewardTokens[i];
-            uint256 claimedAmount = claimedAmounts[i];
+    function _accrueUnclaimedRewardsFromClaimedRewards(
+        address _user,
+        address[] memory _rewardTokens,
+        uint256[] memory _claimedAmounts
+    ) internal {
+        for (uint256 i; i < _rewardTokens.length; ++i) {
+            address rewardToken = _rewardTokens[i];
+            uint256 claimedAmount = _claimedAmounts[i];
             uint256 rewardsIndexMem = rewardsIndex[rewardToken];
 
             if (claimedAmount > 0) {
