@@ -78,76 +78,67 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @return rewardsAmount The amount of rewards claimed.
     function claimRewards(address _user) external returns (uint256 rewardsAmount) {
         rewardsAmount = _accrueUnclaimedRewards(_user);
+        if (rewardsAmount == 0) return rewardsAmount;
 
-        if (rewardsAmount > 0) {
-            userRewards[_user].unclaimed = 0;
+        userRewards[_user].unclaimed = 0;
 
-            comp.safeTransfer(_user, rewardsAmount);
-        }
+        comp.safeTransfer(_user, rewardsAmount);
 
         emit Claimed(_user, rewardsAmount);
     }
 
     /// INTERNAL ///
 
-    function _deposit(
-        address _caller,
-        address _receiver,
-        uint256 _assets,
-        uint256 _shares
-    ) internal override {
-        _accrueUnclaimedRewards(_receiver);
-        super._deposit(_caller, _receiver, _assets, _shares);
-    }
-
-    function _withdraw(
-        address _caller,
-        address _receiver,
-        address _owner,
-        uint256 _assets,
-        uint256 _shares
-    ) internal override {
-        _accrueUnclaimedRewards(_owner);
-        super._withdraw(_caller, _receiver, _owner, _assets, _shares);
-    }
-
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
     ) internal override {
-        _accrueUnclaimedRewards(from);
-        _accrueUnclaimedRewards(to);
+        uint256 newRewardsIndex = _claimVaultRewards();
+        _accrueUnclaimedRewardsFromRewardsIndex(from, newRewardsIndex);
+        _accrueUnclaimedRewardsFromRewardsIndex(to, newRewardsIndex);
+
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
-        uint256 supply = totalSupply();
-        uint256 rewardsIndexMem = rewardsIndex;
+    function _claimVaultRewards() internal returns (uint256 newRewardsIndex) {
+        newRewardsIndex = rewardsIndex;
 
+        uint256 supply = totalSupply();
         if (supply > 0) {
             address[] memory poolTokens = new address[](1);
             poolTokens[0] = poolToken;
-            rewardsIndexMem += morpho.claimRewards(poolTokens, false).divWadDown(supply);
-            rewardsIndex = rewardsIndexMem;
+
+            newRewardsIndex += morpho.claimRewards(poolTokens, false).divWadDown(supply);
+            rewardsIndex = newRewardsIndex;
         }
+    }
+
+    function _accrueUnclaimedRewards(address _user) internal returns (uint256 unclaimed) {
+        return _accrueUnclaimedRewardsFromRewardsIndex(_user, _claimVaultRewards());
+    }
+
+    function _accrueUnclaimedRewardsFromRewardsIndex(address _user, uint256 _newRewardsIndex)
+        internal
+        returns (uint256 unclaimed)
+    {
+        if (_user == address(0)) return unclaimed;
 
         UserRewardsData storage userRewardsData = userRewards[_user];
         uint256 rewardsIndexDiff;
 
         // Safe because we always have `rewardsIndex` >= `userRewardsData.index`.
         unchecked {
-            rewardsIndexDiff = rewardsIndexMem - userRewardsData.index;
+            rewardsIndexDiff = _newRewardsIndex - userRewardsData.index;
         }
 
         unclaimed = userRewardsData.unclaimed;
         if (rewardsIndexDiff > 0) {
             unclaimed += balanceOf(_user).mulWadDown(rewardsIndexDiff);
             userRewardsData.unclaimed = unclaimed.safeCastTo128();
+            userRewardsData.index = _newRewardsIndex.safeCastTo128();
+
+            emit Accrued(_user, _newRewardsIndex, unclaimed);
         }
-
-        userRewardsData.index = rewardsIndexMem.safeCastTo128();
-
-        emit Accrued(_user, rewardsIndexMem, unclaimed);
     }
 }

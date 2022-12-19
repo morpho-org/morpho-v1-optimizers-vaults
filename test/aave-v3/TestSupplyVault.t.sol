@@ -798,21 +798,6 @@ contract TestSupplyVault is TestSetupVaults {
         // In the end, vaultSupplier1 got 2 * X rewards while vaultSupplier2 got 3 * X
     }
 
-    // TODO: fix this test by using updated indexes in previewMint
-    // function testShouldMintCorrectAmountWhenMorphoPoolIndexesOutdated() public {
-    //     uint256 amount = 10_000 ether;
-
-    //     vaultSupplier1.depositVault(daiSupplyVault, amount);
-
-    //     vm.roll(block.number + 100_000);
-    //     vm.warp(block.timestamp + 1_000_000);
-
-    //     uint256 assets = vaultSupplier2.mintVault(daiSupplyVault, amount);
-    //     uint256 shares = vaultSupplier2.withdrawVault(daiSupplyVault, assets);
-
-    //     assertEq(shares, amount, "unexpected redeemed shares");
-    // }
-
     function testShouldDepositCorrectAmountWhenMorphoPoolIndexesOutdated() public {
         uint256 amount = 10_000 ether;
 
