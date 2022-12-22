@@ -39,11 +39,11 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
 
     IMorpho public immutable morpho; // The main Morpho contract.
     ERC20 public immutable morphoToken; // The address of the Morpho Token.
+    address public immutable recipient; // The recipient of the rewards that will redistribute them to vault's users.
 
     /// STORAGE ///
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
-    address public recipient; // The recipient of the rewards that will redistribute them to vault's users.
 
     /// CONSTRUCTOR ///
 
