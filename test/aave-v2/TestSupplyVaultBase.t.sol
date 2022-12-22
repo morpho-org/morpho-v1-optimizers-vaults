@@ -20,15 +20,6 @@ contract TestSupplyVaultBase is TestSetupVaults {
         daiSupplyVault.transferRewards();
     }
 
-    function testNotOwnerShouldNotTransferRewardsToRecipient(uint256 _amount) public {
-        vm.assume(_amount > 0);
-        _prepareTransfer(_amount);
-
-        vm.startPrank(address(2));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyVault.transferRewards();
-    }
-
     function testOwnerShouldTransferRewardsToRecipient(uint256 _amount) public {
         vm.assume(_amount > 0);
         _prepareTransfer(_amount);
