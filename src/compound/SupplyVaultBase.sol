@@ -123,7 +123,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     }
 
     /// @notice Transfers the MORPHO rewards to the rewards recipient.
-    function transferRewards() external onlyOwner {
+    function transferRewards() external {
         if (recipient == address(0)) revert ZeroAddress();
         uint256 amount = morphoToken.balanceOf(address(this));
         morphoToken.safeTransfer(recipient, amount);
