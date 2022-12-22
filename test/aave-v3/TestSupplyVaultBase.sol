@@ -15,7 +15,6 @@ contract TestSupplyVaultBase is TestSetupVaults {
     }
 
     function _prepareTransfer(uint256 _amount) internal {
-        daiSupplyVault.setRewardsRecipient(RECIPIENT);
         assertEq(ERC20(MORPHO_TOKEN).balanceOf(RECIPIENT), 0);
 
         deal(MORPHO_TOKEN, address(daiSupplyVault), _amount);

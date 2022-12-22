@@ -53,7 +53,7 @@ contract TestSetupVaults is TestSetup {
         supplyVaultBase = SupplyVaultBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN), RECIPIENT),
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN, RECIPIENT)),
                     address(proxyAdmin),
                     ""
                 )
