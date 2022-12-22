@@ -7,6 +7,7 @@ contract SupplyVaultBaseMock is SupplyVaultBase {
     constructor(
         address _morpho,
         address _morphoToken,
-        address _lens
-    ) SupplyVaultBase(_morpho, _morphoToken, _lens) {}
+        address _lens,
+        address _recipient
+    ) SupplyVaultBase(_morpho, _morphoToken, _lens, _recipient) {}
 }

@@ -10,7 +10,8 @@ contract TestUpgradeable is TestSetupVaults {
         SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(
             address(morpho),
             MORPHO_TOKEN,
-            address(lens)
+            address(lens),
+            RECIPIENT
         );
 
         vm.record();
@@ -32,7 +33,8 @@ contract TestUpgradeable is TestSetupVaults {
         SupplyVault supplyVaultImplV2 = new SupplyVault(
             address(morpho),
             MORPHO_TOKEN,
-            address(lens)
+            address(lens),
+            RECIPIENT
         );
 
         vm.prank(address(vaultSupplier1));
@@ -46,7 +48,8 @@ contract TestUpgradeable is TestSetupVaults {
         SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(
             address(morpho),
             MORPHO_TOKEN,
-            address(lens)
+            address(lens),
+            RECIPIENT
         );
 
         vm.prank(address(vaultSupplier1));
