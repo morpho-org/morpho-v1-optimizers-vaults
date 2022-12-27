@@ -2,14 +2,6 @@
   "name": "morpho-tokenized-vaults",
   "version": "1.0.0",
   "description": "Morpho tokenized vaults contracts",
-  "directories": {
-    "lib": "lib",
-    "test": "test"
-  },
-  "scripts": {
-    "fix:sol": "prettier --write './contracts/**/*.sol' && prettier --write './test/**/*.sol'",
-    "postinstall": "husky install"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/morpho-labs/morpho-tokenized-vaults.git"
@@ -22,11 +14,15 @@
     "vaults"
   ],
   "author": "Morpho Labs",
-  "license": "ISC",
+  "license": "AGPL-3.0-only",
   "bugs": {
     "url": "https://github.com/morpho-labs/morpho-tokenized-vaults/issues"
   },
   "homepage": "https://github.com/morpho-labs/morpho-tokenized-vaults#readme",
+  "scripts": {
+    "fix:sol": "prettier --write './contracts/**/*.sol' && prettier --write './test/**/*.sol'",
+    "postinstall": "husky install"
+  },
   "devDependencies": {
     "husky": "7.0.1",
     "prettier": "2.3.2",
