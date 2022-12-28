@@ -2,6 +2,8 @@
   "name": "morpho-tokenized-vaults",
   "version": "1.0.0",
   "description": "Morpho tokenized vaults contracts",
+  "author": "Morpho Labs <security@morpho.xyz>",
+  "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/morpho-labs/morpho-tokenized-vaults.git"
@@ -13,8 +15,6 @@
     "morpho",
     "vaults"
   ],
-  "author": "Morpho Labs",
-  "license": "AGPL-3.0-only",
   "bugs": {
     "url": "https://github.com/morpho-labs/morpho-tokenized-vaults/issues"
   },
