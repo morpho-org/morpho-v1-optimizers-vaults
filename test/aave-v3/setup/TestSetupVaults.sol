@@ -14,6 +14,7 @@ contract TestSetupVaults is TestSetup {
 
     address internal MORPHO_TOKEN = address(new FakeToken("Morpho Token", "MORPHO"));
     address internal constant MORPHO_DAO = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
+    address internal constant RECIPIENT = 0x60345417a227ad7E312eAa1B5EC5CD1Fe5E2Cdc6;
 
     TransparentUpgradeableProxy internal wrappedNativeTokenSupplyVaultProxy;
 
@@ -48,11 +49,11 @@ contract TestSetupVaults is TestSetup {
     function initVaultContracts() internal {
         createMarket(aWrappedNativeToken);
 
-        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN);
+        supplyVaultImplV1 = new SupplyVault(address(morpho), MORPHO_TOKEN, RECIPIENT);
         supplyVaultBase = SupplyVaultBase(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN)),
+                    address(new SupplyVaultBaseMock(address(morpho), MORPHO_TOKEN, RECIPIENT)),
                     address(proxyAdmin),
                     ""
                 )

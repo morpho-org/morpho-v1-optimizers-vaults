@@ -16,11 +16,13 @@ contract SupplyVault is ISupplyVault, SupplyVaultBase {
     /// @param _morpho The address of the main Morpho contract.
     /// @param _morphoToken The address of the Morpho Token.
     /// @param _lens The address of the Morpho Lens.
+    /// @param _recipient The recipient of the rewards that will redistribute them to vault's users.
     constructor(
         address _morpho,
         address _morphoToken,
-        address _lens
-    ) SupplyVaultBase(_morpho, _morphoToken, _lens) {}
+        address _lens,
+        address _recipient
+    ) SupplyVaultBase(_morpho, _morphoToken, _lens, _recipient) {}
 
     /// INITIALIZER ///
 
