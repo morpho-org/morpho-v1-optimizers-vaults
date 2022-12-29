@@ -20,5 +20,4 @@
 | _owner        | address                                         | 201  | 0      | 20    | src/aave-v2/SupplyVault.sol:SupplyVault |
 | __gap         | uint256[49]                                     | 202  | 0      | 1568  | src/aave-v2/SupplyVault.sol:SupplyVault |
 | poolToken     | address                                         | 251  | 0      | 20    | src/aave-v2/SupplyVault.sol:SupplyVault |
-| recipient     | address                                         | 252  | 0      | 20    | src/aave-v2/SupplyVault.sol:SupplyVault |
-| __gap         | uint256[48]                                     | 253  | 0      | 1536  | src/aave-v2/SupplyVault.sol:SupplyVault |
+| __gap         | uint256[49]                                     | 252  | 0      | 1568  | src/aave-v2/SupplyVault.sol:SupplyVault |

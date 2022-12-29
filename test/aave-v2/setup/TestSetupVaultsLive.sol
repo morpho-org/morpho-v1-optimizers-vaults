@@ -20,6 +20,7 @@ contract TestSetupVaultsLive is TestSetup {
     address internal constant USDC_VAULT_ADDRESS = 0xd45EF8c9b9431298019FC15753609DB2FB101aa5;
     address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
     address internal constant LENS = 0x507fA343d0A90786d86C7cd885f5C49263A91FF4;
+    address internal constant RECIPIENT = 0x60345417a227ad7E312eAa1B5EC5CD1Fe5E2Cdc6;
 
     uint256 internal constant INITIAL_DEPOSIT = 1e8;
 

@@ -10,7 +10,8 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         SupplyVault wethSupplyVaultImplV2 = new SupplyVault(
             address(morpho),
             MORPHO_TOKEN,
-            address(lens)
+            address(lens),
+            RECIPIENT
         );
 
         vm.record();
@@ -33,7 +34,8 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         SupplyVault supplyVaultImplV2 = new SupplyVault(
             address(morpho),
             MORPHO_TOKEN,
-            address(lens)
+            address(lens),
+            RECIPIENT
         );
 
         vm.prank(address(supplier1));
@@ -48,7 +50,8 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         SupplyVault wethSupplyVaultImplV2 = new SupplyVault(
             address(morpho),
             MORPHO_TOKEN,
-            address(lens)
+            address(lens),
+            RECIPIENT
         );
 
         vm.prank(address(supplier1));
