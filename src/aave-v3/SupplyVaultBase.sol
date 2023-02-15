@@ -109,9 +109,6 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// PUBLIC ///
 
     /// @notice The amount of assets in the vault.
-    /// @dev The indexes used by this function might not be up-to-date.
-    ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
-    ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
     function totalAssets()
         public
         view
