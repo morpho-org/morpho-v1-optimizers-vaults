@@ -9,7 +9,6 @@ import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
 import {Types} from "@contracts/aave-v2/libraries/Types.sol";
 
@@ -20,7 +19,6 @@ import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../E
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V2.
 abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, OwnableUpgradeable {
-    using WadRayMath for uint256;
     using SafeTransferLib for ERC20;
 
     /// EVENTS ///
@@ -117,9 +115,6 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// PUBLIC ///
 
     /// @notice The amount of assets in the vault.
-    /// @dev The indexes used by this function might not be up-to-date.
-    ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
-    ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
     function totalAssets()
         public
         view

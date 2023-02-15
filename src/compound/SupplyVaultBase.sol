@@ -9,7 +9,6 @@ import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import {Types} from "@contracts/compound/libraries/Types.sol";
 
 import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
@@ -19,7 +18,6 @@ import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../E
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
 abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, OwnableUpgradeable {
-    using CompoundMath for uint256;
     using SafeTransferLib for ERC20;
 
     /// EVENTS ///
@@ -86,9 +84,8 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
-    ) internal onlyInitializing returns (bool isEth) {
-        ERC20 underlyingToken;
-        (isEth, underlyingToken) = __SupplyVaultBase_init_unchained(_poolToken);
+    ) internal onlyInitializing {
+        ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
 
         __Ownable_init_unchained();
         __ERC20_init_unchained(_name, _symbol);
@@ -101,13 +98,13 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     function __SupplyVaultBase_init_unchained(address _poolToken)
         internal
         onlyInitializing
-        returns (bool isEth, ERC20 underlyingToken)
+        returns (ERC20 underlyingToken)
     {
         if (_poolToken == address(0)) revert ZeroAddress();
 
         poolToken = _poolToken;
 
-        isEth = _poolToken == morpho.cEth();
+        bool isEth = _poolToken == morpho.cEth();
 
         underlyingToken = ERC20(isEth ? wEth : ICToken(_poolToken).underlying());
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
@@ -125,9 +122,6 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     /// PUBLIC ///
 
     /// @notice The amount of assets in the vault.
-    /// @dev The indexes used by this function might not be up-to-date.
-    ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
-    ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
     function totalAssets()
         public
         view
