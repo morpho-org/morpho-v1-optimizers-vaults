@@ -9,7 +9,6 @@ import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import {CompoundMath} from "@morpho-labs/morpho-utils/math/CompoundMath.sol";
 import {Types} from "@contracts/compound/libraries/Types.sol";
 
 import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
@@ -19,7 +18,6 @@ import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../E
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Compound.
 abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, OwnableUpgradeable {
-    using CompoundMath for uint256;
     using SafeTransferLib for ERC20;
 
     /// EVENTS ///
