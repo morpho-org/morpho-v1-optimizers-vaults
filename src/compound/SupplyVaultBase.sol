@@ -84,9 +84,8 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
         string calldata _name,
         string calldata _symbol,
         uint256 _initialDeposit
-    ) internal onlyInitializing returns (bool isEth) {
-        ERC20 underlyingToken;
-        (isEth, underlyingToken) = __SupplyVaultBase_init_unchained(_poolToken);
+    ) internal onlyInitializing {
+        ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
 
         __Ownable_init_unchained();
         __ERC20_init_unchained(_name, _symbol);
@@ -99,13 +98,13 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
     function __SupplyVaultBase_init_unchained(address _poolToken)
         internal
         onlyInitializing
-        returns (bool isEth, ERC20 underlyingToken)
+        returns (ERC20 underlyingToken)
     {
         if (_poolToken == address(0)) revert ZeroAddress();
 
         poolToken = _poolToken;
 
-        isEth = _poolToken == morpho.cEth();
+        bool isEth = _poolToken == morpho.cEth();
 
         underlyingToken = ERC20(isEth ? wEth : ICToken(_poolToken).underlying());
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
