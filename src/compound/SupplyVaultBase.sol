@@ -65,7 +65,7 @@ abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, O
             _recipient == address(0)
         ) revert ZeroAddress();
         morpho = IMorpho(_morpho);
-        wEth = morpho.wEth(); // Reverts if morpho is zero address, so no zero address check is needed.
+        wEth = morpho.wEth();
         comp = ERC20(morpho.comptroller().getCompAddress());
         morphoToken = ERC20(_morphoToken);
         lens = ILens(_lens);
