@@ -24,8 +24,6 @@ contract TestSetupVaultsLive is TestSetup {
 
     uint256 internal constant INITIAL_DEPOSIT = 1e8;
 
-    address internal constant PROXY_ADMIN_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
-
     SupplyVault internal wNativeSupplyVault;
     SupplyVault internal daiSupplyVault;
     SupplyVault internal usdcSupplyVault;

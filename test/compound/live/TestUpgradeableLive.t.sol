@@ -15,7 +15,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         vm.record();
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(wethSupplyVaultImplV2));
         (, bytes32[] memory writes) = vm.accesses(address(wethSupplyVault));
 
@@ -42,7 +42,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
 
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
     }
 
@@ -63,7 +63,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         // Revert for wrong data not wrong caller.
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
             wethSupplyVaultProxy,
@@ -73,7 +73,6 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testSupplyVaultImplementationsShouldBeInitialized() public {
-        vm.prank(PROXY_ADMIN_OWNER);
         vm.expectRevert("Initializable: contract is already initialized");
         supplyVaultImplV1.initialize(address(cEth), "MorphoCompoundETH", "mcETH", 0);
     }

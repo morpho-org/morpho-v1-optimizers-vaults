@@ -22,7 +22,6 @@ contract TestSetupVaultsLive is TestSetup {
     address internal constant DAI_SV = 0xDfe7d9322835EBD7317B5947e898780a2f97B636;
     address internal constant USDC_SV = 0x125e52E814d1f32D64f62677bFFA28225a9283D1;
     address internal constant PROXY_ADMIN = 0x99917ca0426fbC677e84f873Fb0b726Bb4799cD8;
-    address internal constant PROXY_ADMIN_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
 
     address internal constant MORPHO = 0x8888882f8f843896699869179fB6E4f7e3B58888;
     address internal constant LENS = 0x930f1b46e1D081Ec1524efD95752bE3eCe51EF67;

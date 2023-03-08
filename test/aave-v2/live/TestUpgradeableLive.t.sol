@@ -15,7 +15,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         vm.record();
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(wNativeSupplyVaultImplV2));
         (, bytes32[] memory writes) = vm.accesses(address(wNativeSupplyVault));
 
@@ -42,7 +42,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
 
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
     }
 
@@ -63,7 +63,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         // Revert for wrong data not wrong caller.
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
             wNativeSupplyVaultProxy,
