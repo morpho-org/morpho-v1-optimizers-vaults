@@ -34,7 +34,7 @@ All audits are stored in the [audits](./audits/)' folder.
 - mcUSDC: [0xba9E3b3b684719F80657af1A19DEbc3C772494a0](https://etherscan.io/address/0xba9E3b3b684719F80657af1A19DEbc3C772494a0)
 - mcUSDT: [0xC2A4fBA93d4120d304c94E4fd986e0f9D213eD8A](https://etherscan.io/address/0xC2A4fBA93d4120d304c94E4fd986e0f9D213eD8A)
 - mcWBTC: [0xF31AC95fe692190b9C67112d8c912bA9973944F2](https://etherscan.io/address/0xF31AC95fe692190b9C67112d8c912bA9973944F2)
-- Implementation: [0xbc49c0f652dac4dbc90ee97d71b66a1bf228f66f](https://etherscan.io/address/0xbc49c0f652dac4dbc90ee97d71b66a1bf228f66f)
+- Implementation: [0x07b7319aaf04f8a28c74fd5ca3ec01aa4af66069](https://etherscan.io/address/0x07b7319aaf04f8a28c74fd5ca3ec01aa4af66069)
 
 ### Morpho-Aave-V2 (Ethereum)
 
@@ -46,7 +46,7 @@ All audits are stored in the [audits](./audits/)' folder.
 - maUSDC: [0xa5269a8e31b93ff27b887b56720a25f844db0529](https://etherscan.io/address/0xa5269a8e31b93ff27b887b56720a25f844db0529)
 - maUSDT: [0xafe7131a57e44f832cb2de78ade38cad644aac2f](https://etherscan.io/address/0xafe7131a57e44f832cb2de78ade38cad644aac2f)
 - maCRV: [0x9dc7094530cb1bcf5442c3b9389ee386738a190c](https://etherscan.io/address/0x9dc7094530cb1bcf5442c3b9389ee386738a190c)
-- Implementation: [0x5f52ab9b380fd794c77a575f1f9323dae1bd6157](https://etherscan.io/address/0x5f52ab9b380fd794c77a575f1f9323dae1bd6157)
+- Implementation: [0x86d61e37f68194b55d7590c230077e0f8607f563](https://etherscan.io/address/0x86d61e37f68194b55d7590c230077e0f8607f563)
 
 ### Common Contracts (Ethereum)
 
