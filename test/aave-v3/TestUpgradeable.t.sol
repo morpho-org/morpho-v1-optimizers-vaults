@@ -14,6 +14,7 @@ contract TestUpgradeable is TestSetupVaults {
         );
 
         vm.record();
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wrappedNativeTokenSupplyVaultProxy, address(wethSupplyVaultImplV2));
         (, bytes32[] memory writes) = vm.accesses(address(wrappedNativeTokenSupplyVault));
 
@@ -35,6 +36,7 @@ contract TestUpgradeable is TestSetupVaults {
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wrappedNativeTokenSupplyVaultProxy, address(supplyVaultImplV2));
 
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wrappedNativeTokenSupplyVaultProxy, address(supplyVaultImplV2));
     }
 

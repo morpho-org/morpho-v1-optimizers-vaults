@@ -54,6 +54,10 @@ test:
 	@echo Running all Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test --no-match-path **/live/** -vv | tee trace.ansi
 
+live:
+	@echo Running all Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
+	@forge test --match-path **/live/** -vvv | tee trace.ansi
+
 gas-report:
 	@echo Creating gas report for Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test --no-match-path **/live/** --gas-report
