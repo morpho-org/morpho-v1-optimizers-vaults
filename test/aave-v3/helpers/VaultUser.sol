@@ -17,6 +17,15 @@ contract VaultUser is User {
         return tokenizedVault.deposit(_amount, address(this));
     }
 
+    function depositVault(
+        ERC4626UpgradeableSafe tokenizedVault,
+        uint256 _amount,
+        address _to
+    ) external returns (uint256) {
+        ERC20(tokenizedVault.asset()).safeApprove(address(tokenizedVault), _amount);
+        return tokenizedVault.deposit(_amount, _to);
+    }
+
     function mintVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _shares)
         external
         returns (uint256)
@@ -28,12 +37,33 @@ contract VaultUser is User {
         return tokenizedVault.mint(_shares, address(this));
     }
 
+    function mintVault(
+        ERC4626UpgradeableSafe tokenizedVault,
+        uint256 _shares,
+        address _to
+    ) external returns (uint256) {
+        ERC20(tokenizedVault.asset()).safeApprove(
+            address(tokenizedVault),
+            tokenizedVault.previewMint(_shares)
+        );
+        return tokenizedVault.mint(_shares, _to);
+    }
+
     function withdrawVault(
         ERC4626UpgradeableSafe tokenizedVault,
         uint256 _amount,
         address _owner
     ) public returns (uint256) {
         return tokenizedVault.withdraw(_amount, address(this), _owner);
+    }
+
+    function withdrawVault(
+        ERC4626UpgradeableSafe tokenizedVault,
+        uint256 _amount,
+        address _receiver,
+        address _owner
+    ) public returns (uint256) {
+        return tokenizedVault.withdraw(_amount, _receiver, _owner);
     }
 
     function withdrawVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _amount)
@@ -46,18 +76,18 @@ contract VaultUser is User {
     function redeemVault(
         ERC4626UpgradeableSafe tokenizedVault,
         uint256 _shares,
-        address _receiver,
         address _owner
     ) public returns (uint256) {
-        return tokenizedVault.redeem(_shares, _receiver, _owner);
+        return tokenizedVault.redeem(_shares, address(this), _owner);
     }
 
     function redeemVault(
         ERC4626UpgradeableSafe tokenizedVault,
         uint256 _shares,
+        address _receiver,
         address _owner
     ) public returns (uint256) {
-        return tokenizedVault.redeem(_shares, address(this), _owner);
+        return tokenizedVault.redeem(_shares, _receiver, _owner);
     }
 
     function redeemVault(ERC4626UpgradeableSafe tokenizedVault, uint256 _shares)

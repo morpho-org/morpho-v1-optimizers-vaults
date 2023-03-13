@@ -10,7 +10,6 @@ import {ERC4626Upgradeable, ERC20Upgradeable, IERC20MetadataUpgradeable} from "@
 abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
     /// CONSTRUCTOR ///
 
-    /// @notice Constructs the contract.
     /// @dev The contract automatically disables initializers when deployed so that nobody can highjack the implementation contract.
     constructor() {
         _disableInitializers();
@@ -21,12 +20,15 @@ abstract contract ERC4626UpgradeableSafe is ERC4626Upgradeable {
     function __ERC4626UpgradeableSafe_init(
         IERC20MetadataUpgradeable _asset,
         uint256 _initialDeposit
-    ) internal {
-        __ERC4626_init(_asset);
+    ) internal onlyInitializing {
+        __ERC4626_init_unchained(_asset);
         __ERC4626UpgradeableSafe_init_unchained(_initialDeposit);
     }
 
-    function __ERC4626UpgradeableSafe_init_unchained(uint256 _initialDeposit) internal {
+    function __ERC4626UpgradeableSafe_init_unchained(uint256 _initialDeposit)
+        internal
+        onlyInitializing
+    {
         // Sacrifice an initial seed of shares to ensure a healthy amount of precision in minting shares.
         // Set to 0 at your own risk.
         // Caller must have approved the asset to this contract's address.

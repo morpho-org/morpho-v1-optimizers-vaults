@@ -232,7 +232,7 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertLt(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
+        assertLe(claimedAmounts1[0] + claimedAmounts2[0], expectedTotalRewardsAmount);
         assertApproxEqAbs(
             claimedAmounts1[0],
             2 * claimedAmounts2[0],
@@ -357,7 +357,7 @@ contract TestSupplyVault is TestSetupVaults {
             1e5,
             "unexpected total rewards amount"
         );
-        assertGt(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
+        assertGe(expectedTotalRewardsAmount, claimedAmounts1[0] + claimedAmounts2[0]);
         assertApproxEqAbs(
             claimedAmounts1[0],
             claimedAmounts2[0],
@@ -468,25 +468,391 @@ contract TestSupplyVault is TestSetupVaults {
         ); // not exact because of rewardTokenounded interests
     }
 
-    function testNotOwnerShouldNotTransferTokens(uint256 _amount) public {
-        vm.prank(address(1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        daiSupplyVault.transferTokens($token, address(2), _amount);
+    function testRewardsShouldAccrueWhenDepositingOnBehalf() public {
+        uint256 amount = 10_000 ether;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
+
+        vaultSupplier2.depositVault(daiSupplyVault, amount, address(vaultSupplier1));
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokens,
+            address(daiSupplyVault),
+            rewardToken
+        );
+
+        // Should update the unclaimed amount
+        vaultSupplier2.depositVault(daiSupplyVault, amount, address(vaultSupplier1));
+        uint256 userReward1_1 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+
+        vm.warp(block.timestamp + 10 days);
+        uint256 userReward1_2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+
+        uint256 userReward2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier2),
+            rewardToken
+        );
+        assertEq(userReward2, 0);
+        assertGt(userReward1_1, 0);
+        assertGt(userReward1_2, 0);
+        assertApproxEqAbs(userReward1_1, expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(userReward1_1 * 3, userReward1_2, userReward1_2 / 1000);
     }
 
-    function testOwnerShouldTransferTokens(
-        address _to,
-        uint256 _deal,
-        uint256 _toTransfer
-    ) public {
-        vm.assume(_to != daiSupplyVault.owner());
-        _toTransfer = bound(_toTransfer, 0, _deal);
-        deal($token, address(daiSupplyVault), _deal);
+    function testRewardsShouldAccrueWhenMintingOnBehalf() public {
+        uint256 amount = 10_000 ether;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
 
-        vm.prank(daiSupplyVault.owner());
-        daiSupplyVault.transferTokens($token, _to, _toTransfer);
+        vaultSupplier2.mintVault(
+            daiSupplyVault,
+            daiSupplyVault.previewMint(amount),
+            address(vaultSupplier1)
+        );
+        vm.warp(block.timestamp + 10 days);
 
-        assertEq(token.balanceOf(address(daiSupplyVault)), _deal - _toTransfer);
-        assertEq(token.balanceOf(_to), _toTransfer);
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokens,
+            address(daiSupplyVault),
+            rewardToken
+        );
+        morpho.updateIndexes(aDai);
+
+        // Should update the unclaimed amount
+        vaultSupplier2.mintVault(
+            daiSupplyVault,
+            daiSupplyVault.previewMint(amount),
+            address(vaultSupplier1)
+        );
+
+        uint256 userReward1_1 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+
+        vm.warp(block.timestamp + 10 days);
+        uint256 userReward1_2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+
+        uint256 userReward2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier2),
+            rewardToken
+        );
+        assertEq(userReward2, 0);
+        assertGt(userReward1_1, 0);
+        assertApproxEqAbs(userReward1_1, expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(userReward1_1 * 3, userReward1_2, userReward1_2 / 1000);
+    }
+
+    function testRewardsShouldAccrueWhenRedeemingToReceiver() public {
+        uint256 amount = 10_000 ether;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokens,
+            address(daiSupplyVault),
+            rewardToken
+        );
+        morpho.updateIndexes(aDai);
+
+        // Should update the unclaimed amount
+        vaultSupplier1.redeemVault(
+            daiSupplyVault,
+            daiSupplyVault.balanceOf(address(vaultSupplier1)),
+            address(vaultSupplier2),
+            address(vaultSupplier1)
+        );
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier1)
+        );
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 userReward1_2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+        uint256 userReward2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier2),
+            rewardToken
+        );
+
+        (uint128 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
+        assertEq(index2, 0);
+        assertEq(userReward2, 0);
+        assertGt(uint256(userReward1_1), 0);
+        assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
+    }
+
+    function testRewardsShouldAccrueWhenWithdrawingToReceiver() public {
+        uint256 amount = 10_000 ether;
+        address[] memory poolTokens = new address[](1);
+        poolTokens[0] = aDai;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 expectedTotalRewardsAmount = rewardsManager.getUserRewards(
+            poolTokens,
+            address(daiSupplyVault),
+            rewardToken
+        );
+        morpho.updateIndexes(aDai);
+
+        // Should update the unclaimed amount
+        vaultSupplier1.withdrawVault(
+            daiSupplyVault,
+            daiSupplyVault.maxWithdraw(address(vaultSupplier1)),
+            address(vaultSupplier2),
+            address(vaultSupplier1)
+        );
+
+        (, uint128 userReward1_1) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier1)
+        );
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 userReward1_2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+        uint256 userReward2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier2),
+            rewardToken
+        );
+
+        (uint128 index2, ) = daiSupplyVault.userRewards(rewardToken, address(vaultSupplier2));
+        assertEq(index2, 0);
+        assertEq(userReward2, 0);
+        assertGt(uint256(userReward1_1), 0);
+        assertApproxEqAbs(uint256(userReward1_1), expectedTotalRewardsAmount, 10000);
+        assertApproxEqAbs(uint256(userReward1_1), userReward1_2, 1);
+    }
+
+    function testTransfer() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
+    }
+
+    function testTransferFrom() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.approve(address(vaultSupplier3), balance);
+
+        vm.prank(address(vaultSupplier3));
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
+
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0);
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier2)), balance);
+    }
+
+    function testTransferAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
+
+        uint256 rewardAmount = ERC20(rewardToken).balanceOf(address(daiSupplyVault));
+        assertGt(rewardAmount, 0);
+
+        uint256 expectedIndex = rewardAmount.rayDiv(daiSupplyVault.totalSupply());
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
+        assertEq(expectedIndex, rewardsIndex);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier1)
+        );
+        assertEq(index1, rewardsIndex);
+        assertEq(unclaimed1, rewardAmount);
+
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier2)
+        );
+        assertEq(index2, rewardsIndex);
+        assertEq(unclaimed2, 0);
+
+        (, uint256[] memory rewardsAmount1) = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        (, uint256[] memory rewardsAmount2) = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        assertGt(rewardsAmount1[0], 0, "rewardsAmount1");
+        assertEq(rewardsAmount2[0], 0);
+    }
+
+    function testTransferFromAccrueRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.approve(address(vaultSupplier3), balance);
+
+        vm.prank(address(vaultSupplier3));
+        daiSupplyVault.transferFrom(address(vaultSupplier1), address(vaultSupplier2), balance);
+
+        uint256 rewardAmount = ERC20(rewardToken).balanceOf(address(daiSupplyVault));
+        assertGt(rewardAmount, 0);
+
+        uint256 expectedIndex = rewardAmount.rayDiv(daiSupplyVault.totalSupply());
+        uint256 rewardsIndex = daiSupplyVault.rewardsIndex(rewardToken);
+        assertEq(rewardsIndex, expectedIndex);
+
+        (uint256 index1, uint256 unclaimed1) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier1)
+        );
+        assertEq(index1, rewardsIndex);
+        assertEq(unclaimed1, rewardAmount);
+
+        (uint256 index2, uint256 unclaimed2) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier2)
+        );
+        assertEq(index2, rewardsIndex);
+        assertEq(unclaimed2, 0);
+
+        (uint256 index3, uint256 unclaimed3) = daiSupplyVault.userRewards(
+            rewardToken,
+            address(vaultSupplier3)
+        );
+        assertEq(index3, 0);
+        assertEq(unclaimed3, 0);
+
+        (, uint256[] memory rewardsAmount1) = daiSupplyVault.claimRewards(address(vaultSupplier1));
+        (, uint256[] memory rewardsAmount2) = daiSupplyVault.claimRewards(address(vaultSupplier2));
+        (, uint256[] memory rewardsAmount3) = daiSupplyVault.claimRewards(address(vaultSupplier3));
+        assertGt(rewardsAmount1[0], 0, "rewardsAmount1");
+        assertEq(rewardsAmount2[0], 0);
+        assertEq(rewardsAmount3[0], 0);
+    }
+
+    function testTransferAndClaimRewards() public {
+        uint256 amount = 1e6 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        vaultSupplier2.depositVault(daiSupplyVault, amount);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 balance = daiSupplyVault.balanceOf(address(vaultSupplier1));
+        vm.prank(address(vaultSupplier1));
+        daiSupplyVault.transfer(address(vaultSupplier2), balance);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 rewardsAmount1 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier1),
+            rewardToken
+        );
+        uint256 rewardsAmount2 = daiSupplyVault.getUnclaimedRewards(
+            address(vaultSupplier2),
+            rewardToken
+        );
+
+        assertGt(rewardsAmount1, 0);
+        assertApproxEqAbs(rewardsAmount1, (2 * rewardsAmount2) / 3, rewardsAmount1 / 100);
+        // Why rewardsAmount1 is 2/3 of rewardsAmount2 can be explained as follows:
+        // vaultSupplier1 first gets X rewards corresponding to amount over one period of time
+        // vaultSupplier1 then and vaultSupplier2 get X rewards each (under the approximation that doubling the amount doubles the rewards)
+        // vaultSupplier2 then gets 2 * X rewards
+        // In the end, vaultSupplier1 got 2 * X rewards while vaultSupplier2 got 3 * X
+    }
+
+    function testShouldDepositCorrectAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 shares = vaultSupplier2.depositVault(daiSupplyVault, amount);
+        uint256 assets = vaultSupplier2.redeemVault(daiSupplyVault, shares);
+
+        assertApproxEqAbs(assets, amount, 1, "unexpected withdrawn assets");
+    }
+
+    function testShouldRedeemAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        uint256 shares = vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        uint256 assets = vaultSupplier1.redeemVault(daiSupplyVault, shares);
+
+        assertEq(
+            assets,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai)),
+            "unexpected withdrawn assets"
+        );
+    }
+
+    function testShouldWithdrawAllAmountWhenMorphoPoolIndexesOutdated() public {
+        uint256 amount = 10_000 ether;
+
+        uint256 expectedOnPool = amount.rayDiv(pool.getReserveNormalizedIncome(dai));
+
+        vaultSupplier1.depositVault(daiSupplyVault, amount);
+
+        vm.roll(block.number + 100_000);
+        vm.warp(block.timestamp + 1_000_000);
+
+        vaultSupplier1.withdrawVault(
+            daiSupplyVault,
+            expectedOnPool.rayMul(pool.getReserveNormalizedIncome(dai))
+        );
+
+        (uint256 balanceInP2P, uint256 balanceOnPool) = morpho.supplyBalanceInOf(
+            address(aUsdc),
+            address(daiSupplyVault)
+        );
+
+        assertEq(daiSupplyVault.balanceOf(address(vaultSupplier1)), 0, "mcUSDT balance not zero");
+        assertEq(balanceOnPool, 0, "onPool amount not zero");
+        assertEq(balanceInP2P, 0, "inP2P amount not zero");
     }
 }

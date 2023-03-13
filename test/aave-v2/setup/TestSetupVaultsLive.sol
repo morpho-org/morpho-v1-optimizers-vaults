@@ -18,10 +18,11 @@ contract TestSetupVaultsLive is TestSetup {
     address internal constant W_NATIVE_VAULT_ADDRESS = 0x762fafA0257CD3b697e0D7FD40f1f6c03F07A8ef;
     address internal constant DAI_VAULT_ADDRESS = 0x3A91D37BAc30C913369E1ABC8CAd1C13D1ff2e98;
     address internal constant USDC_VAULT_ADDRESS = 0xd45EF8c9b9431298019FC15753609DB2FB101aa5;
+    address internal constant MORPHO_TOKEN = 0x9994E35Db50125E0DF82e4c2dde62496CE330999;
+    address internal constant LENS = 0x507fA343d0A90786d86C7cd885f5C49263A91FF4;
+    address internal constant RECIPIENT = 0x60345417a227ad7E312eAa1B5EC5CD1Fe5E2Cdc6;
 
     uint256 internal constant INITIAL_DEPOSIT = 1e8;
-
-    address internal constant PROXY_ADMIN_OWNER = 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa;
 
     SupplyVault internal wNativeSupplyVault;
     SupplyVault internal daiSupplyVault;

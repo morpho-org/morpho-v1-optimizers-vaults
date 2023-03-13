@@ -7,10 +7,15 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     using WadRayMath for uint256;
 
     function testUpgradeSupplyVault() public {
-        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens),
+            RECIPIENT
+        );
 
         vm.record();
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(wNativeSupplyVaultImplV2));
         (, bytes32[] memory writes) = vm.accesses(address(wNativeSupplyVault));
 
@@ -26,18 +31,28 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
-        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault supplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens),
+            RECIPIENT
+        );
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
 
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         proxyAdmin.upgrade(wNativeSupplyVaultProxy, address(supplyVaultImplV2));
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
-        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault wNativeSupplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens),
+            RECIPIENT
+        );
 
         vm.prank(address(supplier1));
         vm.expectRevert("Ownable: caller is not the owner");
@@ -48,7 +63,7 @@ contract TestUpgradeableLive is TestSetupVaultsLive {
         );
 
         // Revert for wrong data not wrong caller.
-        vm.prank(PROXY_ADMIN_OWNER);
+        vm.prank(proxyAdmin.owner());
         vm.expectRevert("Address: low-level delegate call failed");
         proxyAdmin.upgradeAndCall(
             wNativeSupplyVaultProxy,

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.10;
 
+import {IERC4626Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
+import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
 import {IAToken} from "@aave/core-v3/contracts/interfaces/IAToken.sol";
 import {IMorpho} from "@contracts/aave-v3/interfaces/IMorpho.sol";
-import {IRewardsController} from "@aave/periphery-v3/contracts/rewards/interfaces/IRewardsController.sol";
+import {ISupplyVaultBase} from "./interfaces/ISupplyVaultBase.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ERC20, SafeTransferLib} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
@@ -11,34 +13,54 @@ import {WadRayMath} from "@morpho-labs/morpho-utils/math/WadRayMath.sol";
 import {Math} from "@morpho-labs/morpho-utils/math/Math.sol";
 import {Types} from "@contracts/aave-v3/libraries/Types.sol";
 
-import {ERC4626UpgradeableSafe, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
+import {ERC4626UpgradeableSafe, ERC4626Upgradeable, ERC20Upgradeable} from "../ERC4626UpgradeableSafe.sol";
 
 /// @title SupplyVaultBase.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice ERC4626-upgradeable Tokenized Vault abstract implementation for Morpho-Aave V3.
-abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable {
+abstract contract SupplyVaultBase is ISupplyVaultBase, ERC4626UpgradeableSafe, OwnableUpgradeable {
     using WadRayMath for uint256;
     using SafeTransferLib for ERC20;
 
+    /// EVENTS ///
+
+    /// @notice Emitted when MORPHO rewards are transferred to `recipient`.
+    /// @param recipient The recipient of the rewards.
+    /// @param amount The amount of rewards transferred.
+    event RewardsTransferred(address recipient, uint256 amount);
+
     /// ERRORS ///
 
-    /// @notice Thrown when the zero address is passed as input.
+    /// @notice Thrown when the zero address is passed as input or is the recipient address when calling `transferRewards`.
     error ZeroAddress();
 
-    /// STORAGE ///
+    /// IMMUTABLES ///
 
     IMorpho public immutable morpho; // The main Morpho contract.
+    ERC20 public immutable morphoToken; // The address of the Morpho Token.
+    address public immutable recipient; // The recipient of the rewards that will redistribute them to vault's users.
+
+    /// STORAGE ///
 
     address public poolToken; // The pool token corresponding to the market to supply to through this vault.
 
     /// CONSTRUCTOR ///
 
-    /// @dev Initializes network-wide immutables
+    /// @dev Initializes network-wide immutables.
     /// @param _morpho The address of the main Morpho contract.
-    constructor(address _morpho) {
-        if (_morpho == address(0)) revert ZeroAddress();
+    /// @param _morphoToken The address of the Morpho Token.
+    /// @param _recipient The recipient of the rewards that will redistribute them to vault's users.
+    constructor(
+        address _morpho,
+        address _morphoToken,
+        address _recipient
+    ) {
+        if (_morpho == address(0) || _morphoToken == address(0) || _recipient == address(0))
+            revert ZeroAddress();
         morpho = IMorpho(_morpho);
+        morphoToken = ERC20(_morphoToken);
+        recipient = _recipient;
     }
 
     /// INITIALIZER ///
@@ -56,9 +78,10 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
     ) internal onlyInitializing {
         ERC20 underlyingToken = __SupplyVaultBase_init_unchained(_poolToken);
 
-        __Ownable_init();
-        __ERC20_init(_name, _symbol);
-        __ERC4626UpgradeableSafe_init(ERC20Upgradeable(address(underlyingToken)), _initialDeposit);
+        __Ownable_init_unchained();
+        __ERC20_init_unchained(_name, _symbol);
+        __ERC4626_init_unchained(ERC20Upgradeable(address(underlyingToken)));
+        __ERC4626UpgradeableSafe_init_unchained(_initialDeposit);
     }
 
     /// @dev Initializes the vault whithout initializing parent contracts (avoid the double initialization problem).
@@ -68,30 +91,34 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
         onlyInitializing
         returns (ERC20 underlyingToken)
     {
-        if (_poolToken == address(0)) revert ZeroAddress();
-
         poolToken = _poolToken;
 
-        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS());
+        underlyingToken = ERC20(IAToken(poolToken).UNDERLYING_ASSET_ADDRESS()); // Reverts on zero address so no check for pool token needed.
         underlyingToken.safeApprove(address(morpho), type(uint256).max);
     }
 
     /// EXTERNAL ///
 
-    function transferTokens(
-        address _asset,
-        address _to,
-        uint256 _amount
-    ) external onlyOwner {
-        ERC20(_asset).safeTransfer(_to, _amount);
+    /// @notice Transfers the MORPHO rewards to the rewards recipient.
+    function transferRewards() external {
+        uint256 amount = morphoToken.balanceOf(address(this));
+        morphoToken.safeTransfer(recipient, amount);
+        emit RewardsTransferred(recipient, amount);
     }
 
     /// PUBLIC ///
 
+    /// @notice The amount of assets in the vault.
     /// @dev The indexes used by this function might not be up-to-date.
     ///      As a consequence, view functions (like `maxWithdraw`) could underestimate the withdrawable amount.
     ///      To redeem all their assets, users are encouraged to use the `redeem` function passing their vault tokens balance.
-    function totalAssets() public view override returns (uint256) {
+    function totalAssets()
+        public
+        view
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         address poolTokenMem = poolToken;
         Types.SupplyBalance memory supplyBalance = morpho.supplyBalanceInOf(
             poolTokenMem,
@@ -103,33 +130,57 @@ abstract contract SupplyVaultBase is ERC4626UpgradeableSafe, OwnableUpgradeable 
             supplyBalance.inP2P.rayMul(morpho.p2pSupplyIndex(poolTokenMem));
     }
 
-    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+    /// @notice Deposits an amount of assets into the vault and receive vault shares.
+    /// @param assets The amount of assets to deposit.
+    /// @param receiver The recipient of the vault shares.
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateIndexes(poolToken);
         return super.deposit(assets, receiver);
     }
 
-    function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
+    /// @notice Mints shares of the vault and transfers assets to the vault.
+    /// @param shares The number of shares to mint.
+    /// @param receiver The recipient of the vault shares.
+    function mint(uint256 shares, address receiver)
+        public
+        virtual
+        override(IERC4626Upgradeable, ERC4626Upgradeable)
+        returns (uint256)
+    {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateIndexes(poolToken);
         return super.mint(shares, receiver);
     }
 
+    /// @notice Withdraws an amount of assets from the vault and burn an owner's shares.
+    /// @param assets The number of assets to withdraw.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The owner of the vault shares.
     function withdraw(
         uint256 assets,
         address receiver,
         address owner
-    ) public virtual override returns (uint256) {
+    ) public virtual override(IERC4626Upgradeable, ERC4626Upgradeable) returns (uint256) {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateIndexes(poolToken);
         return super.withdraw(assets, receiver, owner);
     }
 
+    /// @notice Burn an amount of shares and receive assets.
+    /// @param shares The number of shares to burn.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The owner of the assets.
     function redeem(
         uint256 shares,
         address receiver,
         address owner
-    ) public virtual override returns (uint256) {
+    ) public virtual override(IERC4626Upgradeable, ERC4626Upgradeable) returns (uint256) {
         // Update the indexes to get the most up-to-date total assets balance.
         morpho.updateIndexes(poolToken);
         return super.redeem(shares, receiver, owner);

@@ -11,10 +11,7 @@ FOUNDRY_ETH_RPC_URL?=https://${NETWORK}.g.alchemy.com/v2/${ALCHEMY_KEY}
 
 ifeq (${NETWORK}, eth-mainnet)
   FOUNDRY_CHAIN_ID=1
-  FOUNDRY_FORK_BLOCK_NUMBER=14292587
-  ifeq (${PROTOCOL}, aave-v2)
-    FOUNDRY_FORK_BLOCK_NUMBER=15485110
-  endif
+  FOUNDRY_FORK_BLOCK_NUMBER=15425110
 endif
 
 ifeq (${NETWORK}, polygon-mainnet)
@@ -56,6 +53,10 @@ deploy:
 test:
 	@echo Running all Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
 	@forge test --no-match-path **/live/** -vv | tee trace.ansi
+
+live:
+	@echo Running all Morpho-${PROTOCOL} tests on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"
+	@forge test --match-path **/live/** -vvv | tee trace.ansi
 
 gas-report:
 	@echo Creating gas report for Morpho-${PROTOCOL} on \"${NETWORK}\" at block \"${FOUNDRY_FORK_BLOCK_NUMBER}\" with seed \"${FOUNDRY_FUZZ_SEED}\"

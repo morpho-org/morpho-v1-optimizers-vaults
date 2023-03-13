@@ -6,67 +6,13 @@ import "./setup/TestSetupVaults.sol";
 contract TestUpgradeable is TestSetupVaults {
     using CompoundMath for uint256;
 
-    function testUpgradeSupplyHarvestVault() public {
-        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
-
-        vm.record();
-        proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(wethSupplyHarvestVaultImplV2));
-        (, bytes32[] memory writes) = vm.accesses(address(wethSupplyHarvestVault));
-
-        // 1 write for the implemention.
-        assertEq(writes.length, 1);
-        address newImplem = bytes32ToAddress(
-            vm.load(
-                address(wethSupplyHarvestVault),
-                bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1) // Implementation slot.
-            )
-        );
-        assertEq(newImplem, address(wethSupplyHarvestVaultImplV2));
-    }
-
-    function testOnlyProxyOwnerCanUpgradeSupplyHarvestVault() public {
-        SupplyHarvestVault supplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
-
-        vm.prank(address(supplier1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
-
-        proxyAdmin.upgrade(wethSupplyHarvestVaultProxy, address(supplyHarvestVaultImplV2));
-    }
-
-    function testOnlyProxyOwnerCanUpgradeAndCallSupplyHarvestVault() public {
-        SupplyHarvestVault wethSupplyHarvestVaultImplV2 = new SupplyHarvestVault(address(morpho));
-
-        vm.prank(address(supplier1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        proxyAdmin.upgradeAndCall(
-            wethSupplyHarvestVaultProxy,
-            payable(address(wethSupplyHarvestVaultImplV2)),
-            ""
-        );
-
-        // Revert for wrong data not wrong caller.
-        vm.expectRevert("Address: low-level delegate call failed");
-        proxyAdmin.upgradeAndCall(
-            wethSupplyHarvestVaultProxy,
-            payable(address(wethSupplyHarvestVaultImplV2)),
-            ""
-        );
-    }
-
-    function testSupplyHarvestVaultImplementationsShouldBeInitialized() public {
-        vm.expectRevert("Initializable: contract is already initialized");
-        supplyHarvestVaultImplV1.initialize(
-            address(cEth),
-            "MorphoCompoundETH",
-            "mcETH",
-            0,
-            SupplyHarvestVault.HarvestConfig(3000, 500, 50)
-        );
-    }
-
     function testUpgradeSupplyVault() public {
-        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens),
+            RECIPIENT
+        );
 
         vm.record();
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(wethSupplyVaultImplV2));
@@ -84,9 +30,14 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeSupplyVault() public {
-        SupplyVault supplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault supplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens),
+            RECIPIENT
+        );
 
-        vm.prank(address(supplier1));
+        vm.prank(address(vaultSupplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgrade(wethSupplyVaultProxy, address(supplyVaultImplV2));
 
@@ -94,9 +45,14 @@ contract TestUpgradeable is TestSetupVaults {
     }
 
     function testOnlyProxyOwnerCanUpgradeAndCallSupplyVault() public {
-        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(address(morpho));
+        SupplyVault wethSupplyVaultImplV2 = new SupplyVault(
+            address(morpho),
+            MORPHO_TOKEN,
+            address(lens),
+            RECIPIENT
+        );
 
-        vm.prank(address(supplier1));
+        vm.prank(address(vaultSupplier1));
         vm.expectRevert("Ownable: caller is not the owner");
         proxyAdmin.upgradeAndCall(
             wethSupplyVaultProxy,
