@@ -20,7 +20,6 @@
 # misc
 .DS_Store
 .env*
-*.ansi
 
 npm-debug.log*
 yarn-debug.log*
@@ -35,3 +34,6 @@ yarn-error.log*
 
 # broadcast
 /broadcast
+
+# docs
+/docs
