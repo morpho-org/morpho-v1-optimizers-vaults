@@ -17,7 +17,8 @@ Morpho's vaults represent tokenized supply positions on Morpho. Vaults are compl
 
 ## Audits
 
-All audits are accessible in the [audits](https://docs.morpho.xyz/security/audits)' section related to security.
+Vaults' audits are accessible in the [audits](https://github.com/morpho-dao/morpho-tokenized-vaults/tree/main/audits)' folder.
+All Morpho audits are accessible in the [audits section of the Morpho documentation](https://docs.morpho.xyz/security/audits).
 
 ---
 
