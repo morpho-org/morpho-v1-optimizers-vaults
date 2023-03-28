@@ -11,13 +11,14 @@
 
 ## Morpho's vaults
 
-Morpho's vaults represent tokenized supply positions on Morpho. Vaults are compliant to the ERC4626 standard and can be easily integrated. Please refer to the [vaults documentation](https://developers.morpho.xyz/vaults) for more information.
+Morpho's vaults represent tokenized supply positions on Morpho. Vaults are compliant to the ERC4626 standard and can be easily integrated. Please refer to the [vaults documentation](https://developers-vaults.morpho.xyz/) for more information.
 
 ---
 
 ## Audits
 
-All audits are stored in the [audits](./audits/)' folder.
+Vaults' audits are accessible in the [audits](https://github.com/morpho-dao/morpho-tokenized-vaults/tree/main/audits)' folder.
+All Morpho audits are accessible in the [audits section of the Morpho documentation](https://docs.morpho.xyz/security/audits).
 
 ---
 
