@@ -17,20 +17,12 @@ endif
 ifeq (${NETWORK}, polygon-mainnet)
   FOUNDRY_CHAIN_ID=137
   FOUNDRY_FORK_BLOCK_NUMBER=22116728
-
-  ifeq (${PROTOCOL}, aave-v3)
-    FOUNDRY_FORK_BLOCK_NUMBER=29116728
-  endif
 endif
 
 ifeq (${NETWORK}, avalanche-mainnet)
   FOUNDRY_CHAIN_ID=43114
   FOUNDRY_ETH_RPC_URL=https://api.avax.network/ext/bc/C/rpc
   FOUNDRY_FORK_BLOCK_NUMBER=12675271
-
-  ifeq (${PROTOCOL}, aave-v3)
-    FOUNDRY_FORK_BLOCK_NUMBER=15675271
-  endif
 endif
 
 
