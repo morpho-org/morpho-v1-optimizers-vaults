@@ -1,4 +1,4 @@
-# Morpho Tokenized Vaults
+# Morpho Optimizers Vaults
 
 [![Test](https://github.com/morpho-labs/morpho-contracts/actions/workflows/ci-foundry.yml/badge.svg)](https://github.com/morpho-dao/morpho-tokenized-vaults/actions/workflows/ci-foundry.yml)
 
@@ -9,22 +9,22 @@
 
 ---
 
-## Morpho's vaults
+## Morpho Optimizers vaults
 
-Morpho's vaults represent tokenized supply positions on Morpho. Vaults are compliant to the ERC4626 standard and can be easily integrated. Please refer to the [vaults documentation](https://developers-vaults.morpho.xyz/) for more information.
+Morpho Optimizers vaults represent tokenized supply positions on Morpho. Vaults are compliant with the ERC4626 standard and can be easily integrated. Please take a look at the [vaults documentation](https://developers-vaults.morpho.org/) for more information.
 
 ---
 
 ## Audits
 
 Vaults' audits are accessible in the [audits](https://github.com/morpho-dao/morpho-tokenized-vaults/tree/main/audits)' folder.
-All Morpho audits are accessible in the [audits section of the Morpho documentation](https://docs.morpho.xyz/security/audits).
+All Morpho audits are accessible in the [audits section of the Morpho documentation](https://docs.morpho.org/security/audits).
 
 ---
 
 ## Deployment Addresses
 
-### Morpho-Compound (Ethereum)
+### Morpho-Compound Optimizer (Ethereum)
 
 #### Supply Vaults
 
@@ -37,7 +37,7 @@ All Morpho audits are accessible in the [audits section of the Morpho documentat
 - mcWBTC: [0xF31AC95fe692190b9C67112d8c912bA9973944F2](https://etherscan.io/address/0xF31AC95fe692190b9C67112d8c912bA9973944F2)
 - Implementation: [0x07b7319aaf04f8a28c74fd5ca3ec01aa4af66069](https://etherscan.io/address/0x07b7319aaf04f8a28c74fd5ca3ec01aa4af66069)
 
-### Morpho-Aave-V2 (Ethereum)
+### Morpho-AaveV2 Optimizer (Ethereum)
 
 #### Supply Vaults
 
@@ -57,7 +57,7 @@ All Morpho audits are accessible in the [audits section of the Morpho documentat
 
 ## Testing with [Foundry](https://github.com/foundry-rs/foundry) 🔨
 
-Tests are run against a forks of real networks, which allows us to interact directly with liquidity pools of Compound or Aave. Note that you need to have an RPC provider that have access to Ethereum or Polygon.
+Tests are run against a fork of real networks, allowing us to interact directly with Compound or Aave liquidity pools. Note that you need an RPC provider with access to Ethereum or Polygon.
 
 For testing, make sure `yarn` and `foundry` are installed and install dependencies (node_modules, git submodules) with:
 
@@ -77,13 +77,13 @@ To run every test of a specific protocol (e.g. for Morpho-Compound):
 make test PROTOCOL=compound
 ```
 
-or to run only a specific set of tests of a specific protocol (e.g. for Morpho-Aave V2):
+Or to run only a specific set of tests of a specific protocol (e.g. for Morpho-Aave V2):
 
 ```bash
 make c-TestSupplyVault PROTOCOL=aave-v2
 ```
 
-or to run an individual test of a specific protocol (e.g. for Morpho-Aave V2):
+Or to run an individual test of a specific protocol (e.g. for Morpho-Aave V2):
 
 ```bash
 make s-testShouldDepositAmount PROTOCOL=aave-v2
@@ -97,7 +97,7 @@ For the other commands, check the [Makefile](./Makefile).
 
 Test coverage is reported using [foundry](https://github.com/foundry-rs/foundry) coverage with [lcov](https://github.com/linux-test-project/lcov) report formatting (and optionally, [genhtml](https://manpages.ubuntu.com/manpages/xenial/man1/genhtml.1.html) transformer).
 
-To generate the `lcov` report, run:
+To generate the `lcov` report, run the following:
 
 ```bash
 make coverage
@@ -112,7 +112,7 @@ The report is then usable either:
 
 ## Questions & Feedback
 
-For any question or feedback you can send an email to [merlin@morpho.xyz](mailto:merlin@morpho.xyz).
+For any question or feedback, email [merlin@morpho.org](mailto:merlin@morpho.org).
 
 ---
 
